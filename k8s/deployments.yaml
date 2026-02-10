@@ -1,0 +1,186 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: smartnews-web
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: smartnews-web
+  template:
+    metadata:
+      labels:
+        app: smartnews-web
+    spec:
+      initContainers:
+        - name: app-copy
+          image: ghcr.io/smartnews/app:latest
+          command: ["/bin/sh", "-c", "cp -R /app/. /shared"]
+          volumeMounts:
+            - name: app-code
+              mountPath: /shared
+      containers:
+        - name: php-fpm
+          image: ghcr.io/smartnews/app:latest
+          ports:
+            - containerPort: 9000
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "512Mi"
+            limits:
+              cpu: "500m"
+              memory: "1Gi"
+          envFrom:
+            - configMapRef:
+                name: smartnews-config
+            - secretRef:
+                name: smartnews-secrets
+          volumeMounts:
+            - name: app-code
+              mountPath: /app
+        - name: nginx
+          image: nginx:alpine
+          ports:
+            - containerPort: 80
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          volumeMounts:
+            - name: nginx-conf
+              mountPath: /etc/nginx/conf.d
+            - name: app-code
+              mountPath: /app
+      volumes:
+        - name: nginx-conf
+          configMap:
+            name: smartnews-nginx
+        - name: app-code
+          emptyDir: {}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: smartnews-worker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: smartnews-worker
+  template:
+    metadata:
+      labels:
+        app: smartnews-worker
+    spec:
+      containers:
+        - name: worker
+          image: ghcr.io/smartnews/app:latest
+          command: ["php", "artisan", "queue:work", "rabbitmq", "--tries=3", "--timeout=60"]
+          resources:
+            requests:
+              cpu: "300m"
+              memory: "512Mi"
+            limits:
+              cpu: "1"
+              memory: "1Gi"
+          envFrom:
+            - configMapRef:
+                name: smartnews-config
+            - secretRef:
+                name: smartnews-secrets
+          livenessProbe:
+            exec:
+              command: ["sh", "-c", "ps aux | grep -v grep | grep -q 'queue:work'"]
+            initialDelaySeconds: 20
+            periodSeconds: 20
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: smartnews-scheduler
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: smartnews-scheduler
+  template:
+    metadata:
+      labels:
+        app: smartnews-scheduler
+    spec:
+      containers:
+        - name: scheduler
+          image: ghcr.io/smartnews/app:latest
+          command: ["php", "artisan", "schedule:work"]
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          envFrom:
+            - configMapRef:
+                name: smartnews-config
+            - secretRef:
+                name: smartnews-secrets
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: smartnews-web
+spec:
+  selector:
+    app: smartnews-web
+  ports:
+    - port: 80
+      targetPort: 80
+      protocol: TCP
+      name: http
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: smartnews-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+    - host: news.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: smartnews-web
+                port:
+                  number: 80
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: smartnews-worker-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: smartnews-worker
+  minReplicas: 1
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70

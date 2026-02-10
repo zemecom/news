@@ -1,0 +1,53 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Modules\Intelligence\Infrastructure\Messaging;
+
+use Modules\Shared\Domain\DTO\EnrichedNewsData;
+use PhpAmqpLib\Connection\AMQPStreamConnection;
+use PhpAmqpLib\Message\AMQPMessage;
+use PhpAmqpLib\Wire\AMQPTable;
+
+final class EnrichedPublisher
+{
+    public function __construct(
+        private AMQPStreamConnection $connection,
+        private string $exchange = 'news_flow',
+        private string $routingKey = 'enriched.ready',
+    ) {
+    }
+
+    public function publish(EnrichedNewsData $enriched): void
+    {
+        $channel = $this->connection->channel();
+
+        $payload = json_encode([
+            'rawId' => $enriched->rawId,
+            'titleGenerated' => $enriched->titleGenerated,
+            'contentTranslated' => $enriched->contentTranslated,
+            'sentiment' => $enriched->sentiment,
+            'category' => $enriched->category,
+            'tags' => $enriched->tags,
+            'importance' => $enriched->importance,
+            'status' => $enriched->status->value,
+            'moderationReason' => $enriched->moderationReason,
+            'fingerprint' => $enriched->fingerprint,
+        ], JSON_THROW_ON_ERROR);
+
+        $headers = new AMQPTable();
+        if ($enriched->importance === true) {
+            $headers->set('x-important', 1);
+        }
+
+        $message = new AMQPMessage($payload, [
+            'content_type' => 'application/json',
+            'delivery_mode' => 2,
+            'message_id' => $enriched->fingerprint,
+            'application_headers' => $headers,
+        ]);
+
+        $channel->basic_publish($message, $this->exchange, $this->routingKey, true);
+        $channel->close();
+    }
+}
