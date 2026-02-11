@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Modules\Intelligence\Application\Pipeline\Steps;
 
-use Modules\Shared\Domain\DTO\RawNewsData;
 use Modules\Shared\Domain\DTO\EnrichedNewsData;
+use Modules\Shared\Domain\DTO\RawNewsData;
 
 final class LanguageDetectStep implements PipelineStep
 {
@@ -16,17 +16,7 @@ final class LanguageDetectStep implements PipelineStep
         }
 
         $lang = $input->language !== '' ? $input->language : 'en';
-        return new RawNewsData(
-            sourceId: $input->sourceId,
-            externalId: $input->externalId,
-            title: $input->title,
-            link: $input->link,
-            content: $input->content,
-            publishedAt: $input->publishedAt,
-            language: $lang,
-            metadata: $input->metadata,
-            fingerprint: $input->fingerprint,
-            rawId: $input->rawId,
-        );
+
+        return $input->with(['language' => $lang]);
     }
 }

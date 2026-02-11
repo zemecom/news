@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Modules\Intelligence\Application\Pipeline\Steps;
 
-use Modules\Shared\Domain\DTO\RawNewsData;
 use Modules\Shared\Domain\DTO\EnrichedNewsData;
+use Modules\Shared\Domain\DTO\RawNewsData;
 
 final class ImportanceStep implements PipelineStep
 {
@@ -20,17 +20,8 @@ final class ImportanceStep implements PipelineStep
         $importantCategories = ['Экономика', 'Политика', 'IT'];
         $importance = in_array($category, $importantCategories, true) && abs($sentiment) > 3;
 
-        return new RawNewsData(
-            sourceId: $input->sourceId,
-            externalId: $input->externalId,
-            title: $input->title,
-            link: $input->link,
-            content: $input->content,
-            publishedAt: $input->publishedAt,
-            language: $input->language,
-            metadata: array_merge($input->metadata, ['importance' => $importance]),
-            fingerprint: $input->fingerprint,
-            rawId: $input->rawId,
-        );
+        return $input->with([
+            'metadata' => array_merge($input->metadata, ['importance' => $importance]),
+        ]);
     }
 }

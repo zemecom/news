@@ -1,0 +1,15 @@
+parameters:
+  bootstrapFiles:
+    - vendor/autoload.php
+  level: 8
+  paths:
+    - app
+    - src
+    - database
+    - routes
+    - tests
+  excludePaths:
+    - vendor
+    - storage
+    - bootstrap/cache
+  reportUnmatchedIgnoredErrors: true

@@ -4,14 +4,12 @@ declare(strict_types=1);
 
 namespace Modules\Intelligence\Application\Pipeline\Steps;
 
-use Modules\Shared\Domain\DTO\RawNewsData;
 use Modules\Shared\Domain\DTO\EnrichedNewsData;
+use Modules\Shared\Domain\DTO\RawNewsData;
 
 final class TranslateStep implements PipelineStep
 {
-    public function __construct(private \Modules\Intelligence\Domain\Contracts\Translator $translator)
-    {
-    }
+    public function __construct(private \Modules\Intelligence\Domain\Contracts\Translator $translator) {}
 
     public function process(RawNewsData|EnrichedNewsData $input): RawNewsData|EnrichedNewsData
     {
@@ -23,19 +21,17 @@ final class TranslateStep implements PipelineStep
             return $input;
         }
 
-        $translated = $this->translator->translate($input->content, 'ru', $input->language);
+        $originalContent = $input->content;
+        $originalLanguage = $input->language;
+        $translated = $this->translator->translate($originalContent, 'ru', $originalLanguage);
 
-        return new RawNewsData(
-            sourceId: $input->sourceId,
-            externalId: $input->externalId,
-            title: $input->title,
-            link: $input->link,
-            content: $translated,
-            publishedAt: $input->publishedAt,
-            language: 'ru',
-            metadata: $input->metadata,
-            fingerprint: $input->fingerprint,
-            rawId: $input->rawId,
-        );
+        return $input->with([
+            'content' => $translated,
+            'language' => 'ru',
+            'metadata' => array_merge($input->metadata, [
+                'original_content' => $originalContent,
+                'original_language' => $originalLanguage,
+            ]),
+        ]);
     }
 }

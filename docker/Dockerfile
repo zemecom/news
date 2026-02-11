@@ -15,10 +15,14 @@ RUN php artisan package:discover --ansi
 # Stage 2: production
 FROM php:8.4-fpm-alpine AS runtime
 WORKDIR /app
+ARG WITH_XDEBUG=0
 RUN apk add --no-cache $PHPIZE_DEPS linux-headers libzip-dev libxml2-dev oniguruma-dev icu-dev postgresql-dev \
+    && if [ "$WITH_XDEBUG" = "1" ]; then pecl install xdebug && docker-php-ext-enable xdebug; fi \
     && docker-php-ext-install pdo pdo_pgsql zip xml mbstring intl sockets \
     && apk del $PHPIZE_DEPS
+COPY --from=builder /usr/local/bin/composer /usr/local/bin/composer
 COPY --from=builder /app /app
+RUN if [ "$WITH_XDEBUG" = "1" ]; then cp docker/php/conf.d/xdebug.ini /usr/local/etc/php/conf.d/xdebug.ini; fi
 
 # Nginx image can be separate; here only php-fpm
 CMD ["php-fpm", "-F"]

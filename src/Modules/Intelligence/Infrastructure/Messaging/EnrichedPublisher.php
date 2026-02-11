@@ -4,19 +4,19 @@ declare(strict_types=1);
 
 namespace Modules\Intelligence\Infrastructure\Messaging;
 
+use Modules\Intelligence\Domain\Contracts\EnrichedPublisher as EnrichedPublisherContract;
 use Modules\Shared\Domain\DTO\EnrichedNewsData;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
 use PhpAmqpLib\Message\AMQPMessage;
 use PhpAmqpLib\Wire\AMQPTable;
 
-final class EnrichedPublisher
+final class EnrichedPublisher implements EnrichedPublisherContract
 {
     public function __construct(
         private AMQPStreamConnection $connection,
         private string $exchange = 'news_flow',
         private string $routingKey = 'enriched.ready',
-    ) {
-    }
+    ) {}
 
     public function publish(EnrichedNewsData $enriched): void
     {
@@ -35,7 +35,7 @@ final class EnrichedPublisher
             'fingerprint' => $enriched->fingerprint,
         ], JSON_THROW_ON_ERROR);
 
-        $headers = new AMQPTable();
+        $headers = new AMQPTable;
         if ($enriched->importance === true) {
             $headers->set('x-important', 1);
         }

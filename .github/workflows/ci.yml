@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+    branches: ["master", "main"]
+  pull_request:
+    branches: ["*"]
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    env:
+      APP_ENV: testing
+      APP_KEY: base64:JYl9hu3knYX4DfeOJCJ1QzNc6ICWmzLg/9Xs4Kb4a5U=
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: intl, mbstring, sockets, zip, xml, pdo_pgsql
+          coverage: none
+      - name: Cache composer
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: ${{ runner.os }}-composer-${{ hashFiles('composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress
+      - name: Validate composer.json
+        run: composer qa:validate
+      - name: Lint (Pint)
+        run: composer lint:check
+      - name: Static analysis (PHPStan)
+        run: composer analyze
+      - name: Static analysis (Psalm taint)
+        run: composer psalm:taint
+      - name: Tests
+        run: ./vendor/bin/pest

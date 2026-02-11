@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Modules\Catalog\Infrastructure\Persistence;
 
+use Illuminate\Support\Str;
 use Modules\Catalog\Domain\Contracts\NewsRepository;
 use Modules\Catalog\Infrastructure\Persistence\Models\NewsItem;
 use Modules\Shared\Domain\DTO\EnrichedNewsData;
 use Modules\Shared\Domain\DTO\RawNewsData;
 use Modules\Shared\Domain\Enum\NewsStatus;
-use Illuminate\Support\Str;
 
 final class EloquentNewsRepository implements NewsRepository
 {
@@ -38,6 +38,8 @@ final class EloquentNewsRepository implements NewsRepository
                 'source_id' => $raw->sourceId,
                 'title_original' => $raw->title,
                 'content_original' => $raw->content,
+                'image_url' => $raw->imageUrl,
+                'media' => $raw->media,
                 'status' => NewsStatus::PROCESSING->value,
                 'source_metadata' => array_merge($raw->metadata, [
                     'external_id' => $raw->externalId,

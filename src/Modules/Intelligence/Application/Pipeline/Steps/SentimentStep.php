@@ -5,14 +5,12 @@ declare(strict_types=1);
 namespace Modules\Intelligence\Application\Pipeline\Steps;
 
 use Modules\Intelligence\Domain\Contracts\SentimentAnalyzer;
-use Modules\Shared\Domain\DTO\RawNewsData;
 use Modules\Shared\Domain\DTO\EnrichedNewsData;
+use Modules\Shared\Domain\DTO\RawNewsData;
 
 final class SentimentStep implements PipelineStep
 {
-    public function __construct(private SentimentAnalyzer $sentiment)
-    {
-    }
+    public function __construct(private SentimentAnalyzer $sentiment) {}
 
     public function process(RawNewsData|EnrichedNewsData $input): RawNewsData|EnrichedNewsData
     {
@@ -22,17 +20,8 @@ final class SentimentStep implements PipelineStep
 
         $score = $this->sentiment->score($input->content);
 
-        return new RawNewsData(
-            sourceId: $input->sourceId,
-            externalId: $input->externalId,
-            title: $input->title,
-            link: $input->link,
-            content: $input->content,
-            publishedAt: $input->publishedAt,
-            language: $input->language,
-            metadata: array_merge($input->metadata, ['sentiment' => $score]),
-            fingerprint: $input->fingerprint,
-            rawId: $input->rawId,
-        );
+        return $input->with([
+            'metadata' => array_merge($input->metadata, ['sentiment' => $score]),
+        ]);
     }
 }

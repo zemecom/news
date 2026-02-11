@@ -23,6 +23,7 @@ final class Source extends Model
         'error_streak',
     ];
 
+    /** @var array<string, string> */
     protected $casts = [
         'is_active' => 'boolean',
         'retry_backoff_state' => 'array',

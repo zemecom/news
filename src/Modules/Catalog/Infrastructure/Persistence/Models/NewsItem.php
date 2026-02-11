@@ -6,11 +6,17 @@ namespace Modules\Catalog\Infrastructure\Persistence\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @property string $id
+ */
 final class NewsItem extends Model
 {
     protected $table = 'news_items';
+
     protected $primaryKey = 'id';
+
     public $incrementing = false;
+
     protected $keyType = 'string';
 
     protected $fillable = [
@@ -20,6 +26,8 @@ final class NewsItem extends Model
         'content_original',
         'title_generated',
         'content_translated',
+        'image_url',
+        'media',
         'sentiment_score',
         'tags',
         'is_important',
@@ -30,10 +38,12 @@ final class NewsItem extends Model
         'published_at',
     ];
 
+    /** @var array<string, string> */
     protected $casts = [
         'tags' => 'array',
         'source_metadata' => 'array',
         'is_important' => 'boolean',
         'published_at' => 'datetime',
+        'media' => 'array',
     ];
 }

@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
-use Modules\Crawler\CrawlerServiceProvider;
-use Modules\Intelligence\IntelligenceServiceProvider;
 use Modules\Catalog\CatalogServiceProvider;
+use Modules\Crawler\CrawlerServiceProvider;
 use Modules\Delivery\DeliveryServiceProvider;
+use Modules\Intelligence\IntelligenceServiceProvider;
 
 final class ModulesServiceProvider extends ServiceProvider
 {

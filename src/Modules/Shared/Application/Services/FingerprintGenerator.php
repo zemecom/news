@@ -10,7 +10,7 @@ final class FingerprintGenerator
 {
     public function generate(int $sourceId, string $link, string $publishedAt): string
     {
-        return hash('sha256', $sourceId . '|' . $link . '|' . $publishedAt);
+        return hash('sha256', $sourceId.'|'.$link.'|'.$publishedAt);
     }
 
     public function attachFingerprint(RawNewsData $raw): RawNewsData

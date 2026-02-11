@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Modules\Intelligence\Application\Pipeline;
 
-use Modules\Shared\Domain\DTO\RawNewsData;
-use Modules\Shared\Domain\DTO\EnrichedNewsData;
-use Modules\Intelligence\Application\Pipeline\Steps\PipelineStep;
-use Modules\Intelligence\Infrastructure\Messaging\EnrichedPublisher;
 use Modules\Catalog\Domain\Contracts\NewsRepository;
+use Modules\Intelligence\Application\Pipeline\Steps\PipelineStep;
+use Modules\Intelligence\Domain\Contracts\EnrichedPublisher;
+use Modules\Shared\Domain\DTO\EnrichedNewsData;
+use Modules\Shared\Domain\DTO\RawNewsData;
 
 final class NewsProcessingPipeline
 {
@@ -20,8 +20,7 @@ final class NewsProcessingPipeline
         array $steps,
         private EnrichedPublisher $publisher,
         private NewsRepository $news,
-    )
-    {
+    ) {
         $this->steps = $steps;
     }
 

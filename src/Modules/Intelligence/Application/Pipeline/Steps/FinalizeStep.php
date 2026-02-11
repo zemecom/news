@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Modules\Intelligence\Application\Pipeline\Steps;
 
-use Modules\Shared\Domain\DTO\RawNewsData;
 use Modules\Shared\Domain\DTO\EnrichedNewsData;
+use Modules\Shared\Domain\DTO\RawNewsData;
 use Modules\Shared\Domain\Enum\NewsStatus;
 
 final class FinalizeStep implements PipelineStep
@@ -17,6 +17,7 @@ final class FinalizeStep implements PipelineStep
         }
 
         $metadata = $input->metadata;
+
         return new EnrichedNewsData(
             rawId: $input->rawId ?? $input->externalId ?? $input->fingerprint,
             titleGenerated: $input->title,

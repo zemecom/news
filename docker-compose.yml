@@ -1,9 +1,16 @@
-version: '3.9'
 services:
   app:
-    build: ./docker
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      args:
+        WITH_XDEBUG: ${WITH_XDEBUG:-1}
     volumes:
       - ./:/app
+    environment:
+      XDEBUG_MODE: ${XDEBUG_MODE:-off}
+      XDEBUG_CLIENT_HOST: ${XDEBUG_CLIENT_HOST:-host.docker.internal}
+      XDEBUG_CLIENT_PORT: ${XDEBUG_CLIENT_PORT:-9003}
     depends_on:
       - postgres
       - redis

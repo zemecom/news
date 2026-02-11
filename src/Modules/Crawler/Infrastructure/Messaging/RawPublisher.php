@@ -4,18 +4,18 @@ declare(strict_types=1);
 
 namespace Modules\Crawler\Infrastructure\Messaging;
 
+use Modules\Crawler\Domain\Contracts\RawPublisher as RawPublisherContract;
 use Modules\Shared\Domain\DTO\RawNewsData;
-use PhpAmqpLib\Message\AMQPMessage;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
+use PhpAmqpLib\Message\AMQPMessage;
 
-final class RawPublisher
+final class RawPublisher implements RawPublisherContract
 {
     public function __construct(
         private AMQPStreamConnection $connection,
         private string $exchange = 'news_flow',
         private string $routingKey = 'raw.created',
-    ) {
-    }
+    ) {}
 
     public function publish(RawNewsData $raw): void
     {
