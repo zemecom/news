@@ -27,8 +27,13 @@ final class NewsProcessingPipeline
     public function handle(RawNewsData $raw): void
     {
         $context = $raw;
-        foreach ($this->steps as $step) {
-            $context = $step->process($context);
+
+        try {
+            foreach ($this->steps as $step) {
+                $context = $step->process($context);
+            }
+        } catch (SkipMessageException) {
+            return;
         }
 
         if ($context instanceof EnrichedNewsData) {
