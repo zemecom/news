@@ -21,7 +21,7 @@
         "filament/filament": "^4.0"
     },
     "require-dev": {
-        "deptrac/deptrac": "^3.0",
+        "deptrac/deptrac": "^4.6",
         "fakerphp/faker": "^1.23",
         "laravel/pail": "^1.2.2",
         "laravel/pint": "^1.24",
@@ -30,9 +30,9 @@
         "pestphp/pest": "^3.0",
         "pestphp/pest-plugin-arch": "^3.0",
         "pestphp/pest-plugin-laravel": "^3.0",
-        "phpstan/phpstan": "^1.11",
+        "phpstan/phpstan": "^2.0",
         "phpunit/phpunit": "^11.5.3",
-        "rector/rector": "^1.2",
+        "rector/rector": "^2.0",
         "vimeo/psalm": "^6.15"
     },
     "autoload": {
@@ -69,7 +69,7 @@
         "test:acceptance": "pest --group=acceptance",
         "lint": "pint",
         "lint:check": "pint --test",
-        "analyze": "phpstan analyse",
+        "analyze": "phpstan analyse --memory-limit=2G",
         "rector": "rector",
         "rector:check": "rector --dry-run",
         "psalm": "psalm",
