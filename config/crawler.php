@@ -7,4 +7,7 @@ return [
     'allowlist' => [
         // 'example.com',
     ],
+    'telegram' => [
+        'max_items' => (int) env('TELEGRAM_FETCH_LIMIT', 50),
+    ],
 ];

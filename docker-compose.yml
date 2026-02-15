@@ -30,6 +30,8 @@ services:
       POSTGRES_USER: smartnews
       POSTGRES_PASSWORD: smartnews
       POSTGRES_DB: smartnews
+    volumes:
+      - ./.docker-data/postgres:/var/lib/postgresql/data
     ports:
       - "5432:5432"
   redis:

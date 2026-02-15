@@ -1,11 +1,10 @@
 <?php
 
 use App\Http\Controllers\HealthController;
+use App\Http\Controllers\Web\FeedPageController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::get('/', FeedPageController::class);
 
 Route::get('/health/live', [HealthController::class, 'live']);
 Route::get('/health/ready', [HealthController::class, 'ready']);
