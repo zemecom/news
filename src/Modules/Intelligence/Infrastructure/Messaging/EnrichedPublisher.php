@@ -16,6 +16,7 @@ final class EnrichedPublisher implements EnrichedPublisherContract
         private AMQPStreamConnection $connection,
         private string $exchange = 'news_flow',
         private string $routingKey = 'enriched.ready',
+        private string $importantRoutingKey = 'enriched.ready.important',
     ) {}
 
     public function publish(EnrichedNewsData $enriched): void
@@ -48,6 +49,10 @@ final class EnrichedPublisher implements EnrichedPublisherContract
         ]);
 
         $channel->basic_publish($message, $this->exchange, $this->routingKey, true);
+        if ($enriched->importance === true) {
+            $channel->basic_publish($message, $this->exchange, $this->importantRoutingKey, true);
+        }
+
         $channel->close();
     }
 }

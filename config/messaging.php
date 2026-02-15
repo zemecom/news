@@ -13,6 +13,7 @@ return [
         'raw_created' => 'raw.created',
         'raw_retry' => 'raw.retry',
         'enriched_ready' => 'enriched.ready',
+        'enriched_ready_important' => 'enriched.ready.important',
         'enriched_rejected' => 'enriched.rejected',
     ],
     'queues' => [

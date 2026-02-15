@@ -1,4 +1,4 @@
-.PHONY: up down build migrate logs serve queue dev setup-local test smoke-api test-arch acceptance test-all analyze lint lint-check rector rector-check psalm psalm-taint validate audit
+.PHONY: up down build migrate logs messaging-setup crawl process-once serve queue dev setup-local test smoke-api test-arch acceptance test-all analyze lint lint-check rector rector-check psalm psalm-taint validate audit
 
 # Infra
 up:
@@ -15,6 +15,15 @@ migrate:
 
 logs:
 	docker compose logs -f --tail=200
+
+messaging-setup:
+	docker compose exec -T app php artisan news:messaging:setup
+
+crawl:
+	docker compose exec -T app php artisan news:crawl
+
+process-once:
+	docker compose exec -T app php artisan news:process --once
 
 # Local dev
 serve:

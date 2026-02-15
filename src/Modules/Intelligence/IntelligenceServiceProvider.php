@@ -16,7 +16,15 @@ use Modules\Intelligence\Application\Pipeline\Steps\LanguageDetectStep;
 use Modules\Intelligence\Application\Pipeline\Steps\ModerationStep;
 use Modules\Intelligence\Application\Pipeline\Steps\SentimentStep;
 use Modules\Intelligence\Application\Pipeline\Steps\TranslateStep;
+use Modules\Intelligence\Domain\Contracts\Classifier;
 use Modules\Intelligence\Domain\Contracts\EnrichedPublisher as EnrichedPublisherContract;
+use Modules\Intelligence\Domain\Contracts\SentimentAnalyzer;
+use Modules\Intelligence\Domain\Contracts\TitleGenerator;
+use Modules\Intelligence\Domain\Contracts\Translator;
+use Modules\Intelligence\Infrastructure\LLM\HeuristicTranslator;
+use Modules\Intelligence\Infrastructure\LLM\KeywordClassifier;
+use Modules\Intelligence\Infrastructure\LLM\KeywordSentimentAnalyzer;
+use Modules\Intelligence\Infrastructure\LLM\ObjectivelyTitleGenerator;
 use Modules\Intelligence\Infrastructure\Messaging\EnrichedPublisher;
 
 final class IntelligenceServiceProvider extends ServiceProvider
@@ -32,6 +40,10 @@ final class IntelligenceServiceProvider extends ServiceProvider
         });
         $this->app->singleton(EnrichedPublisher::class);
         $this->app->bind(EnrichedPublisherContract::class, EnrichedPublisher::class);
+        $this->app->bind(Translator::class, HeuristicTranslator::class);
+        $this->app->bind(Classifier::class, KeywordClassifier::class);
+        $this->app->bind(SentimentAnalyzer::class, KeywordSentimentAnalyzer::class);
+        $this->app->bind(TitleGenerator::class, ObjectivelyTitleGenerator::class);
 
         $this->app->tag([
             DeduplicateStep::class,

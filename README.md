@@ -44,6 +44,13 @@ make acceptance
 make test-all
 ```
 
+### Очереди и краулер
+```bash
+make messaging-setup
+make crawl
+make process-once
+```
+
 ### Качество кода
 ```bash
 make analyze

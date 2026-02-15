@@ -30,6 +30,8 @@ final class RawPublisher implements RawPublisherContract
             'publishedAt' => $raw->publishedAt->toIso8601String(),
             'language' => $raw->language,
             'metadata' => $raw->metadata,
+            'imageUrl' => $raw->imageUrl,
+            'media' => $raw->media,
             'fingerprint' => $raw->fingerprint,
         ], JSON_THROW_ON_ERROR);
 
