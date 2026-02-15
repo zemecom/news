@@ -51,6 +51,8 @@ make crawl
 make process-once
 ```
 
+`news:process` обрабатывает сообщения с ретраями (5/15/60), максимум 5 попыток, затем отправляет в `queue.news_processing.dlq`.
+
 ### Качество кода
 ```bash
 make analyze

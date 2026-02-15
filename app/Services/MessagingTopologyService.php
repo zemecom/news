@@ -51,6 +51,7 @@ final class MessagingTopologyService
 
         $channel->queue_bind($rawIngest, $exchangeName, 'raw.*');
         $channel->queue_bind($processing, $exchangeName, (string) ($routingKeys['raw_created'] ?? 'raw.created'));
+        $channel->queue_bind($processing, $exchangeName, (string) ($routingKeys['raw_retry'] ?? 'raw.retry'));
         $channel->queue_bind($feed, $exchangeName, (string) ($routingKeys['enriched_ready'] ?? 'enriched.ready'));
         $channel->queue_bind($push, $exchangeName, (string) ($routingKeys['enriched_ready_important'] ?? 'enriched.ready.important'));
     }

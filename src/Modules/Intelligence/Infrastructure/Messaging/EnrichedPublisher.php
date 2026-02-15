@@ -6,6 +6,7 @@ namespace Modules\Intelligence\Infrastructure\Messaging;
 
 use Modules\Intelligence\Domain\Contracts\EnrichedPublisher as EnrichedPublisherContract;
 use Modules\Shared\Domain\DTO\EnrichedNewsData;
+use Modules\Shared\Domain\Enum\NewsStatus;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
 use PhpAmqpLib\Message\AMQPMessage;
 use PhpAmqpLib\Wire\AMQPTable;
@@ -15,8 +16,9 @@ final class EnrichedPublisher implements EnrichedPublisherContract
     public function __construct(
         private AMQPStreamConnection $connection,
         private string $exchange = 'news_flow',
-        private string $routingKey = 'enriched.ready',
+        private string $readyRoutingKey = 'enriched.ready',
         private string $importantRoutingKey = 'enriched.ready.important',
+        private string $rejectedRoutingKey = 'enriched.rejected',
     ) {}
 
     public function publish(EnrichedNewsData $enriched): void
@@ -48,8 +50,13 @@ final class EnrichedPublisher implements EnrichedPublisherContract
             'application_headers' => $headers,
         ]);
 
-        $channel->basic_publish($message, $this->exchange, $this->routingKey, true);
-        if ($enriched->importance === true) {
+        $routingKey = $enriched->status === NewsStatus::REJECTED
+            ? $this->rejectedRoutingKey
+            : $this->readyRoutingKey;
+
+        $channel->basic_publish($message, $this->exchange, $routingKey, true);
+
+        if ($enriched->status !== NewsStatus::REJECTED && $enriched->importance === true) {
             $channel->basic_publish($message, $this->exchange, $this->importantRoutingKey, true);
         }
 

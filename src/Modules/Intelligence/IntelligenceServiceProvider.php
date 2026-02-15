@@ -38,7 +38,15 @@ final class IntelligenceServiceProvider extends ServiceProvider
                 news: $app->make(NewsRepository::class),
             );
         });
-        $this->app->singleton(EnrichedPublisher::class);
+        $this->app->singleton(EnrichedPublisher::class, function ($app) {
+            return new EnrichedPublisher(
+                connection: $app->make(\PhpAmqpLib\Connection\AMQPStreamConnection::class),
+                exchange: (string) config('messaging.exchange.news_flow.name', 'news_flow'),
+                readyRoutingKey: (string) config('messaging.routing_keys.enriched_ready', 'enriched.ready'),
+                importantRoutingKey: (string) config('messaging.routing_keys.enriched_ready_important', 'enriched.ready.important'),
+                rejectedRoutingKey: (string) config('messaging.routing_keys.enriched_rejected', 'enriched.rejected'),
+            );
+        });
         $this->app->bind(EnrichedPublisherContract::class, EnrichedPublisher::class);
         $this->app->bind(Translator::class, HeuristicTranslator::class);
         $this->app->bind(Classifier::class, KeywordClassifier::class);

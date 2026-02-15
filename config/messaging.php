@@ -23,4 +23,8 @@ return [
         'delivery_push' => 'queue.delivery_push',
         'news_processing_dlq' => 'queue.news_processing.dlq',
     ],
+    'processing' => [
+        'max_attempts' => 5,
+        'retry_backoff_seconds' => [5, 15, 60],
+    ],
 ];
