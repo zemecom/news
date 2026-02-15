@@ -15,42 +15,80 @@
 ## 2.1 Технологический стек
 
 - **Backend/архитектура**
-  - Laravel 12 + strict types.
-  - Modular Monolith структура: `src/Modules/{Crawler,Intelligence,Catalog,Delivery,Shared}`.
-  - Контейнер модулей подключается через `app/Providers/ModulesServiceProvider.php`.
+    - Laravel 12 + strict types.
+    - Modular Monolith структура: `src/Modules/{Crawler,Intelligence,Catalog,Delivery,Shared}`.
+    - Контейнер модулей подключается через `app/Providers/ModulesServiceProvider.php`.
 - **Интеграции**
-  - Saloon используется для HTTP-клиентов (RSS/Telegram web endpoint).
-  - RabbitMQ через `php-amqplib`.
+    - Saloon используется для HTTP-клиентов (RSS/Telegram web endpoint).
+    - RabbitMQ через `php-amqplib`.
 - **Data**
-  - PostgreSQL + JSONB-поля в `sources/news_items`.
-  - Redis подключен для инфраструктурного контура.
+    - PostgreSQL + JSONB-поля в `sources/news_items`.
+    - Redis подключен для инфраструктурного контура.
 - **Code quality**
-  - Pest + Arch tests, PHPStan, Psalm (в т.ч. taint), Pint, Rector.
+    - Pest + Arch tests, PHPStan, Psalm (в т.ч. taint), Pint, Rector.
 
 ## 2.2 Архитектура модулей
 
+### 2.2.1 Архитектурный стиль (Hexagonal Architecture)
+
+Проект следует принципам **Hexagonal Architecture (Ports and Adapters)** внутри каждого модуля Модульного Молита.
+Правила жестко зафиксированы в `deptrac.yaml` и проверяются в CI.
+
+**Слои (от центра к периферии):**
+
+1.  **Domain** (`src/Modules/*/Domain`):
+    - Ядро бизнес-логики.
+    - Зависит **только** от `Shared` (Kernel).
+    - Запрещено использование классов из `Application`, `Infrastructure`, `App`.
+    - Содержит: Entities, Value Objects, Domain Services, Repository Interfaces (Contracts).
+
+2.  **Application** (`src/Modules/*/Application`):
+    - Сценарии использования (Use Cases).
+    - Зависит от `Domain` и `Shared`.
+    - Запрещено использование классов из `Infrastructure`, `App`.
+    - Содержит: Actions, Commands, DTOs, Event Listeners.
+
+3.  **Infrastructure** (`src/Modules/*/Infrastructure`):
+    - Реализация интерфейсов и работа с внешним миром.
+    - Зависит от `Domain`, `Application`, `Shared`.
+    - Запрещено использование классов из `App`.
+    - Содержит: Repository Implementations (Eloquent), API Clients, DB Migrations.
+
+4.  **Framework** (`app/*`):
+    - Точка входа и склейка приложения.
+    - Зависит от всех слоев.
+    - Содержит: Controllers, Console Commands, Service Providers.
+
+**Shared Kernel (`src/Modules/Shared`):**
+
+- Общий код, доступный всем слоям (DTO, Enums, Traits), не имеет зависимостей от других модулей.
+
+---
+
+## 2.3 Детали модулей
+
 - **Crawler**
-  - Есть `FeedFetcherAction`, `RawNewsFactory`, `RssClient`, `TelegramClient`, `RawPublisher`.
-  - Источники `rss` и `telegram` реально обрабатываются.
-  - Поддержан массовый Telegram fetch через pagination (`before`) с лимитом.
-  - Команда: `php artisan news:crawl`.
+    - Есть `FeedFetcherAction`, `RawNewsFactory`, `RssClient`, `TelegramClient`, `RawPublisher`.
+    - Источники `rss` и `telegram` реально обрабатываются.
+    - Поддержан массовый Telegram fetch через pagination (`before`) с лимитом.
+    - Команда: `php artisan news:crawl`.
 
 - **Intelligence**
-  - Pipeline реализован: dedup -> lang detect -> translate -> classify -> sentiment -> anti-clickbait -> importance -> moderation -> finalize.
-  - Сейчас AI-обогащение эвристическое (без реальных LLM провайдеров).
-  - Команда обработки очереди: `php artisan news:process`.
+    - Pipeline реализован: dedup -> lang detect -> translate -> classify -> sentiment -> anti-clickbait -> importance -> moderation -> finalize.
+    - Сейчас AI-обогащение эвристическое (без реальных LLM провайдеров).
+    - Команда обработки очереди: `php artisan news:process`.
 
 - **Catalog**
-  - Репозиторий и модели для хранения сырого и обогащенного контента.
-  - Дедуп на уровне БД через `raw_fingerprint` (unique).
-  - Поддержка media (`image_url`, `media`) и `source_metadata`.
+    - Репозиторий и модели для хранения сырого и обогащенного контента.
+    - Дедуп на уровне БД через `raw_fingerprint` (unique).
+    - Поддержка media (`image_url`, `media`) и `source_metadata`.
 
 - **Delivery**
-  - API:
-    - `GET /api/news`
-    - `GET /api/news/{id}`
-    - `GET /api/admin/sources` (RBAC)
-  - Web-лента на `/` с фильтрами и догрузкой (cursor-based).
+    - API:
+        - `GET /api/news`
+        - `GET /api/news/{id}`
+        - `GET /api/admin/sources` (RBAC)
+    - Web-лента на `/` с фильтрами и догрузкой (cursor-based).
 
 ## 2.3 Очереди/события
 
@@ -58,16 +96,16 @@
 - Routing keys: `raw.created`, `raw.retry`, `enriched.ready`, `enriched.ready.important`, `enriched.rejected`.
 - Очереди: `queue.raw_ingest`, `queue.news_processing`, `queue.delivery_feed`, `queue.delivery_push`, `queue.news_processing.dlq`.
 - Реализованы:
-  - setup topology (`news:messaging:setup`),
-  - retries/backoff в обработчике,
-  - отправка в DLQ при исчерпании попыток.
+    - setup topology (`news:messaging:setup`),
+    - retries/backoff в обработчике,
+    - отправка в DLQ при исчерпании попыток.
 
 ## 2.4 Дедупликация (актуальное решение)
 
 - Fingerprint стратегия:
-  1) `source + externalId` (приоритет),
-  2) fallback `source + normalized_title + minute_bucket`,
-  3) fallback `source + normalized_link + minute_bucket`.
+    1. `source + externalId` (приоритет),
+    2. fallback `source + normalized_title + minute_bucket`,
+    3. fallback `source + normalized_link + minute_bucket`.
 - В БД: unique индекс на `raw_fingerprint`.
 - Проверено на Telegram импорте: дубли из одного источника повторно не создаются.
 
@@ -75,10 +113,10 @@
 
 - Docker Compose поднимает `app`, `nginx`, `postgres`, `redis`, `rabbitmq`.
 - Данные Postgres теперь персистятся на диск проекта:
-  - `./.docker-data/postgres:/var/lib/postgresql/data`.
+    - `./.docker-data/postgres:/var/lib/postgresql/data`.
 - Папка `.docker-data` добавлена в `.gitignore`.
 - Замечание из ревью по ext-zip/ext-xml закрыто:
-  - runtime-слой Dockerfile собирает `zip` и `xml`.
+    - runtime-слой Dockerfile собирает `zip` и `xml`.
 
 ---
 
@@ -158,10 +196,9 @@
 ## 7) Правило актуализации
 
 - При изменении архитектуры, контрактов, очередей, infra-контура, критичных команд:
-  1) сначала обновить этот файл,
-  2) затем делать кодовые изменения.
+    1. сначала обновить этот файл,
+    2. затем делать кодовые изменения.
 - После каждого крупного merge/commit обязательно обновлять секции:
-  - «Что реализовано»,
-  - «Что осталось»,
-  - «Статус roadmap».
-
+    - «Что реализовано»,
+    - «Что осталось»,
+    - «Статус roadmap».

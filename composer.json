@@ -21,6 +21,7 @@
         "filament/filament": "^4.0"
     },
     "require-dev": {
+        "deptrac/deptrac": "^3.0",
         "fakerphp/faker": "^1.23",
         "laravel/pail": "^1.2.2",
         "laravel/pint": "^1.24",
@@ -31,7 +32,6 @@
         "pestphp/pest-plugin-laravel": "^3.0",
         "phpstan/phpstan": "^1.11",
         "phpunit/phpunit": "^11.5.3",
-        "qossmic/deptrac": "^2.0",
         "rector/rector": "^1.2",
         "vimeo/psalm": "^6.15"
     },

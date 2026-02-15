@@ -3,44 +3,39 @@ parameters:
     - ./app
     - ./src/Modules
   layers:
-    - name: App
+    - name: Domain
       collectors:
         - type: classNameRegex
-          value: /^App\\.*/
-    - name: Catalog
+          value: /^Modules\\(?!Shared\\)[^\\]+\\Domain\\.*/
+    - name: Application
       collectors:
         - type: classNameRegex
-          value: /^Modules\\Catalog\\.*/
-    - name: Crawler
+          value: /^Modules\\(?!Shared\\)[^\\]+\\Application\\.*/
+    - name: Infrastructure
       collectors:
         - type: classNameRegex
-          value: /^Modules\\Crawler\\.*/
-    - name: Intelligence
-      collectors:
-        - type: classNameRegex
-          value: /^Modules\\Intelligence\\.*/
+          value: /^Modules\\(?!Shared\\)[^\\]+\\Infrastructure\\.*/
     - name: Shared
       collectors:
         - type: classNameRegex
           value: /^Modules\\Shared\\.*/
-    - name: Delivery
+    - name: Framework
       collectors:
         - type: classNameRegex
-          value: /^Modules\\Delivery\\.*/
+          value: /^App\\.*/
   ruleset:
-    App:
-      - Catalog
-      - Crawler
-      - Intelligence
+    Domain:
       - Shared
-      - Delivery
-    Catalog:
+    Application:
+      - Domain
       - Shared
-    Crawler:
+    Infrastructure:
+      - Domain
+      - Application
       - Shared
-    Intelligence:
-      - Catalog
-      - Shared
-    Delivery:
+    Framework:
+      - Domain
+      - Application
+      - Infrastructure
       - Shared
     Shared: ~
