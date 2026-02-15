@@ -65,6 +65,7 @@
             "@php artisan test"
         ],
         "test:arch": "pest --group=arch",
+        "test:acceptance": "pest --group=acceptance",
         "lint": "pint",
         "lint:check": "pint --test",
         "analyze": "phpstan analyse",

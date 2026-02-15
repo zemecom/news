@@ -5,6 +5,9 @@ on:
     branches: ["master", "main"]
   pull_request:
     branches: ["*"]
+  workflow_dispatch:
+  schedule:
+    - cron: "0 6 * * 1"
 
 jobs:
   tests:
@@ -30,6 +33,8 @@ jobs:
         run: composer install --prefer-dist --no-progress
       - name: Validate composer.json
         run: composer qa:validate
+      - name: Security audit (Composer)
+        run: composer qa:audit
       - name: Lint (Pint)
         run: composer lint:check
       - name: Static analysis (PHPStan)

@@ -24,7 +24,10 @@ final class FingerprintGenerator
             publishedAt: $raw->publishedAt,
             language: $raw->language,
             metadata: $raw->metadata,
+            imageUrl: $raw->imageUrl,
+            media: $raw->media,
             fingerprint: $this->generate($raw->sourceId, $raw->link, $raw->publishedAt->toRfc3339String()),
+            rawId: $raw->rawId,
         );
     }
 }

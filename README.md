@@ -33,11 +33,19 @@ php artisan serve
 make dev
 ```
 
-## Команды (Makefile → composer)
+## Команды
 
+### Тесты
 ```bash
+make smoke-api
 make test
 make test-arch
+make acceptance
+make test-all
+```
+
+### Качество кода
+```bash
 make analyze
 make lint
 make lint-check
@@ -47,6 +55,10 @@ make psalm
 make psalm-taint
 make validate
 make audit
+```
+
+### Локальный bootstrap
+```bash
 make setup-local
 ```
 

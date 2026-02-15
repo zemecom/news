@@ -10,6 +10,9 @@ final class HealthController extends Controller
 {
     public function __construct(private HealthCheckService $health) {}
 
+    /**
+     * @return array{status:string}
+     */
     public function live(): array
     {
         return ['status' => 'ok'];
