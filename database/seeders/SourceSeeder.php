@@ -22,7 +22,7 @@ final class SourceSeeder extends Seeder
             ['name' => 'ScienceDaily', 'url' => 'https://www.sciencedaily.com/rss/top.xml', 'type' => 'rss', 'language_default' => 'en', 'cron_expression' => '*/30 * * * *'],
             ['name' => 'MedicalXpress', 'url' => 'https://medicalxpress.com/rss-feed/', 'type' => 'rss', 'language_default' => 'en', 'cron_expression' => '*/30 * * * *'],
             ['name' => 'Habr (RU)', 'url' => 'https://habr.com/ru/rss/all/all/?fl=ru', 'type' => 'rss', 'language_default' => 'ru', 'cron_expression' => '*/10 * * * *'],
-            ['name' => 'TOPOR Live', 'url' => 'https://t.me/toporlive', 'type' => 'telegram', 'language_default' => 'ru', 'cron_expression' => '*/2 * * * *'],
+            ['name' => 'TOPOR Live', 'url' => '@toporlive', 'type' => 'telegram', 'language_default' => 'ru', 'cron_expression' => '*/2 * * * *'],
         ];
 
         foreach ($sources as $source) {

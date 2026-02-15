@@ -12,13 +12,12 @@ final class NewsCrawlCommand extends Command
 {
     protected $signature = 'news:crawl {--source-id= : Crawl only one source id}';
 
-    protected $description = 'Fetch RSS/Atom sources and publish raw messages to RabbitMQ.';
+    protected $description = 'Fetch active sources and publish raw messages to RabbitMQ.';
 
     public function handle(FeedFetcherAction $fetchFeed): int
     {
         $query = Source::query()
             ->where('is_active', true)
-            ->where('type', 'rss')
             ->orderBy('id');
 
         $sourceId = $this->option('source-id');
@@ -27,7 +26,7 @@ final class NewsCrawlCommand extends Command
         }
 
         /** @var \Illuminate\Database\Eloquent\Collection<int, Source> $sources */
-        $sources = $query->get(['id', 'url', 'language_default']);
+        $sources = $query->get(['id', 'url', 'type', 'language_default']);
         if ($sources->isEmpty()) {
             $this->warn('No active sources found.');
 
@@ -42,6 +41,7 @@ final class NewsCrawlCommand extends Command
                 ($fetchFeed)([
                     'id' => $sourceId,
                     'url' => (string) $source->getAttribute('url'),
+                    'type' => (string) $source->getAttribute('type'),
                     'language_default' => $source->getAttribute('language_default'),
                 ]);
 

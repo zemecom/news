@@ -66,7 +66,7 @@ final class AdminSourcesApiTest extends TestCase
         $this->assertIsArray($data);
         $this->assertCount(Source::query()->count(), $data);
         $this->assertTrue(collect($data)->contains(
-            fn (array $source): bool => ($source['url'] ?? null) === 'https://t.me/toporlive'
+            fn (array $source): bool => ($source['url'] ?? null) === '@toporlive'
                 && ($source['type'] ?? null) === 'telegram'
         ));
     }

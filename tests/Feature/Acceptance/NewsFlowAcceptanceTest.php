@@ -68,7 +68,7 @@ final class NewsFlowAcceptanceTest extends TestCase
         $data = $response->json('data');
         $this->assertIsArray($data);
         $this->assertTrue(collect($data)->contains(
-            fn (array $source): bool => ($source['url'] ?? null) === 'https://t.me/toporlive'
+            fn (array $source): bool => ($source['url'] ?? null) === '@toporlive'
                 && ($source['type'] ?? null) === 'telegram'
         ));
     }

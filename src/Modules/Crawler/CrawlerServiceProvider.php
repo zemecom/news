@@ -9,8 +9,10 @@ use Modules\Crawler\Application\Actions\FeedFetcherAction;
 use Modules\Crawler\Application\Services\RawNewsFactory;
 use Modules\Crawler\Domain\Contracts\RawPublisher as RawPublisherContract;
 use Modules\Crawler\Domain\Contracts\RssClient as RssClientContract;
+use Modules\Crawler\Domain\Contracts\TelegramClient as TelegramClientContract;
 use Modules\Crawler\Infrastructure\Http\RssClient;
 use Modules\Crawler\Infrastructure\Http\RssConnector;
+use Modules\Crawler\Infrastructure\Http\TelegramClient;
 use Modules\Crawler\Infrastructure\Messaging\RawPublisher;
 use Modules\Shared\Application\Services\FingerprintGenerator;
 
@@ -21,9 +23,11 @@ final class CrawlerServiceProvider extends ServiceProvider
         $this->app->singleton(FeedFetcherAction::class);
         $this->app->singleton(RssConnector::class);
         $this->app->singleton(RssClient::class);
+        $this->app->singleton(TelegramClient::class);
         $this->app->singleton(RawPublisher::class);
         $this->app->singleton(RawNewsFactory::class);
         $this->app->bind(RssClientContract::class, RssClient::class);
+        $this->app->bind(TelegramClientContract::class, TelegramClient::class);
         $this->app->bind(RawPublisherContract::class, RawPublisher::class);
         $this->app->singleton(FingerprintGenerator::class);
     }
