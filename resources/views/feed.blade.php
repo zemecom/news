@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -67,6 +68,7 @@
             from {
                 transform: translate3d(0, 0, 0) scale(1);
             }
+
             to {
                 transform: translate3d(0, -18px, 0) scale(1.03);
             }
@@ -254,8 +256,6 @@
         .media img,
         .media video {
             width: 100%;
-            max-height: 380px;
-            object-fit: cover;
             border-radius: 10px;
             border: 1px solid rgba(148, 163, 184, 0.2);
         }
@@ -306,370 +306,374 @@
         }
     </style>
 </head>
+
 <body>
-<div class="shell">
-    <div class="header">
-        <div>
-            <h1 class="title">SmartNews</h1>
-            <p class="subtitle">Лента новостей с фильтрами по категориям, тональности и важности.</p>
+    <div class="shell">
+        <div class="header">
+            <div>
+                <h1 class="title">SmartNews</h1>
+                <p class="subtitle">Лента новостей с фильтрами по категориям, тональности и важности.</p>
+            </div>
+        </div>
+
+        <div class="grid">
+            <aside class="panel filters">
+                <h2>Фильтры</h2>
+                <form id="filters-form">
+                    <div class="field">
+                        <label for="q">Поиск</label>
+                        <input id="q" name="q" type="text" placeholder="Ключевое слово">
+                    </div>
+
+                    <div class="field">
+                        <label for="category">Категория</label>
+                        <select id="category" name="category">
+                            <option value="">Все</option>
+                            <option value="it">IT</option>
+                            <option value="economy">Экономика</option>
+                            <option value="markets">Рынки</option>
+                            <option value="politics">Политика</option>
+                            <option value="crime">Криминал</option>
+                            <option value="medicine">Медицина</option>
+                            <option value="laravel">Laravel</option>
+                        </select>
+                    </div>
+
+                    <div class="field">
+                        <label for="important">Важность</label>
+                        <select id="important" name="important">
+                            <option value="">Все</option>
+                            <option value="1">Только важные</option>
+                            <option value="0">Только обычные</option>
+                        </select>
+                    </div>
+
+                    <div class="field">
+                        <label>Тональность</label>
+                        <div class="range">
+                            <input id="sentiment_min" name="sentiment_min" type="number" min="-10" max="10"
+                                placeholder="от -10">
+                            <input id="sentiment_max" name="sentiment_max" type="number" min="-10" max="10"
+                                placeholder="до 10">
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label>Диапазон дат</label>
+                        <div class="range">
+                            <input id="date_from" name="date_from" type="date">
+                            <input id="date_to" name="date_to" type="date">
+                        </div>
+                    </div>
+
+                    <div class="buttons">
+                        <button class="btn-primary" type="submit">Применить</button>
+                        <button class="btn-ghost" type="button" id="reset-btn">Сбросить</button>
+                    </div>
+                </form>
+            </aside>
+
+            <main class="panel feed">
+                <div class="status">
+                    <span id="status-text">Загрузка...</span>
+                    <span id="counter-text">0</span>
+                </div>
+                <div id="news-list" class="list"></div>
+                <button id="load-more" class="load-more" type="button" hidden>Показать еще</button>
+            </main>
         </div>
     </div>
 
-    <div class="grid">
-        <aside class="panel filters">
-            <h2>Фильтры</h2>
-            <form id="filters-form">
-                <div class="field">
-                    <label for="q">Поиск</label>
-                    <input id="q" name="q" type="text" placeholder="Ключевое слово">
-                </div>
+    <script>
+        const form = document.getElementById('filters-form');
+        const resetBtn = document.getElementById('reset-btn');
+        const listEl = document.getElementById('news-list');
+        const statusEl = document.getElementById('status-text');
+        const counterEl = document.getElementById('counter-text');
+        const loadMoreEl = document.getElementById('load-more');
 
-                <div class="field">
-                    <label for="category">Категория</label>
-                    <select id="category" name="category">
-                        <option value="">Все</option>
-                        <option value="it">IT</option>
-                        <option value="economy">Экономика</option>
-                        <option value="markets">Рынки</option>
-                        <option value="politics">Политика</option>
-                        <option value="crime">Криминал</option>
-                        <option value="medicine">Медицина</option>
-                        <option value="laravel">Laravel</option>
-                    </select>
-                </div>
+        let nextCursor = null;
+        let loadedCount = 0;
+        let currentFilters = readFiltersFromQuery();
 
-                <div class="field">
-                    <label for="important">Важность</label>
-                    <select id="important" name="important">
-                        <option value="">Все</option>
-                        <option value="1">Только важные</option>
-                        <option value="0">Только обычные</option>
-                    </select>
-                </div>
-
-                <div class="field">
-                    <label>Тональность</label>
-                    <div class="range">
-                        <input id="sentiment_min" name="sentiment_min" type="number" min="-10" max="10" placeholder="от -10">
-                        <input id="sentiment_max" name="sentiment_max" type="number" min="-10" max="10" placeholder="до 10">
-                    </div>
-                </div>
-
-                <div class="field">
-                    <label>Диапазон дат</label>
-                    <div class="range">
-                        <input id="date_from" name="date_from" type="date">
-                        <input id="date_to" name="date_to" type="date">
-                    </div>
-                </div>
-
-                <div class="buttons">
-                    <button class="btn-primary" type="submit">Применить</button>
-                    <button class="btn-ghost" type="button" id="reset-btn">Сбросить</button>
-                </div>
-            </form>
-        </aside>
-
-        <main class="panel feed">
-            <div class="status">
-                <span id="status-text">Загрузка...</span>
-                <span id="counter-text">0</span>
-            </div>
-            <div id="news-list" class="list"></div>
-            <button id="load-more" class="load-more" type="button" hidden>Показать еще</button>
-        </main>
-    </div>
-</div>
-
-<script>
-    const form = document.getElementById('filters-form');
-    const resetBtn = document.getElementById('reset-btn');
-    const listEl = document.getElementById('news-list');
-    const statusEl = document.getElementById('status-text');
-    const counterEl = document.getElementById('counter-text');
-    const loadMoreEl = document.getElementById('load-more');
-
-    let nextCursor = null;
-    let loadedCount = 0;
-    let currentFilters = readFiltersFromQuery();
-
-    applyFiltersToForm(currentFilters);
-    loadNews(true);
-
-    form.addEventListener('submit', (event) => {
-        event.preventDefault();
-        currentFilters = getFiltersFromForm();
-        writeFiltersToQuery(currentFilters);
+        applyFiltersToForm(currentFilters);
         loadNews(true);
-    });
 
-    resetBtn.addEventListener('click', () => {
-        form.reset();
-        currentFilters = {};
-        writeFiltersToQuery(currentFilters);
-        loadNews(true);
-    });
+        form.addEventListener('submit', (event) => {
+            event.preventDefault();
+            currentFilters = getFiltersFromForm();
+            writeFiltersToQuery(currentFilters);
+            loadNews(true);
+        });
 
-    loadMoreEl.addEventListener('click', () => loadNews(false));
+        resetBtn.addEventListener('click', () => {
+            form.reset();
+            currentFilters = {};
+            writeFiltersToQuery(currentFilters);
+            loadNews(true);
+        });
 
-    async function loadNews(reset) {
-        if (reset) {
-            nextCursor = null;
-            loadedCount = 0;
-            listEl.innerHTML = '';
-            counterEl.textContent = '0';
-        }
+        loadMoreEl.addEventListener('click', () => loadNews(false));
 
-        const params = new URLSearchParams();
-        params.set('per_page', '25');
-
-        for (const [key, value] of Object.entries(currentFilters)) {
-            if (value !== null && value !== undefined && String(value).trim() !== '') {
-                params.set(key, String(value));
-            }
-        }
-
-        if (!reset && nextCursor) {
-            params.set('cursor', nextCursor);
-        }
-
-        statusEl.textContent = 'Загрузка...';
-        loadMoreEl.hidden = true;
-
-        try {
-            const response = await fetch(`/api/news?${params.toString()}`, {
-                headers: {'Accept': 'application/json'}
-            });
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}`);
+        async function loadNews(reset) {
+            if (reset) {
+                nextCursor = null;
+                loadedCount = 0;
+                listEl.innerHTML = '';
+                counterEl.textContent = '0';
             }
 
-            const payload = await response.json();
-            const items = Array.isArray(payload.data) ? payload.data : [];
+            const params = new URLSearchParams();
+            params.set('per_page', '25');
 
-            if (items.length === 0 && reset) {
-                listEl.innerHTML = '<div class="empty">По текущим фильтрам ничего не найдено.</div>';
-            } else {
-                for (const item of items) {
-                    listEl.append(createCard(item));
+            for (const [key, value] of Object.entries(currentFilters)) {
+                if (value !== null && value !== undefined && String(value).trim() !== '') {
+                    params.set(key, String(value));
                 }
             }
 
-            loadedCount += items.length;
-            counterEl.textContent = `${loadedCount} новостей`;
-            statusEl.textContent = items.length > 0 ? 'Данные обновлены' : 'Больше новостей нет';
+            if (!reset && nextCursor) {
+                params.set('cursor', nextCursor);
+            }
 
-            nextCursor = payload?.meta?.next_cursor ?? null;
-            loadMoreEl.hidden = !nextCursor;
-        } catch (error) {
-            statusEl.textContent = 'Ошибка загрузки ленты';
+            statusEl.textContent = 'Загрузка...';
             loadMoreEl.hidden = true;
-        }
-    }
 
-    function createCard(item) {
-        const article = document.createElement('article');
-        article.className = 'card';
+            try {
+                const response = await fetch(`/api/news?${params.toString()}`, {
+                    headers: { 'Accept': 'application/json' }
+                });
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
 
-        const cardTop = document.createElement('div');
-        cardTop.className = 'card-top';
+                const payload = await response.json();
+                const items = Array.isArray(payload.data) ? payload.data : [];
 
-        const date = document.createElement('div');
-        date.textContent = formatDate(item.published_at);
+                if (items.length === 0 && reset) {
+                    listEl.innerHTML = '<div class="empty">По текущим фильтрам ничего не найдено.</div>';
+                } else {
+                    for (const item of items) {
+                        listEl.append(createCard(item));
+                    }
+                }
 
-        const badges = document.createElement('div');
-        badges.className = 'badges';
-        if (item.important === true) {
-            const importantBadge = document.createElement('span');
-            importantBadge.className = 'badge badge-important';
-            importantBadge.textContent = 'important';
-            badges.append(importantBadge);
-        }
-        const sentimentBadge = document.createElement('span');
-        sentimentBadge.className = 'badge';
-        sentimentBadge.style.color = sentimentColor(item.sentiment);
-        sentimentBadge.textContent = `sentiment: ${item.sentiment ?? 0}`;
-        badges.append(sentimentBadge);
+                loadedCount += items.length;
+                counterEl.textContent = `${loadedCount} новостей`;
+                statusEl.textContent = items.length > 0 ? 'Данные обновлены' : 'Больше новостей нет';
 
-        cardTop.append(date, badges);
-        article.append(cardTop);
-
-        const title = document.createElement('h3');
-        title.textContent = item.title_generated || item.title_original || 'Без заголовка';
-        article.append(title);
-
-        const text = document.createElement('p');
-        text.textContent = truncate(item.content_translated || item.content_original || '', 900);
-        article.append(text);
-
-        const mediaWrap = buildMedia(item);
-        if (mediaWrap !== null) {
-            article.append(mediaWrap);
+                nextCursor = payload?.meta?.next_cursor ?? null;
+                loadMoreEl.hidden = !nextCursor;
+            } catch (error) {
+                statusEl.textContent = 'Ошибка загрузки ленты';
+                loadMoreEl.hidden = true;
+            }
         }
 
-        const meta = document.createElement('div');
-        meta.className = 'meta';
-        meta.innerHTML = `
+        function createCard(item) {
+            const article = document.createElement('article');
+            article.className = 'card';
+
+            const cardTop = document.createElement('div');
+            cardTop.className = 'card-top';
+
+            const date = document.createElement('div');
+            date.textContent = formatDate(item.published_at);
+
+            const badges = document.createElement('div');
+            badges.className = 'badges';
+            if (item.important === true) {
+                const importantBadge = document.createElement('span');
+                importantBadge.className = 'badge badge-important';
+                importantBadge.textContent = 'important';
+                badges.append(importantBadge);
+            }
+            const sentimentBadge = document.createElement('span');
+            sentimentBadge.className = 'badge';
+            sentimentBadge.style.color = sentimentColor(item.sentiment);
+            sentimentBadge.textContent = `sentiment: ${item.sentiment ?? 0}`;
+            badges.append(sentimentBadge);
+
+            cardTop.append(date, badges);
+            article.append(cardTop);
+
+            const title = document.createElement('h3');
+            title.textContent = item.title_generated || item.title_original || 'Без заголовка';
+            article.append(title);
+
+            const text = document.createElement('p');
+            text.textContent = truncate(item.content_translated || item.content_original || '', 900);
+            article.append(text);
+
+            const mediaWrap = buildMedia(item);
+            if (mediaWrap !== null) {
+                article.append(mediaWrap);
+            }
+
+            const meta = document.createElement('div');
+            meta.className = 'meta';
+            meta.innerHTML = `
             <span>${renderTags(item.tags)}</span>
             ${buildSourceLink(item)}
         `;
-        article.append(meta);
+            article.append(meta);
 
-        return article;
-    }
-
-    function buildMedia(item) {
-        const mediaWrap = document.createElement('div');
-        mediaWrap.className = 'media';
-
-        const used = new Set();
-        if (item.image_url) {
-            const image = document.createElement('img');
-            image.src = item.image_url;
-            image.alt = item.title_generated || item.title_original || 'preview';
-            image.loading = 'lazy';
-            mediaWrap.append(image);
-            used.add(item.image_url);
+            return article;
         }
 
-        if (Array.isArray(item.media)) {
-            for (const media of item.media.slice(0, 3)) {
-                if (!media || !media.url || used.has(media.url)) {
-                    continue;
+        function buildMedia(item) {
+            const mediaWrap = document.createElement('div');
+            mediaWrap.className = 'media';
+
+            const used = new Set();
+            if (item.image_url) {
+                const image = document.createElement('img');
+                image.src = item.image_url;
+                image.alt = item.title_generated || item.title_original || 'preview';
+                image.loading = 'lazy';
+                mediaWrap.append(image);
+                used.add(item.image_url);
+            }
+
+            if (Array.isArray(item.media)) {
+                for (const media of item.media.slice(0, 3)) {
+                    if (!media || !media.url || used.has(media.url)) {
+                        continue;
+                    }
+
+                    const type = String(media.type || '');
+                    if (type.startsWith('video/')) {
+                        const video = document.createElement('video');
+                        video.src = media.url;
+                        video.controls = true;
+                        video.preload = 'none';
+                        mediaWrap.append(video);
+                        used.add(media.url);
+                        continue;
+                    }
+
+                    if (type.startsWith('image/')) {
+                        const image = document.createElement('img');
+                        image.src = media.url;
+                        image.alt = item.title_generated || item.title_original || 'preview';
+                        image.loading = 'lazy';
+                        mediaWrap.append(image);
+                        used.add(media.url);
+                    }
                 }
+            }
 
-                const type = String(media.type || '');
-                if (type.startsWith('video/')) {
-                    const video = document.createElement('video');
-                    video.src = media.url;
-                    video.controls = true;
-                    video.preload = 'none';
-                    mediaWrap.append(video);
-                    used.add(media.url);
-                    continue;
+            return mediaWrap.children.length > 0 ? mediaWrap : null;
+        }
+
+        function buildSourceLink(item) {
+            const link = item?.source_metadata?.link;
+            if (typeof link !== 'string' || link.trim() === '') {
+                return '<span></span>';
+            }
+
+            return `<a href="${escapeHtml(link)}" target="_blank" rel="noopener noreferrer">источник</a>`;
+        }
+
+        function readFiltersFromQuery() {
+            const params = new URLSearchParams(window.location.search);
+            const filters = {};
+            for (const key of ['q', 'category', 'important', 'sentiment_min', 'sentiment_max', 'date_from', 'date_to']) {
+                const value = params.get(key);
+                if (value !== null && value !== '') {
+                    filters[key] = value;
                 }
+            }
 
-                if (type.startsWith('image/')) {
-                    const image = document.createElement('img');
-                    image.src = media.url;
-                    image.alt = item.title_generated || item.title_original || 'preview';
-                    image.loading = 'lazy';
-                    mediaWrap.append(image);
-                    used.add(media.url);
+            return filters;
+        }
+
+        function writeFiltersToQuery(filters) {
+            const params = new URLSearchParams();
+            for (const [key, value] of Object.entries(filters)) {
+                if (String(value).trim() !== '') {
+                    params.set(key, String(value));
+                }
+            }
+            const query = params.toString();
+            const url = query === '' ? window.location.pathname : `${window.location.pathname}?${query}`;
+            window.history.replaceState({}, '', url);
+        }
+
+        function getFiltersFromForm() {
+            const data = new FormData(form);
+            const filters = {};
+            for (const [key, value] of data.entries()) {
+                if (String(value).trim() !== '') {
+                    filters[key] = value;
+                }
+            }
+
+            return filters;
+        }
+
+        function applyFiltersToForm(filters) {
+            for (const [key, value] of Object.entries(filters)) {
+                const field = form.elements.namedItem(key);
+                if (field) {
+                    field.value = value;
                 }
             }
         }
 
-        return mediaWrap.children.length > 0 ? mediaWrap : null;
-    }
-
-    function buildSourceLink(item) {
-        const link = item?.source_metadata?.link;
-        if (typeof link !== 'string' || link.trim() === '') {
-            return '<span></span>';
-        }
-
-        return `<a href="${escapeHtml(link)}" target="_blank" rel="noopener noreferrer">источник</a>`;
-    }
-
-    function readFiltersFromQuery() {
-        const params = new URLSearchParams(window.location.search);
-        const filters = {};
-        for (const key of ['q', 'category', 'important', 'sentiment_min', 'sentiment_max', 'date_from', 'date_to']) {
-            const value = params.get(key);
-            if (value !== null && value !== '') {
-                filters[key] = value;
+        function renderTags(tags) {
+            if (!Array.isArray(tags) || tags.length === 0) {
+                return 'без тегов';
             }
+
+            return tags.map((tag) => `#${escapeHtml(String(tag))}`).join(' ');
         }
 
-        return filters;
-    }
-
-    function writeFiltersToQuery(filters) {
-        const params = new URLSearchParams();
-        for (const [key, value] of Object.entries(filters)) {
-            if (String(value).trim() !== '') {
-                params.set(key, String(value));
+        function truncate(value, length) {
+            const text = String(value || '').trim();
+            if (text.length <= length) {
+                return text;
             }
-        }
-        const query = params.toString();
-        const url = query === '' ? window.location.pathname : `${window.location.pathname}?${query}`;
-        window.history.replaceState({}, '', url);
-    }
 
-    function getFiltersFromForm() {
-        const data = new FormData(form);
-        const filters = {};
-        for (const [key, value] of data.entries()) {
-            if (String(value).trim() !== '') {
-                filters[key] = value;
+            return `${text.slice(0, length - 1)}…`;
+        }
+
+        function sentimentColor(score) {
+            if (Number(score) > 0) {
+                return getComputedStyle(document.documentElement).getPropertyValue('--good');
             }
-        }
-
-        return filters;
-    }
-
-    function applyFiltersToForm(filters) {
-        for (const [key, value] of Object.entries(filters)) {
-            const field = form.elements.namedItem(key);
-            if (field) {
-                field.value = value;
+            if (Number(score) < 0) {
+                return getComputedStyle(document.documentElement).getPropertyValue('--bad');
             }
-        }
-    }
 
-    function renderTags(tags) {
-        if (!Array.isArray(tags) || tags.length === 0) {
-            return 'без тегов';
+            return '#cbd5e1';
         }
 
-        return tags.map((tag) => `#${escapeHtml(String(tag))}`).join(' ');
-    }
+        function formatDate(value) {
+            if (!value) {
+                return 'дата неизвестна';
+            }
 
-    function truncate(value, length) {
-        const text = String(value || '').trim();
-        if (text.length <= length) {
-            return text;
+            const date = new Date(value);
+            if (Number.isNaN(date.getTime())) {
+                return String(value);
+            }
+
+            return new Intl.DateTimeFormat('ru-RU', {
+                dateStyle: 'medium',
+                timeStyle: 'short'
+            }).format(date);
         }
 
-        return `${text.slice(0, length - 1)}…`;
-    }
-
-    function sentimentColor(score) {
-        if (Number(score) > 0) {
-            return getComputedStyle(document.documentElement).getPropertyValue('--good');
+        function escapeHtml(value) {
+            return value
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;')
+                .replaceAll('"', '&quot;')
+                .replaceAll("'", '&#39;');
         }
-        if (Number(score) < 0) {
-            return getComputedStyle(document.documentElement).getPropertyValue('--bad');
-        }
-
-        return '#cbd5e1';
-    }
-
-    function formatDate(value) {
-        if (!value) {
-            return 'дата неизвестна';
-        }
-
-        const date = new Date(value);
-        if (Number.isNaN(date.getTime())) {
-            return String(value);
-        }
-
-        return new Intl.DateTimeFormat('ru-RU', {
-            dateStyle: 'medium',
-            timeStyle: 'short'
-        }).format(date);
-    }
-
-    function escapeHtml(value) {
-        return value
-            .replaceAll('&', '&amp;')
-            .replaceAll('<', '&lt;')
-            .replaceAll('>', '&gt;')
-            .replaceAll('"', '&quot;')
-            .replaceAll("'", '&#39;');
-    }
-</script>
+    </script>
 </body>
+
 </html>
