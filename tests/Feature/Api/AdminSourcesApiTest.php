@@ -8,6 +8,7 @@ use App\Models\User;
 use Database\Seeders\SourceSeeder;
 use Database\Seeders\UserSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Modules\Catalog\Infrastructure\Persistence\Models\Source;
 use Tests\TestCase;
 
 final class AdminSourcesApiTest extends TestCase
@@ -43,10 +44,9 @@ final class AdminSourcesApiTest extends TestCase
         /** @var User $admin */
         $admin = User::query()->where('email', 'admin@example.com')->firstOrFail();
 
-        $this->actingAs($admin)
+        $response = $this->actingAs($admin)
             ->getJson('/api/admin/sources')
             ->assertOk()
-            ->assertJsonCount(5, 'data')
             ->assertJsonStructure([
                 'data' => [
                     [
@@ -61,5 +61,13 @@ final class AdminSourcesApiTest extends TestCase
                     ],
                 ],
             ]);
+
+        $data = $response->json('data');
+        $this->assertIsArray($data);
+        $this->assertCount(Source::query()->count(), $data);
+        $this->assertTrue(collect($data)->contains(
+            fn (array $source): bool => ($source['url'] ?? null) === 'https://t.me/toporlive'
+                && ($source['type'] ?? null) === 'telegram'
+        ));
     }
 }

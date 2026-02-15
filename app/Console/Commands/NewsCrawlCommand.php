@@ -18,6 +18,7 @@ final class NewsCrawlCommand extends Command
     {
         $query = Source::query()
             ->where('is_active', true)
+            ->where('type', 'rss')
             ->orderBy('id');
 
         $sourceId = $this->option('source-id');

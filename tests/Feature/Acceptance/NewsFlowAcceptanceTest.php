@@ -9,6 +9,7 @@ use Database\Seeders\NewsItemSeeder;
 use Database\Seeders\SourceSeeder;
 use Database\Seeders\UserSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Modules\Catalog\Infrastructure\Persistence\Models\Source;
 use PHPUnit\Framework\Attributes\Group;
 use Tests\TestCase;
 
@@ -59,9 +60,16 @@ final class NewsFlowAcceptanceTest extends TestCase
 
         /** @var User $admin */
         $admin = User::query()->where('email', 'admin@example.com')->firstOrFail();
-        $this->actingAs($admin)
+        $response = $this->actingAs($admin)
             ->getJson('/api/admin/sources')
             ->assertOk()
-            ->assertJsonCount(5, 'data');
+            ->assertJsonCount(Source::query()->count(), 'data');
+
+        $data = $response->json('data');
+        $this->assertIsArray($data);
+        $this->assertTrue(collect($data)->contains(
+            fn (array $source): bool => ($source['url'] ?? null) === 'https://t.me/toporlive'
+                && ($source['type'] ?? null) === 'telegram'
+        ));
     }
 }
