@@ -6,7 +6,7 @@
     "keywords": ["laravel", "news", "aggregator"],
     "license": "MIT",
     "require": {
-        "php": "^8.4",
+        "php": "^8.5",
         "ext-json": "*",
         "ext-intl": "*",
         "ext-mbstring": "*",

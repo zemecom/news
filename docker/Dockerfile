@@ -1,5 +1,5 @@
 # Stage 1: builder
-FROM php:8.4-cli AS builder
+FROM php:8.5-cli AS builder
 WORKDIR /app
 RUN apt-get update && apt-get install -y git unzip libpq-dev libzip-dev libxml2-dev libonig-dev libicu-dev \
     && docker-php-ext-install pdo pdo_pgsql zip intl sockets mbstring
@@ -13,7 +13,7 @@ RUN php artisan package:discover --ansi
 # RUN npm ci && npm run build # для фронта, если понадобится
 
 # Stage 2: production
-FROM php:8.4-fpm-alpine AS runtime
+FROM php:8.5-fpm-alpine AS runtime
 WORKDIR /app
 ARG WITH_XDEBUG=0
 RUN apk add --no-cache $PHPIZE_DEPS linux-headers libzip-dev libxml2-dev oniguruma-dev icu-dev postgresql-dev \
