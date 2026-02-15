@@ -1,311 +1,2106 @@
 # Business Logic Dependencies
-
-_Generated at: 2026-02-15 20:23:35Z (UTC)_
-
-## Module Graph
-
-```text
-App
-  -> Catalog
-  -> Crawler
-  -> Delivery
-  -> Intelligence
-  -> Shared
-Catalog
-  -> Shared
-Crawler
-  -> Shared
-Delivery
-  -> Shared
-Intelligence
-  -> Catalog
-  -> Shared
-Shared
+_SOURCE: Application Core_
+# Application Core
 ```
+// Structure of documents
+└── app/
+    └── Console/
+        ├── Commands/
+        │   └── MessagingSetupCommand.php
+        │   └── NewsCrawlCommand.php
+        │   └── NewsProcessQueueCommand.php
+    └── Http/
+        ├── Controllers/
+        │   ├── Api/
+        │   │   ├── Admin/
+        │   │   │   ├── SourceController.php
+        │   │   ├── NewsController.php
+        │   ├── Controller.php
+        │   ├── HealthController.php
+        │   ├── Web/
+        │   │   └── FeedPageController.php
+        ├── Middleware/
+        │   ├── EnsureUserIsAdmin.php
+        ├── Requests/
+        │   └── Api/
+        │       └── NewsIndexRequest.php
+    └── Models/
+        ├── User.php
+    └── Providers/
+        ├── AppServiceProvider.php
+        ├── ModulesServiceProvider.php
+    └── Services/
+        └── HealthCheckService.php
+        └── MessagingTopologyService.php
 
-## Class-Level Dependencies
-
-```text
-App\Console\Commands\MessagingSetupCommand
-  file: app/Console/Commands/MessagingSetupCommand.php
-  -> App\Services\MessagingTopologyService
-App\Console\Commands\NewsCrawlCommand
-  file: app/Console/Commands/NewsCrawlCommand.php
-  -> Modules\Catalog\Infrastructure\Persistence\Models\Source
-  -> Modules\Crawler\Application\Actions\FeedFetcherAction
-App\Console\Commands\NewsProcessQueueCommand
-  file: app/Console/Commands/NewsProcessQueueCommand.php
-  -> App\Services\MessagingTopologyService
-  -> Modules\Intelligence\Application\Pipeline\NewsProcessingPipeline
-  -> Modules\Shared\Domain\DTO\RawNewsData
-App\Http\Controllers\Api\Admin\SourceController
-  file: app/Http/Controllers/Api/Admin/SourceController.php
-  -> App\Http\Controllers\Controller
-  -> Modules\Delivery\Application\Actions\ListSourcesAction
-App\Http\Controllers\Api\NewsController
-  file: app/Http/Controllers/Api/NewsController.php
-  -> App\Http\Controllers\Controller
-  -> App\Http\Requests\Api\NewsIndexRequest
-  -> Modules\Delivery\Application\Actions\ListNewsAction
-  -> Modules\Delivery\Application\Actions\ShowNewsAction
-  -> Modules\Delivery\Domain\DTO\NewsFeedFilters
-App\Http\Controllers\Controller
-  file: app/Http/Controllers/Controller.php
-  deps: (none)
-App\Http\Controllers\HealthController
-  file: app/Http/Controllers/HealthController.php
-  -> App\Services\HealthCheckService
-App\Http\Controllers\Web\FeedPageController
-  file: app/Http/Controllers/Web/FeedPageController.php
-  -> App\Http\Controllers\Controller
-App\Http\Middleware\EnsureUserIsAdmin
-  file: app/Http/Middleware/EnsureUserIsAdmin.php
-  -> App\Models\User
-App\Http\Requests\Api\NewsIndexRequest
-  file: app/Http/Requests/Api/NewsIndexRequest.php
-  deps: (none)
-App\Models\User
-  file: app/Models/User.php
-  deps: (none)
-App\Providers\AppServiceProvider
-  file: app/Providers/AppServiceProvider.php
-  deps: (none)
-App\Providers\ModulesServiceProvider
-  file: app/Providers/ModulesServiceProvider.php
-  -> Modules\Catalog\CatalogServiceProvider
-  -> Modules\Crawler\CrawlerServiceProvider
-  -> Modules\Delivery\DeliveryServiceProvider
-  -> Modules\Intelligence\IntelligenceServiceProvider
-App\Services\HealthCheckService
-  file: app/Services/HealthCheckService.php
-  deps: (none)
-App\Services\MessagingTopologyService
-  file: app/Services/MessagingTopologyService.php
-  deps: (none)
-Modules\Catalog\CatalogServiceProvider
-  file: src/Modules/Catalog/CatalogServiceProvider.php
-  -> Modules\Catalog\Domain\Contracts\NewsRepository
-  -> Modules\Catalog\Infrastructure\Persistence\EloquentNewsRepository
-Modules\Catalog\Domain\Contracts\NewsRepository
-  file: src/Modules/Catalog/Domain/Contracts/NewsRepository.php
-  -> Modules\Shared\Domain\DTO\EnrichedNewsData
-  -> Modules\Shared\Domain\DTO\RawNewsData
-Modules\Catalog\Infrastructure\Persistence\EloquentNewsRepository
-  file: src/Modules/Catalog/Infrastructure/Persistence/EloquentNewsRepository.php
-  -> Modules\Catalog\Domain\Contracts\NewsRepository
-  -> Modules\Catalog\Infrastructure\Persistence\Models\NewsItem
-  -> Modules\Shared\Domain\DTO\EnrichedNewsData
-  -> Modules\Shared\Domain\DTO\RawNewsData
-  -> Modules\Shared\Domain\Enum\NewsStatus
-Modules\Catalog\Infrastructure\Persistence\Models\NewsItem
-  file: src/Modules/Catalog/Infrastructure/Persistence/Models/NewsItem.php
-  deps: (none)
-Modules\Catalog\Infrastructure\Persistence\Models\Source
-  file: src/Modules/Catalog/Infrastructure/Persistence/Models/Source.php
-  deps: (none)
-Modules\Crawler\Application\Actions\FeedFetcherAction
-  file: src/Modules/Crawler/Application/Actions/FeedFetcherAction.php
-  -> Modules\Crawler\Application\Services\RawNewsFactory
-  -> Modules\Crawler\Domain\Contracts\RawPublisher
-  -> Modules\Crawler\Domain\Contracts\RssClient
-  -> Modules\Crawler\Domain\Contracts\TelegramClient
-Modules\Crawler\Application\Services\RawNewsFactory
-  file: src/Modules/Crawler/Application/Services/RawNewsFactory.php
-  -> Modules\Shared\Application\Services\FingerprintGenerator
-  -> Modules\Shared\Domain\DTO\RawNewsData
-Modules\Crawler\CrawlerServiceProvider
-  file: src/Modules/Crawler/CrawlerServiceProvider.php
-  -> Modules\Crawler\Application\Actions\FeedFetcherAction
-  -> Modules\Crawler\Application\Services\RawNewsFactory
-  -> Modules\Crawler\Domain\Contracts\RawPublisher
-  -> Modules\Crawler\Domain\Contracts\RssClient
-  -> Modules\Crawler\Domain\Contracts\TelegramClient
-  -> Modules\Crawler\Infrastructure\Http\RssClient
-  -> Modules\Crawler\Infrastructure\Http\RssConnector
-  -> Modules\Crawler\Infrastructure\Http\TelegramClient
-  -> Modules\Crawler\Infrastructure\Messaging\RawPublisher
-  -> Modules\Shared\Application\Services\FingerprintGenerator
-Modules\Crawler\Domain\Contracts\RawPublisher
-  file: src/Modules/Crawler/Domain/Contracts/RawPublisher.php
-  -> Modules\Shared\Domain\DTO\RawNewsData
-Modules\Crawler\Domain\Contracts\RssClient
-  file: src/Modules/Crawler/Domain/Contracts/RssClient.php
-  deps: (none)
-Modules\Crawler\Domain\Contracts\TelegramClient
-  file: src/Modules/Crawler/Domain/Contracts/TelegramClient.php
-  deps: (none)
-Modules\Crawler\Infrastructure\Http\RssClient
-  file: src/Modules/Crawler/Infrastructure/Http/RssClient.php
-  -> Modules\Crawler\Domain\Contracts\RssClient
-Modules\Crawler\Infrastructure\Http\RssConnector
-  file: src/Modules/Crawler/Infrastructure/Http/RssConnector.php
-  deps: (none)
-Modules\Crawler\Infrastructure\Http\TelegramClient
-  file: src/Modules/Crawler/Infrastructure/Http/TelegramClient.php
-  -> Modules\Crawler\Domain\Contracts\TelegramClient
-Modules\Crawler\Infrastructure\Messaging\RawPublisher
-  file: src/Modules/Crawler/Infrastructure/Messaging/RawPublisher.php
-  -> Modules\Crawler\Domain\Contracts\RawPublisher
-  -> Modules\Shared\Domain\DTO\RawNewsData
-Modules\Delivery\Application\Actions\ListNewsAction
-  file: src/Modules/Delivery/Application/Actions/ListNewsAction.php
-  -> Modules\Delivery\Domain\Contracts\NewsFeedReader
-  -> Modules\Delivery\Domain\DTO\NewsFeedFilters
-Modules\Delivery\Application\Actions\ListSourcesAction
-  file: src/Modules/Delivery/Application/Actions/ListSourcesAction.php
-  -> Modules\Delivery\Domain\Contracts\SourceAdminReader
-Modules\Delivery\Application\Actions\ShowNewsAction
-  file: src/Modules/Delivery/Application/Actions/ShowNewsAction.php
-  -> Modules\Delivery\Domain\Contracts\NewsFeedReader
-Modules\Delivery\DeliveryServiceProvider
-  file: src/Modules/Delivery/DeliveryServiceProvider.php
-  -> Modules\Delivery\Domain\Contracts\NewsFeedReader
-  -> Modules\Delivery\Domain\Contracts\SourceAdminReader
-  -> Modules\Delivery\Infrastructure\Persistence\EloquentNewsFeedReader
-  -> Modules\Delivery\Infrastructure\Persistence\EloquentSourceAdminReader
-Modules\Delivery\Domain\Contracts\NewsFeedReader
-  file: src/Modules/Delivery/Domain/Contracts/NewsFeedReader.php
-  -> Modules\Delivery\Domain\DTO\NewsFeedFilters
-Modules\Delivery\Domain\Contracts\SourceAdminReader
-  file: src/Modules/Delivery/Domain/Contracts/SourceAdminReader.php
-  deps: (none)
-Modules\Delivery\Domain\DTO\NewsFeedFilters
-  file: src/Modules/Delivery/Domain/DTO/NewsFeedFilters.php
-  deps: (none)
-Modules\Delivery\Infrastructure\Persistence\EloquentNewsFeedReader
-  file: src/Modules/Delivery/Infrastructure/Persistence/EloquentNewsFeedReader.php
-  -> Modules\Delivery\Domain\Contracts\NewsFeedReader
-  -> Modules\Delivery\Domain\DTO\NewsFeedFilters
-  -> Modules\Shared\Domain\Enum\NewsStatus
-Modules\Delivery\Infrastructure\Persistence\EloquentSourceAdminReader
-  file: src/Modules/Delivery/Infrastructure/Persistence/EloquentSourceAdminReader.php
-  -> Modules\Delivery\Domain\Contracts\SourceAdminReader
-Modules\Intelligence\Application\Pipeline\NewsProcessingPipeline
-  file: src/Modules/Intelligence/Application/Pipeline/NewsProcessingPipeline.php
-  -> Modules\Catalog\Domain\Contracts\NewsRepository
-  -> Modules\Intelligence\Application\Pipeline\Steps\PipelineStep
-  -> Modules\Intelligence\Domain\Contracts\EnrichedPublisher
-  -> Modules\Shared\Domain\DTO\EnrichedNewsData
-  -> Modules\Shared\Domain\DTO\RawNewsData
-Modules\Intelligence\Application\Pipeline\Steps\AntiClickbaitStep
-  file: src/Modules/Intelligence/Application/Pipeline/Steps/AntiClickbaitStep.php
-  -> Modules\Intelligence\Domain\Contracts\TitleGenerator
-  -> Modules\Shared\Domain\DTO\EnrichedNewsData
-  -> Modules\Shared\Domain\DTO\RawNewsData
-Modules\Intelligence\Application\Pipeline\Steps\ClassifyStep
-  file: src/Modules/Intelligence/Application/Pipeline/Steps/ClassifyStep.php
-  -> Modules\Intelligence\Domain\Contracts\Classifier
-  -> Modules\Shared\Domain\DTO\EnrichedNewsData
-  -> Modules\Shared\Domain\DTO\RawNewsData
-Modules\Intelligence\Application\Pipeline\Steps\DeduplicateStep
-  file: src/Modules/Intelligence/Application/Pipeline/Steps/DeduplicateStep.php
-  -> Modules\Catalog\Domain\Contracts\NewsRepository
-  -> Modules\Shared\Domain\DTO\EnrichedNewsData
-  -> Modules\Shared\Domain\DTO\RawNewsData
-  -> Modules\Shared\Domain\Enum\NewsStatus
-Modules\Intelligence\Application\Pipeline\Steps\FinalizeStep
-  file: src/Modules/Intelligence/Application/Pipeline/Steps/FinalizeStep.php
-  -> Modules\Shared\Domain\DTO\EnrichedNewsData
-  -> Modules\Shared\Domain\DTO\RawNewsData
-  -> Modules\Shared\Domain\Enum\NewsStatus
-Modules\Intelligence\Application\Pipeline\Steps\ImportanceStep
-  file: src/Modules/Intelligence/Application/Pipeline/Steps/ImportanceStep.php
-  -> Modules\Shared\Domain\DTO\EnrichedNewsData
-  -> Modules\Shared\Domain\DTO\RawNewsData
-Modules\Intelligence\Application\Pipeline\Steps\LanguageDetectStep
-  file: src/Modules/Intelligence/Application/Pipeline/Steps/LanguageDetectStep.php
-  -> Modules\Shared\Domain\DTO\EnrichedNewsData
-  -> Modules\Shared\Domain\DTO\RawNewsData
-Modules\Intelligence\Application\Pipeline\Steps\ModerationStep
-  file: src/Modules/Intelligence/Application/Pipeline/Steps/ModerationStep.php
-  -> Modules\Shared\Domain\DTO\EnrichedNewsData
-  -> Modules\Shared\Domain\DTO\RawNewsData
-  -> Modules\Shared\Domain\Enum\NewsStatus
-Modules\Intelligence\Application\Pipeline\Steps\PipelineStep
-  file: src/Modules/Intelligence/Application/Pipeline/Steps/PipelineStep.php
-  -> Modules\Shared\Domain\DTO\EnrichedNewsData
-  -> Modules\Shared\Domain\DTO\RawNewsData
-Modules\Intelligence\Application\Pipeline\Steps\SentimentStep
-  file: src/Modules/Intelligence/Application/Pipeline/Steps/SentimentStep.php
-  -> Modules\Intelligence\Domain\Contracts\SentimentAnalyzer
-  -> Modules\Shared\Domain\DTO\EnrichedNewsData
-  -> Modules\Shared\Domain\DTO\RawNewsData
-Modules\Intelligence\Application\Pipeline\Steps\TranslateStep
-  file: src/Modules/Intelligence/Application/Pipeline/Steps/TranslateStep.php
-  -> Modules\Shared\Domain\DTO\EnrichedNewsData
-  -> Modules\Shared\Domain\DTO\RawNewsData
-Modules\Intelligence\Domain\Contracts\Classifier
-  file: src/Modules/Intelligence/Domain/Contracts/Classifier.php
-  deps: (none)
-Modules\Intelligence\Domain\Contracts\EnrichedPublisher
-  file: src/Modules/Intelligence/Domain/Contracts/EnrichedPublisher.php
-  -> Modules\Shared\Domain\DTO\EnrichedNewsData
-Modules\Intelligence\Domain\Contracts\SentimentAnalyzer
-  file: src/Modules/Intelligence/Domain/Contracts/SentimentAnalyzer.php
-  deps: (none)
-Modules\Intelligence\Domain\Contracts\TitleGenerator
-  file: src/Modules/Intelligence/Domain/Contracts/TitleGenerator.php
-  deps: (none)
-Modules\Intelligence\Domain\Contracts\Translator
-  file: src/Modules/Intelligence/Domain/Contracts/Translator.php
-  deps: (none)
-Modules\Intelligence\Infrastructure\LLM\HeuristicTranslator
-  file: src/Modules/Intelligence/Infrastructure/LLM/HeuristicTranslator.php
-  -> Modules\Intelligence\Domain\Contracts\Translator
-Modules\Intelligence\Infrastructure\LLM\KeywordClassifier
-  file: src/Modules/Intelligence/Infrastructure/LLM/KeywordClassifier.php
-  -> Modules\Intelligence\Domain\Contracts\Classifier
-Modules\Intelligence\Infrastructure\LLM\KeywordSentimentAnalyzer
-  file: src/Modules/Intelligence/Infrastructure/LLM/KeywordSentimentAnalyzer.php
-  -> Modules\Intelligence\Domain\Contracts\SentimentAnalyzer
-Modules\Intelligence\Infrastructure\LLM\ObjectivelyTitleGenerator
-  file: src/Modules/Intelligence/Infrastructure/LLM/ObjectivelyTitleGenerator.php
-  -> Modules\Intelligence\Domain\Contracts\TitleGenerator
-Modules\Intelligence\Infrastructure\Messaging\EnrichedPublisher
-  file: src/Modules/Intelligence/Infrastructure/Messaging/EnrichedPublisher.php
-  -> Modules\Intelligence\Domain\Contracts\EnrichedPublisher
-  -> Modules\Shared\Domain\DTO\EnrichedNewsData
-  -> Modules\Shared\Domain\Enum\NewsStatus
-Modules\Intelligence\IntelligenceServiceProvider
-  file: src/Modules/Intelligence/IntelligenceServiceProvider.php
-  -> Modules\Catalog\Domain\Contracts\NewsRepository
-  -> Modules\Intelligence\Application\Pipeline\NewsProcessingPipeline
-  -> Modules\Intelligence\Application\Pipeline\Steps\AntiClickbaitStep
-  -> Modules\Intelligence\Application\Pipeline\Steps\ClassifyStep
-  -> Modules\Intelligence\Application\Pipeline\Steps\DeduplicateStep
-  -> Modules\Intelligence\Application\Pipeline\Steps\FinalizeStep
-  -> Modules\Intelligence\Application\Pipeline\Steps\ImportanceStep
-  -> Modules\Intelligence\Application\Pipeline\Steps\LanguageDetectStep
-  -> Modules\Intelligence\Application\Pipeline\Steps\ModerationStep
-  -> Modules\Intelligence\Application\Pipeline\Steps\SentimentStep
-  -> Modules\Intelligence\Application\Pipeline\Steps\TranslateStep
-  -> Modules\Intelligence\Domain\Contracts\Classifier
-  -> Modules\Intelligence\Domain\Contracts\EnrichedPublisher
-  -> Modules\Intelligence\Domain\Contracts\SentimentAnalyzer
-  -> Modules\Intelligence\Domain\Contracts\TitleGenerator
-  -> Modules\Intelligence\Domain\Contracts\Translator
-  -> Modules\Intelligence\Infrastructure\LLM\HeuristicTranslator
-  -> Modules\Intelligence\Infrastructure\LLM\KeywordClassifier
-  -> Modules\Intelligence\Infrastructure\LLM\KeywordSentimentAnalyzer
-  -> Modules\Intelligence\Infrastructure\LLM\ObjectivelyTitleGenerator
-  -> Modules\Intelligence\Infrastructure\Messaging\EnrichedPublisher
-Modules\Shared\Application\Services\FingerprintGenerator
-  file: src/Modules/Shared/Application/Services/FingerprintGenerator.php
-  -> Modules\Shared\Domain\DTO\RawNewsData
-Modules\Shared\Domain\DTO\EnrichedNewsData
-  file: src/Modules/Shared/Domain/DTO/EnrichedNewsData.php
-  -> Modules\Shared\Domain\Enum\NewsStatus
-Modules\Shared\Domain\DTO\RawNewsData
-  file: src/Modules/Shared/Domain/DTO/RawNewsData.php
-  deps: (none)
-Modules\Shared\Domain\Enum\NewsStatus
-  file: src/Modules/Shared/Domain/Enum/NewsStatus.php
-  deps: (none)
 ```
+###  Path: `/app/Console/Commands/MessagingSetupCommand.php`
 
-## Notes
+```php
+namespace App\Console\Commands;
 
-- This file is generated by `scripts/generate_business_deps.php`.
-- Regenerate with: `php scripts/generate_business_deps.php`.
-- It focuses on internal business dependencies (`App\*`, `Modules\*`).
-- Use with architecture tests in `tests/Architecture/LayerDependenciesTest.php`.
+use App\Services\MessagingTopologyService as MessagingTopologyService;
+use Illuminate\Console\Command as Command;
+
+final class MessagingSetupCommand extends Command
+{
+	protected $signature = 'news:messaging:setup';
+	protected $description = 'Declare RabbitMQ exchange, queues and bindings for SmartNews.';
+
+
+	public function handle(MessagingTopologyService $topology): int
+	{
+		// ...
+	}
+}
+
+
+```
+###  Path: `/app/Console/Commands/NewsCrawlCommand.php`
+
+```php
+namespace App\Console\Commands;
+
+use Illuminate\Console\Command as Command;
+use Modules\Catalog\Infrastructure\Persistence\Models\Source as Source;
+use Modules\Crawler\Application\Actions\FeedFetcherAction as FeedFetcherAction;
+
+final class NewsCrawlCommand extends Command
+{
+	protected $signature = 'news:crawl {--source-id= : Crawl only one source id}';
+	protected $description = 'Fetch active sources and publish raw messages to RabbitMQ.';
+
+
+	public function handle(FeedFetcherAction $fetchFeed): int
+	{
+		// ...
+	}
+}
+
+
+```
+###  Path: `/app/Console/Commands/NewsProcessQueueCommand.php`
+
+```php
+namespace App\Console\Commands;
+
+use App\Services\MessagingTopologyService as MessagingTopologyService;
+use Carbon\CarbonImmutable as CarbonImmutable;
+use Illuminate\Console\Command as Command;
+use Illuminate\Support\Facades\Log as Log;
+use Modules\Intelligence\Application\Pipeline\NewsProcessingPipeline as NewsProcessingPipeline;
+use Modules\Shared\Domain\DTO\RawNewsData as RawNewsData;
+use PhpAmqpLib\Connection\AMQPStreamConnection as AMQPStreamConnection;
+use PhpAmqpLib\Message\AMQPMessage as AMQPMessage;
+
+final class NewsProcessQueueCommand extends Command
+{
+	protected $signature = 'news:process {--once : Process only one message and exit} {--declare-topology : Ensure queues/exchange before consuming}';
+	protected $description = 'Consume raw.created messages from RabbitMQ and run intelligence pipeline.';
+
+
+	public function handle(
+		AMQPStreamConnection $connection,
+		MessagingTopologyService $topology,
+		NewsProcessingPipeline $pipeline,
+	): int
+	{
+		// ...
+	}
+
+
+	/**
+	 * @param  array<int, int>  $backoff
+	 */
+	private function processMessage(
+		AMQPMessage $message,
+		\PhpAmqpLib\Channel\AMQPChannel $channel,
+		string $dlq,
+		NewsProcessingPipeline $pipeline,
+		string $exchange,
+		string $retryRoutingKey,
+		int $maxAttempts,
+		array $backoff,
+	): void
+	{
+		// ...
+	}
+
+
+	/**
+	 * @param  array<string, mixed>  $payload
+	 */
+	private function mapRawNews(array $payload): RawNewsData
+	{
+		// ...
+	}
+
+
+	private function sendToDlq(
+		\PhpAmqpLib\Channel\AMQPChannel $channel,
+		string $dlq,
+		AMQPMessage $failedMessage,
+		\Throwable $e,
+		int $attempt,
+	): void
+	{
+		// ...
+	}
+
+
+	/**
+	 * @param  array<string, mixed>  $payload
+	 */
+	private function readAttempt(array $payload): int
+	{
+		// ...
+	}
+
+
+	/**
+	 * @param  array<int, int>  $backoff
+	 */
+	private function retryDelaySeconds(int $nextAttempt, array $backoff): int
+	{
+		// ...
+	}
+
+
+	/**
+	 * @return array<int, int>
+	 */
+	private function normalizeBackoff(mixed $value): array
+	{
+		// ...
+	}
+
+
+	/**
+	 * @param  array<string, mixed>  $payload
+	 */
+	private function publishRetry(
+		\PhpAmqpLib\Channel\AMQPChannel $channel,
+		array $payload,
+		AMQPMessage $failedMessage,
+		string $exchange,
+		string $retryRoutingKey,
+		int $nextAttempt,
+		int $delaySeconds,
+		\Throwable $error,
+	): void
+	{
+		// ...
+	}
+}
+
+
+```
+###  Path: `/app/Http/Controllers/Api/Admin/SourceController.php`
+
+```php
+namespace App\Http\Controllers\Api\Admin;
+
+use App\Http\Controllers\Controller as Controller;
+use Illuminate\Http\JsonResponse as JsonResponse;
+use Modules\Delivery\Application\Actions\ListSourcesAction as ListSourcesAction;
+
+final class SourceController extends Controller
+{
+	public function __construct(
+		private ListSourcesAction $listSources,
+	) {
+		// ...
+	}
+
+
+	public function index(): JsonResponse
+	{
+		// ...
+	}
+}
+
+
+```
+###  Path: `/app/Http/Controllers/Api/NewsController.php`
+
+```php
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller as Controller;
+use App\Http\Requests\Api\NewsIndexRequest as NewsIndexRequest;
+use Carbon\CarbonImmutable as CarbonImmutable;
+use Illuminate\Http\JsonResponse as JsonResponse;
+use Modules\Delivery\Application\Actions\ListNewsAction as ListNewsAction;
+use Modules\Delivery\Application\Actions\ShowNewsAction as ShowNewsAction;
+use Modules\Delivery\Domain\DTO\NewsFeedFilters as NewsFeedFilters;
+
+final class NewsController extends Controller
+{
+	public function __construct(
+		private ListNewsAction $listNews,
+		private ShowNewsAction $showNews,
+	) {
+		// ...
+	}
+
+
+	public function index(NewsIndexRequest $request): JsonResponse
+	{
+		// ...
+	}
+
+
+	public function show(string $id): JsonResponse
+	{
+		// ...
+	}
+}
+
+
+```
+###  Path: `/app/Http/Controllers/Controller.php`
+
+```php
+namespace App\Http\Controllers;
+
+abstract class Controller
+{
+}
+
+
+```
+###  Path: `/app/Http/Controllers/HealthController.php`
+
+```php
+namespace App\Http\Controllers;
+
+use App\Services\HealthCheckService as HealthCheckService;
+
+final class HealthController extends Controller
+{
+	public function __construct(
+		private HealthCheckService $health,
+	) {
+		// ...
+	}
+
+
+	/**
+	 * @return array{status:string}
+	 */
+	public function live(): array
+	{
+		// ...
+	}
+
+
+	public function ready(): \Illuminate\Http\JsonResponse
+	{
+		// ...
+	}
+}
+
+
+```
+###  Path: `/app/Http/Controllers/Web/FeedPageController.php`
+
+```php
+namespace App\Http\Controllers\Web;
+
+use App\Http\Controllers\Controller as Controller;
+use Illuminate\Contracts\View\View as View;
+
+final class FeedPageController extends Controller
+{
+	public function __invoke(): View
+	{
+		// ...
+	}
+}
+
+
+```
+###  Path: `/app/Http/Middleware/EnsureUserIsAdmin.php`
+
+```php
+namespace App\Http\Middleware;
+
+use App\Models\User as User;
+use Closure as Closure;
+use Illuminate\Http\JsonResponse as JsonResponse;
+use Illuminate\Http\Request as Request;
+use Symfony\Component\HttpFoundation\Response as Response;
+
+final class EnsureUserIsAdmin
+{
+	/**
+	 * @param  Closure(Request): Response  $next
+	 */
+	public function handle(Request $request, Closure $next): Response
+	{
+		// ...
+	}
+}
+
+
+```
+###  Path: `/app/Http/Requests/Api/NewsIndexRequest.php`
+
+```php
+namespace App\Http\Requests\Api;
+
+use Illuminate\Contracts\Validation\Validator as Validator;
+use Illuminate\Foundation\Http\FormRequest as FormRequest;
+
+final class NewsIndexRequest extends FormRequest
+{
+	public function authorize(): bool
+	{
+		// ...
+	}
+
+
+	/**
+	 * @return array<string, mixed>
+	 */
+	public function rules(): array
+	{
+		// ...
+	}
+
+
+	public function withValidator(Validator $validator): void
+	{
+		// ...
+	}
+}
+
+
+```
+###  Path: `/app/Models/User.php`
+
+```php
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory as HasFactory;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable as Notifiable;
+
+/**
+ * @property string $role
+ */
+class User extends Authenticatable
+{
+	use HasFactory;
+	/** @use HasFactory<\Database\Factories\UserFactory> */
+	use Notifiable;
+
+	/**
+	 * The attributes that are mass assignable.
+	 *
+	 * @var list<string>
+	 */
+	protected $fillable = ['name', 'email', 'password', 'role'];
+
+	/**
+	 * The attributes that should be hidden for serialization.
+	 *
+	 * @var list<string>
+	 */
+	protected $hidden = ['password', 'remember_token'];
+
+
+	/**
+	 * Get the attributes that should be cast.
+	 *
+	 * @return array<string, string>
+	 */
+	protected function casts(): array
+	{
+		// ...
+	}
+
+
+	public function isAdmin(): bool
+	{
+		// ...
+	}
+}
+
+
+```
+###  Path: `/app/Providers/AppServiceProvider.php`
+
+```php
+namespace App\Providers;
+
+use Illuminate\Support\ServiceProvider as ServiceProvider;
+use PhpAmqpLib\Connection\AMQPStreamConnection as AMQPStreamConnection;
+
+class AppServiceProvider extends ServiceProvider
+{
+	/**
+	 * Register any application services.
+	 */
+	public function register(): void
+	{
+		// ...
+	}
+
+
+	/**
+	 * Bootstrap any application services.
+	 */
+	public function boot(): void
+	{
+		// ...
+	}
+}
+
+
+```
+###  Path: `/app/Providers/ModulesServiceProvider.php`
+
+```php
+namespace App\Providers;
+
+use Illuminate\Support\ServiceProvider as ServiceProvider;
+use Modules\Catalog\CatalogServiceProvider as CatalogServiceProvider;
+use Modules\Crawler\CrawlerServiceProvider as CrawlerServiceProvider;
+use Modules\Delivery\DeliveryServiceProvider as DeliveryServiceProvider;
+use Modules\Intelligence\IntelligenceServiceProvider as IntelligenceServiceProvider;
+
+final class ModulesServiceProvider extends ServiceProvider
+{
+	public function register(): void
+	{
+		// ...
+	}
+}
+
+
+```
+###  Path: `/app/Services/HealthCheckService.php`
+
+```php
+namespace App\Services;
+
+use Illuminate\Support\Facades\DB as DB;
+use Illuminate\Support\Facades\Redis as Redis;
+use PhpAmqpLib\Connection\AMQPStreamConnection as AMQPStreamConnection;
+
+final class HealthCheckService
+{
+	public function __construct(
+		private AMQPStreamConnection $amqp,
+	) {
+		// ...
+	}
+
+
+	/**
+	 * @return array{db:string,redis:string,rabbitmq:string}
+	 */
+	public function check(): array
+	{
+		// ...
+	}
+}
+
+
+```
+###  Path: `/app/Services/MessagingTopologyService.php`
+
+```php
+namespace App\Services;
+
+use PhpAmqpLib\Channel\AMQPChannel as AMQPChannel;
+use PhpAmqpLib\Connection\AMQPStreamConnection as AMQPStreamConnection;
+use PhpAmqpLib\Wire\AMQPTable as AMQPTable;
+
+final class MessagingTopologyService
+{
+	public function __construct(
+		private AMQPStreamConnection $connection,
+	) {
+		// ...
+	}
+
+
+	public function declareTopology(): void
+	{
+		// ...
+	}
+
+
+	public function declareTopologyOn(AMQPChannel $channel): void
+	{
+		// ...
+	}
+
+
+	private function declareQueue(AMQPChannel $channel, string $name, bool $quorum): void
+	{
+		// ...
+	}
+}
+
+
+```
+_SOURCE: Modules_
+# Modules
+```
+// Structure of documents
+└── src/
+    └── Modules/
+        └── Catalog/
+            ├── CatalogServiceProvider.php
+            ├── Domain/
+            │   ├── Contracts/
+            │   │   └── NewsRepository.php
+            ├── Infrastructure/
+            │   └── Persistence/
+            │       └── EloquentNewsRepository.php
+            │       └── Models/
+            │           └── NewsItem.php
+            │           └── Source.php
+        └── Crawler/
+            ├── Application/
+            │   ├── Actions/
+            │   │   ├── FeedFetcherAction.php
+            │   ├── Services/
+            │   │   └── RawNewsFactory.php
+            ├── CrawlerServiceProvider.php
+            ├── Domain/
+            │   ├── Contracts/
+            │   │   └── RawPublisher.php
+            │   │   └── RssClient.php
+            │   │   └── TelegramClient.php
+            ├── Infrastructure/
+            │   └── Http/
+            │       ├── RssClient.php
+            │       ├── RssConnector.php
+            │       ├── TelegramClient.php
+            │   └── Messaging/
+            │       └── RawPublisher.php
+        └── Delivery/
+            ├── Application/
+            │   ├── Actions/
+            │   │   └── ListNewsAction.php
+            │   │   └── ListSourcesAction.php
+            │   │   └── ShowNewsAction.php
+            ├── DeliveryServiceProvider.php
+            ├── Domain/
+            │   ├── Contracts/
+            │   │   ├── NewsFeedReader.php
+            │   │   ├── SourceAdminReader.php
+            │   ├── DTO/
+            │   │   └── NewsFeedFilters.php
+            ├── Infrastructure/
+            │   └── Persistence/
+            │       └── EloquentNewsFeedReader.php
+            │       └── EloquentSourceAdminReader.php
+        └── Intelligence/
+            ├── Application/
+            │   ├── Pipeline/
+            │   │   └── NewsProcessingPipeline.php
+            │   │   └── Steps/
+            │   │       └── AntiClickbaitStep.php
+            │   │       └── ClassifyStep.php
+            │   │       └── DeduplicateStep.php
+            │   │       └── FinalizeStep.php
+            │   │       └── ImportanceStep.php
+            │   │       └── LanguageDetectStep.php
+            │   │       └── ModerationStep.php
+            │   │       └── PipelineStep.php
+            │   │       └── SentimentStep.php
+            │   │       └── TranslateStep.php
+            ├── Domain/
+            │   ├── Contracts/
+            │   │   └── Classifier.php
+            │   │   └── EnrichedPublisher.php
+            │   │   └── SentimentAnalyzer.php
+            │   │   └── TitleGenerator.php
+            │   │   └── Translator.php
+            ├── Infrastructure/
+            │   ├── LLM/
+            │   │   ├── HeuristicTranslator.php
+            │   │   ├── KeywordClassifier.php
+            │   │   ├── KeywordSentimentAnalyzer.php
+            │   │   ├── ObjectivelyTitleGenerator.php
+            │   ├── Messaging/
+            │   │   └── EnrichedPublisher.php
+            ├── IntelligenceServiceProvider.php
+        └── Shared/
+            └── Application/
+                ├── Services/
+                │   └── FingerprintGenerator.php
+            └── Domain/
+                └── DTO/
+                    ├── EnrichedNewsData.php
+                    ├── RawNewsData.php
+                └── Enum/
+                    └── NewsStatus.php
+
+```
+###  Path: `/src/Modules/Catalog/CatalogServiceProvider.php`
+
+```php
+namespace Modules\Catalog;
+
+use Illuminate\Support\ServiceProvider as ServiceProvider;
+use Modules\Catalog\Domain\Contracts\NewsRepository as NewsRepository;
+use Modules\Catalog\Infrastructure\Persistence\EloquentNewsRepository as EloquentNewsRepository;
+
+final class CatalogServiceProvider extends ServiceProvider
+{
+	public function register(): void
+	{
+		// ...
+	}
+}
+
+
+```
+###  Path: `/src/Modules/Catalog/Domain/Contracts/NewsRepository.php`
+
+```php
+namespace Modules\Catalog\Domain\Contracts;
+
+use Modules\Shared\Domain\DTO\EnrichedNewsData as EnrichedNewsData;
+use Modules\Shared\Domain\DTO\RawNewsData as RawNewsData;
+
+interface NewsRepository
+{
+	public function existsByFingerprint(string $fingerprint): bool;
+
+
+	public function findIdByFingerprint(string $fingerprint): string;
+
+
+	public function storeRaw(RawNewsData $raw): string;
+
+
+	public function storeEnriched(EnrichedNewsData $enriched): void;
+}
+
+
+```
+###  Path: `/src/Modules/Catalog/Infrastructure/Persistence/EloquentNewsRepository.php`
+
+```php
+namespace Modules\Catalog\Infrastructure\Persistence;
+
+use Illuminate\Support\Str as Str;
+use Modules\Catalog\Domain\Contracts\NewsRepository as NewsRepository;
+use Modules\Catalog\Infrastructure\Persistence\Models\NewsItem as NewsItem;
+use Modules\Shared\Domain\DTO\EnrichedNewsData as EnrichedNewsData;
+use Modules\Shared\Domain\DTO\RawNewsData as RawNewsData;
+use Modules\Shared\Domain\Enum\NewsStatus as NewsStatus;
+
+final class EloquentNewsRepository implements NewsRepository
+{
+	public function existsByFingerprint(string $fingerprint): bool
+	{
+		// ...
+	}
+
+
+	public function findIdByFingerprint(string $fingerprint): string
+	{
+		// ...
+	}
+
+
+	public function storeRaw(RawNewsData $raw): string
+	{
+		// ...
+	}
+
+
+	public function storeEnriched(EnrichedNewsData $enriched): void
+	{
+		// ...
+	}
+}
+
+
+```
+###  Path: `/src/Modules/Catalog/Infrastructure/Persistence/Models/NewsItem.php`
+
+```php
+namespace Modules\Catalog\Infrastructure\Persistence\Models;
+
+use Illuminate\Database\Eloquent\Model as Model;
+
+/**
+ * @property string $id
+ */
+final class NewsItem extends Model
+{
+	protected $table = 'news_items';
+	protected $primaryKey = 'id';
+	public $incrementing = false;
+	protected $keyType = 'string';
+
+	protected $fillable = [
+		'id',
+		'source_id',
+		'title_original',
+		'content_original',
+		'title_generated',
+		'content_translated',
+		'image_url',
+		'media',
+		'sentiment_score',
+		'tags',
+		'is_important',
+		'status',
+		'source_metadata',
+		'raw_fingerprint',
+		'moderation_reason',
+		'published_at',
+	];
+
+	/** @var array<string, string> */
+	protected $casts = [
+		'tags' => 'array',
+		'source_metadata' => 'array',
+		'is_important' => 'boolean',
+		'published_at' => 'datetime',
+		'media' => 'array',
+	];
+}
+
+
+```
+###  Path: `/src/Modules/Catalog/Infrastructure/Persistence/Models/Source.php`
+
+```php
+namespace Modules\Catalog\Infrastructure\Persistence\Models;
+
+use Illuminate\Database\Eloquent\Model as Model;
+
+final class Source extends Model
+{
+	protected $table = 'sources';
+
+	protected $fillable = [
+		'name',
+		'url',
+		'type',
+		'language_default',
+		'cron_expression',
+		'is_active',
+		'retry_backoff_state',
+		'last_success_at',
+		'last_error_at',
+		'error_streak',
+	];
+
+	/** @var array<string, string> */
+	protected $casts = [
+		'is_active' => 'boolean',
+		'retry_backoff_state' => 'array',
+		'last_success_at' => 'datetime',
+		'last_error_at' => 'datetime',
+	];
+}
+
+
+```
+###  Path: `/src/Modules/Crawler/Application/Actions/FeedFetcherAction.php`
+
+```php
+namespace Modules\Crawler\Application\Actions;
+
+use Modules\Crawler\Application\Services\RawNewsFactory as RawNewsFactory;
+use Modules\Crawler\Domain\Contracts\RawPublisher as RawPublisher;
+use Modules\Crawler\Domain\Contracts\RssClient as RssClient;
+use Modules\Crawler\Domain\Contracts\TelegramClient as TelegramClient;
+
+final class FeedFetcherAction
+{
+	public function __construct(
+		private RssClient $rssClient,
+		private TelegramClient $telegramClient,
+		private RawPublisher $publisher,
+		private RawNewsFactory $rawNewsFactory,
+	) {
+		// ...
+	}
+
+
+	/**
+	 * @param  array{id:int,url:string,type:string,language_default:string|null}  $source
+	 */
+	public function __invoke(array $source): void
+	{
+		// ...
+	}
+}
+
+
+```
+###  Path: `/src/Modules/Crawler/Application/Services/RawNewsFactory.php`
+
+```php
+namespace Modules\Crawler\Application\Services;
+
+use Carbon\CarbonImmutable as CarbonImmutable;
+use Modules\Shared\Application\Services\FingerprintGenerator as FingerprintGenerator;
+use Modules\Shared\Domain\DTO\RawNewsData as RawNewsData;
+
+final class RawNewsFactory
+{
+	public function __construct(
+		private FingerprintGenerator $fingerprintGenerator,
+	) {
+		// ...
+	}
+
+
+	/**
+	 * @param  array{id:int,url:string,language_default:?string}  $source
+	 * @param  array<string, mixed>  $item
+	 */
+	public function fromRss(array $source, array $item): RawNewsData
+	{
+		// ...
+	}
+}
+
+
+```
+###  Path: `/src/Modules/Crawler/CrawlerServiceProvider.php`
+
+```php
+namespace Modules\Crawler;
+
+use Illuminate\Support\ServiceProvider as ServiceProvider;
+use Modules\Crawler\Application\Actions\FeedFetcherAction as FeedFetcherAction;
+use Modules\Crawler\Application\Services\RawNewsFactory as RawNewsFactory;
+use Modules\Crawler\Domain\Contracts\RawPublisher as RawPublisherContract;
+use Modules\Crawler\Domain\Contracts\RssClient as RssClientContract;
+use Modules\Crawler\Domain\Contracts\TelegramClient as TelegramClientContract;
+use Modules\Crawler\Infrastructure\Http\RssClient as RssClient;
+use Modules\Crawler\Infrastructure\Http\RssConnector as RssConnector;
+use Modules\Crawler\Infrastructure\Http\TelegramClient as TelegramClient;
+use Modules\Crawler\Infrastructure\Messaging\RawPublisher as RawPublisher;
+use Modules\Shared\Application\Services\FingerprintGenerator as FingerprintGenerator;
+
+final class CrawlerServiceProvider extends ServiceProvider
+{
+	public function register(): void
+	{
+		// ...
+	}
+}
+
+
+```
+###  Path: `/src/Modules/Crawler/Domain/Contracts/RawPublisher.php`
+
+```php
+namespace Modules\Crawler\Domain\Contracts;
+
+use Modules\Shared\Domain\DTO\RawNewsData as RawNewsData;
+
+interface RawPublisher
+{
+	public function publish(RawNewsData $raw): void;
+}
+
+
+```
+###  Path: `/src/Modules/Crawler/Domain/Contracts/RssClient.php`
+
+```php
+namespace Modules\Crawler\Domain\Contracts;
+
+use Illuminate\Support\Collection as Collection;
+
+interface RssClient
+{
+	/**
+	 * @return Collection<int, array<string, mixed>>
+	 */
+	public function fetch(string $url): Collection;
+}
+
+
+```
+###  Path: `/src/Modules/Crawler/Domain/Contracts/TelegramClient.php`
+
+```php
+namespace Modules\Crawler\Domain\Contracts;
+
+use Illuminate\Support\Collection as Collection;
+
+interface TelegramClient
+{
+	/**
+	 * @return Collection<int, array<string, mixed>>
+	 */
+	public function fetch(string $channel): Collection;
+}
+
+
+```
+###  Path: `/src/Modules/Crawler/Infrastructure/Http/RssClient.php`
+
+```php
+namespace Modules\Crawler\Infrastructure\Http;
+
+use Illuminate\Support\Collection as Collection;
+use Modules\Crawler\Domain\Contracts\RssClient as RssClientContract;
+use Saloon\Enums\Method as Method;
+use Saloon\Http\Response as Response;
+
+final class RssClient implements RssClientContract
+{
+	public function __construct(
+		private RssConnector $connector,
+	) {
+		// ...
+	}
+
+
+	/**
+	 * @return Collection<int, array<string, mixed>>
+	 */
+	public function fetch(string $url): Collection
+	{
+		// ...
+	}
+
+
+	private function assertAllowedHost(string $url): void
+	{
+		// ...
+	}
+
+
+	/**
+	 * @return Collection<int, array<string, mixed>>
+	 */
+	private function mapToItems(Response $response): Collection
+	{
+		// ...
+	}
+}
+
+
+```
+###  Path: `/src/Modules/Crawler/Infrastructure/Http/RssConnector.php`
+
+```php
+namespace Modules\Crawler\Infrastructure\Http;
+
+use Saloon\Http\Connector as Connector;
+
+final class RssConnector extends Connector
+{
+	public function resolveBaseUrl(): string
+	{
+		// ...
+	}
+
+
+	public function defaultConfig(): array
+	{
+		// ...
+	}
+}
+
+
+```
+###  Path: `/src/Modules/Crawler/Infrastructure/Http/TelegramClient.php`
+
+```php
+namespace Modules\Crawler\Infrastructure\Http;
+
+use DOMDocument as DOMDocument;
+use DOMNode as DOMNode;
+use DOMXPath as DOMXPath;
+use Illuminate\Support\Collection as Collection;
+use Modules\Crawler\Domain\Contracts\TelegramClient as TelegramClientContract;
+use Saloon\Enums\Method as Method;
+use Saloon\Http\Response as Response;
+
+final class TelegramClient implements TelegramClientContract
+{
+	public function __construct(
+		private RssConnector $connector,
+	) {
+		// ...
+	}
+
+
+	public function fetch(string $channel): Collection
+	{
+		// ...
+	}
+
+
+	private function request(string $url): Response
+	{
+		// ...
+	}
+
+
+	private function resolveChannelName(string $channel): string
+	{
+		// ...
+	}
+
+
+	private function normalizeChannelName(string $name): string
+	{
+		// ...
+	}
+
+
+	private function assertAllowedHost(string $url): void
+	{
+		// ...
+	}
+
+
+	/**
+	 * @return Collection<int, array<string, mixed>>
+	 */
+	private function mapToItems(Response $response, string $channel): Collection
+	{
+		// ...
+	}
+
+
+	/**
+	 * @return array<int, array{url:string,type:string|null}>
+	 */
+	private function extractMedia(DOMXPath $xpath, DOMNode $node): array
+	{
+		// ...
+	}
+
+
+	private function extractPostId(string $externalId): ?int
+	{
+		// ...
+	}
+
+
+	private function extractTitle(string $content, string $externalId): string
+	{
+		// ...
+	}
+
+
+	private function normalizeWhitespace(string $value): string
+	{
+		// ...
+	}
+
+
+	private function normalizeLink(string $link): string
+	{
+		// ...
+	}
+
+
+	private function buildLinkFromExternalId(string $externalId): string
+	{
+		// ...
+	}
+
+
+	private function extractUrlFromStyle(string $style): string
+	{
+		// ...
+	}
+
+
+	private function evalString(DOMXPath $xpath, DOMNode $node, string $expression): string
+	{
+		// ...
+	}
+}
+
+
+```
+###  Path: `/src/Modules/Crawler/Infrastructure/Messaging/RawPublisher.php`
+
+```php
+namespace Modules\Crawler\Infrastructure\Messaging;
+
+use Modules\Crawler\Domain\Contracts\RawPublisher as RawPublisherContract;
+use Modules\Shared\Domain\DTO\RawNewsData as RawNewsData;
+use PhpAmqpLib\Connection\AMQPStreamConnection as AMQPStreamConnection;
+use PhpAmqpLib\Message\AMQPMessage as AMQPMessage;
+
+final class RawPublisher implements RawPublisherContract
+{
+	public function __construct(
+		private AMQPStreamConnection $connection,
+		private string $exchange = 'news_flow',
+		private string $routingKey = 'raw.created',
+	) {
+		// ...
+	}
+
+
+	public function publish(RawNewsData $raw): void
+	{
+		// ...
+	}
+}
+
+
+```
+###  Path: `/src/Modules/Delivery/Application/Actions/ListNewsAction.php`
+
+```php
+namespace Modules\Delivery\Application\Actions;
+
+use Illuminate\Contracts\Pagination\CursorPaginator as CursorPaginator;
+use Modules\Delivery\Domain\Contracts\NewsFeedReader as NewsFeedReader;
+use Modules\Delivery\Domain\DTO\NewsFeedFilters as NewsFeedFilters;
+
+final class ListNewsAction
+{
+	public function __construct(
+		private NewsFeedReader $reader,
+	) {
+		// ...
+	}
+
+
+	/**
+	 * @return CursorPaginator<int, array<string, mixed>>
+	 */
+	public function __invoke(NewsFeedFilters $filters, int $perPage = 20, ?string $cursor = null): CursorPaginator
+	{
+		// ...
+	}
+}
+
+
+```
+###  Path: `/src/Modules/Delivery/Application/Actions/ListSourcesAction.php`
+
+```php
+namespace Modules\Delivery\Application\Actions;
+
+use Modules\Delivery\Domain\Contracts\SourceAdminReader as SourceAdminReader;
+
+final class ListSourcesAction
+{
+	public function __construct(
+		private SourceAdminReader $reader,
+	) {
+		// ...
+	}
+
+
+	/**
+	 * @return array<int, array<string, mixed>>
+	 */
+	public function __invoke(): array
+	{
+		// ...
+	}
+}
+
+
+```
+###  Path: `/src/Modules/Delivery/Application/Actions/ShowNewsAction.php`
+
+```php
+namespace Modules\Delivery\Application\Actions;
+
+use Modules\Delivery\Domain\Contracts\NewsFeedReader as NewsFeedReader;
+
+final class ShowNewsAction
+{
+	public function __construct(
+		private NewsFeedReader $reader,
+	) {
+		// ...
+	}
+
+
+	/**
+	 * @return array<string, mixed>|null
+	 */
+	public function __invoke(string $id): ?array
+	{
+		// ...
+	}
+}
+
+
+```
+###  Path: `/src/Modules/Delivery/DeliveryServiceProvider.php`
+
+```php
+namespace Modules\Delivery;
+
+use Illuminate\Support\ServiceProvider as ServiceProvider;
+use Modules\Delivery\Domain\Contracts\NewsFeedReader as NewsFeedReader;
+use Modules\Delivery\Domain\Contracts\SourceAdminReader as SourceAdminReader;
+use Modules\Delivery\Infrastructure\Persistence\EloquentNewsFeedReader as EloquentNewsFeedReader;
+use Modules\Delivery\Infrastructure\Persistence\EloquentSourceAdminReader as EloquentSourceAdminReader;
+
+final class DeliveryServiceProvider extends ServiceProvider
+{
+	public function register(): void
+	{
+		// ...
+	}
+}
+
+
+```
+###  Path: `/src/Modules/Delivery/Domain/Contracts/NewsFeedReader.php`
+
+```php
+namespace Modules\Delivery\Domain\Contracts;
+
+use Illuminate\Contracts\Pagination\CursorPaginator as CursorPaginator;
+use Modules\Delivery\Domain\DTO\NewsFeedFilters as NewsFeedFilters;
+
+interface NewsFeedReader
+{
+	/**
+	 * @return CursorPaginator<int, array<string, mixed>>
+	 */
+	public function paginatePublished(NewsFeedFilters $filters, int $perPage, ?string $cursor): CursorPaginator;
+
+
+	/**
+	 * @return array<string, mixed>|null
+	 */
+	public function findPublishedById(string $id): ?array;
+}
+
+
+```
+###  Path: `/src/Modules/Delivery/Domain/Contracts/SourceAdminReader.php`
+
+```php
+namespace Modules\Delivery\Domain\Contracts;
+
+interface SourceAdminReader
+{
+	/**
+	 * @return array<int, array<string, mixed>>
+	 */
+	public function list(): array;
+}
+
+
+```
+###  Path: `/src/Modules/Delivery/Domain/DTO/NewsFeedFilters.php`
+
+```php
+namespace Modules\Delivery\Domain\DTO;
+
+use Carbon\CarbonImmutable as CarbonImmutable;
+
+readonly class NewsFeedFilters
+{
+	public function __construct(
+		public ?string $category = null,
+		public ?int $sentimentMin = null,
+		public ?int $sentimentMax = null,
+		public ?bool $important = null,
+		public ?CarbonImmutable $dateFrom = null,
+		public ?CarbonImmutable $dateTo = null,
+		public ?string $query = null,
+	) {
+		// ...
+	}
+}
+
+
+```
+###  Path: `/src/Modules/Delivery/Infrastructure/Persistence/EloquentNewsFeedReader.php`
+
+```php
+namespace Modules\Delivery\Infrastructure\Persistence;
+
+use Illuminate\Contracts\Pagination\CursorPaginator as CursorPaginator;
+use Illuminate\Database\DatabaseManager as DatabaseManager;
+use Illuminate\Database\Query\Builder as Builder;
+use Illuminate\Pagination\Cursor as Cursor;
+use Modules\Delivery\Domain\Contracts\NewsFeedReader as NewsFeedReader;
+use Modules\Delivery\Domain\DTO\NewsFeedFilters as NewsFeedFilters;
+use Modules\Shared\Domain\Enum\NewsStatus as NewsStatus;
+
+final class EloquentNewsFeedReader implements NewsFeedReader
+{
+	public function __construct(
+		private DatabaseManager $db,
+	) {
+		// ...
+	}
+
+
+	/**
+	 * @return CursorPaginator<int, array<string, mixed>>
+	 */
+	public function paginatePublished(NewsFeedFilters $filters, int $perPage, ?string $cursor): CursorPaginator
+	{
+		// ...
+	}
+
+
+	public function findPublishedById(string $id): ?array
+	{
+		// ...
+	}
+
+
+	private function baseQuery(NewsFeedFilters $filters): Builder
+	{
+		// ...
+	}
+
+
+	private function decodeCursor(?string $cursor): ?Cursor
+	{
+		// ...
+	}
+
+
+	/**
+	 * @return array<string, mixed>
+	 */
+	private function mapRow(object $row): array
+	{
+		// ...
+	}
+
+
+	/**
+	 * @return array<int|string, mixed>
+	 */
+	private function decodeJsonArray(mixed $value): array
+	{
+		// ...
+	}
+}
+
+
+```
+###  Path: `/src/Modules/Delivery/Infrastructure/Persistence/EloquentSourceAdminReader.php`
+
+```php
+namespace Modules\Delivery\Infrastructure\Persistence;
+
+use Illuminate\Database\DatabaseManager as DatabaseManager;
+use Modules\Delivery\Domain\Contracts\SourceAdminReader as SourceAdminReader;
+
+final class EloquentSourceAdminReader implements SourceAdminReader
+{
+	public function __construct(
+		private DatabaseManager $db,
+	) {
+		// ...
+	}
+
+
+	/**
+	 * @return array<int, array<string, mixed>>
+	 */
+	public function list(): array
+	{
+		// ...
+	}
+
+
+	/**
+	 * @return array<string, mixed>
+	 */
+	private function mapSourceRow(object $source): array
+	{
+		// ...
+	}
+}
+
+
+```
+###  Path: `/src/Modules/Intelligence/Application/Pipeline/NewsProcessingPipeline.php`
+
+```php
+namespace Modules\Intelligence\Application\Pipeline;
+
+use Modules\Catalog\Domain\Contracts\NewsRepository as NewsRepository;
+use Modules\Intelligence\Application\Pipeline\Steps\PipelineStep as PipelineStep;
+use Modules\Intelligence\Domain\Contracts\EnrichedPublisher as EnrichedPublisher;
+use Modules\Shared\Domain\DTO\EnrichedNewsData as EnrichedNewsData;
+use Modules\Shared\Domain\DTO\RawNewsData as RawNewsData;
+
+final class NewsProcessingPipeline
+{
+	/** @var PipelineStep[] */
+	private array $steps;
+
+
+	/**
+	 * @param PipelineStep[] $steps
+	 */
+	public function __construct(
+		array $steps,
+		private EnrichedPublisher $publisher,
+		private NewsRepository $news,
+	) {
+		// ...
+	}
+
+
+	public function handle(RawNewsData $raw): void
+	{
+		// ...
+	}
+}
+
+
+```
+###  Path: `/src/Modules/Intelligence/Application/Pipeline/Steps/AntiClickbaitStep.php`
+
+```php
+namespace Modules\Intelligence\Application\Pipeline\Steps;
+
+use Modules\Intelligence\Domain\Contracts\TitleGenerator as TitleGenerator;
+use Modules\Shared\Domain\DTO\EnrichedNewsData as EnrichedNewsData;
+use Modules\Shared\Domain\DTO\RawNewsData as RawNewsData;
+
+final class AntiClickbaitStep implements PipelineStep
+{
+	public function __construct(
+		private TitleGenerator $titleGenerator,
+	) {
+		// ...
+	}
+
+
+	public function process(RawNewsData|EnrichedNewsData $input): RawNewsData|EnrichedNewsData
+	{
+		// ...
+	}
+}
+
+
+```
+###  Path: `/src/Modules/Intelligence/Application/Pipeline/Steps/ClassifyStep.php`
+
+```php
+namespace Modules\Intelligence\Application\Pipeline\Steps;
+
+use Modules\Intelligence\Domain\Contracts\Classifier as Classifier;
+use Modules\Shared\Domain\DTO\EnrichedNewsData as EnrichedNewsData;
+use Modules\Shared\Domain\DTO\RawNewsData as RawNewsData;
+
+final class ClassifyStep implements PipelineStep
+{
+	public function __construct(
+		private Classifier $classifier,
+	) {
+		// ...
+	}
+
+
+	public function process(RawNewsData|EnrichedNewsData $input): RawNewsData|EnrichedNewsData
+	{
+		// ...
+	}
+}
+
+
+```
+###  Path: `/src/Modules/Intelligence/Application/Pipeline/Steps/DeduplicateStep.php`
+
+```php
+namespace Modules\Intelligence\Application\Pipeline\Steps;
+
+use Modules\Catalog\Domain\Contracts\NewsRepository as NewsRepository;
+use Modules\Shared\Domain\DTO\EnrichedNewsData as EnrichedNewsData;
+use Modules\Shared\Domain\DTO\RawNewsData as RawNewsData;
+use Modules\Shared\Domain\Enum\NewsStatus as NewsStatus;
+
+final class DeduplicateStep implements PipelineStep
+{
+	public function __construct(
+		private NewsRepository $news,
+	) {
+		// ...
+	}
+
+
+	public function process(RawNewsData|EnrichedNewsData $input): RawNewsData|EnrichedNewsData
+	{
+		// ...
+	}
+}
+
+
+```
+###  Path: `/src/Modules/Intelligence/Application/Pipeline/Steps/FinalizeStep.php`
+
+```php
+namespace Modules\Intelligence\Application\Pipeline\Steps;
+
+use Modules\Shared\Domain\DTO\EnrichedNewsData as EnrichedNewsData;
+use Modules\Shared\Domain\DTO\RawNewsData as RawNewsData;
+use Modules\Shared\Domain\Enum\NewsStatus as NewsStatus;
+
+final class FinalizeStep implements PipelineStep
+{
+	public function process(RawNewsData|EnrichedNewsData $input): RawNewsData|EnrichedNewsData
+	{
+		// ...
+	}
+}
+
+
+```
+###  Path: `/src/Modules/Intelligence/Application/Pipeline/Steps/ImportanceStep.php`
+
+```php
+namespace Modules\Intelligence\Application\Pipeline\Steps;
+
+use Modules\Shared\Domain\DTO\EnrichedNewsData as EnrichedNewsData;
+use Modules\Shared\Domain\DTO\RawNewsData as RawNewsData;
+
+final class ImportanceStep implements PipelineStep
+{
+	public function process(RawNewsData|EnrichedNewsData $input): RawNewsData|EnrichedNewsData
+	{
+		// ...
+	}
+}
+
+
+```
+###  Path: `/src/Modules/Intelligence/Application/Pipeline/Steps/LanguageDetectStep.php`
+
+```php
+namespace Modules\Intelligence\Application\Pipeline\Steps;
+
+use Modules\Shared\Domain\DTO\EnrichedNewsData as EnrichedNewsData;
+use Modules\Shared\Domain\DTO\RawNewsData as RawNewsData;
+
+final class LanguageDetectStep implements PipelineStep
+{
+	public function process(RawNewsData|EnrichedNewsData $input): RawNewsData|EnrichedNewsData
+	{
+		// ...
+	}
+}
+
+
+```
+###  Path: `/src/Modules/Intelligence/Application/Pipeline/Steps/ModerationStep.php`
+
+```php
+namespace Modules\Intelligence\Application\Pipeline\Steps;
+
+use Modules\Shared\Domain\DTO\EnrichedNewsData as EnrichedNewsData;
+use Modules\Shared\Domain\DTO\RawNewsData as RawNewsData;
+use Modules\Shared\Domain\Enum\NewsStatus as NewsStatus;
+
+final class ModerationStep implements PipelineStep
+{
+	public function process(RawNewsData|EnrichedNewsData $input): RawNewsData|EnrichedNewsData
+	{
+		// ...
+	}
+}
+
+
+```
+###  Path: `/src/Modules/Intelligence/Application/Pipeline/Steps/PipelineStep.php`
+
+```php
+namespace Modules\Intelligence\Application\Pipeline\Steps;
+
+use Modules\Shared\Domain\DTO\EnrichedNewsData as EnrichedNewsData;
+use Modules\Shared\Domain\DTO\RawNewsData as RawNewsData;
+
+interface PipelineStep
+{
+	public function process(RawNewsData|EnrichedNewsData $input): RawNewsData|EnrichedNewsData;
+}
+
+
+```
+###  Path: `/src/Modules/Intelligence/Application/Pipeline/Steps/SentimentStep.php`
+
+```php
+namespace Modules\Intelligence\Application\Pipeline\Steps;
+
+use Modules\Intelligence\Domain\Contracts\SentimentAnalyzer as SentimentAnalyzer;
+use Modules\Shared\Domain\DTO\EnrichedNewsData as EnrichedNewsData;
+use Modules\Shared\Domain\DTO\RawNewsData as RawNewsData;
+
+final class SentimentStep implements PipelineStep
+{
+	public function __construct(
+		private SentimentAnalyzer $sentiment,
+	) {
+		// ...
+	}
+
+
+	public function process(RawNewsData|EnrichedNewsData $input): RawNewsData|EnrichedNewsData
+	{
+		// ...
+	}
+}
+
+
+```
+###  Path: `/src/Modules/Intelligence/Application/Pipeline/Steps/TranslateStep.php`
+
+```php
+namespace Modules\Intelligence\Application\Pipeline\Steps;
+
+use Modules\Shared\Domain\DTO\EnrichedNewsData as EnrichedNewsData;
+use Modules\Shared\Domain\DTO\RawNewsData as RawNewsData;
+
+final class TranslateStep implements PipelineStep
+{
+	public function __construct(
+		private \Modules\Intelligence\Domain\Contracts\Translator $translator,
+	) {
+		// ...
+	}
+
+
+	public function process(RawNewsData|EnrichedNewsData $input): RawNewsData|EnrichedNewsData
+	{
+		// ...
+	}
+}
+
+
+```
+###  Path: `/src/Modules/Intelligence/Domain/Contracts/Classifier.php`
+
+```php
+namespace Modules\Intelligence\Domain\Contracts;
+
+interface Classifier
+{
+	/**
+	 * @return array{category:string,tags:array<int, string>}
+	 */
+	public function classify(string $content): array;
+}
+
+
+```
+###  Path: `/src/Modules/Intelligence/Domain/Contracts/EnrichedPublisher.php`
+
+```php
+namespace Modules\Intelligence\Domain\Contracts;
+
+use Modules\Shared\Domain\DTO\EnrichedNewsData as EnrichedNewsData;
+
+interface EnrichedPublisher
+{
+	public function publish(EnrichedNewsData $enriched): void;
+}
+
+
+```
+###  Path: `/src/Modules/Intelligence/Domain/Contracts/SentimentAnalyzer.php`
+
+```php
+namespace Modules\Intelligence\Domain\Contracts;
+
+interface SentimentAnalyzer
+{
+	public function score(string $content): int;
+}
+
+
+```
+###  Path: `/src/Modules/Intelligence/Domain/Contracts/TitleGenerator.php`
+
+```php
+namespace Modules\Intelligence\Domain\Contracts;
+
+interface TitleGenerator
+{
+	public function generate(string $content, string $originalTitle): string;
+}
+
+
+```
+###  Path: `/src/Modules/Intelligence/Domain/Contracts/Translator.php`
+
+```php
+namespace Modules\Intelligence\Domain\Contracts;
+
+interface Translator
+{
+	public function translate(string $text, string $targetLanguage, string $sourceLanguage): string;
+}
+
+
+```
+###  Path: `/src/Modules/Intelligence/Infrastructure/LLM/HeuristicTranslator.php`
+
+```php
+namespace Modules\Intelligence\Infrastructure\LLM;
+
+use Modules\Intelligence\Domain\Contracts\Translator as Translator;
+
+final class HeuristicTranslator implements Translator
+{
+	public function translate(string $text, string $targetLanguage, string $sourceLanguage): string
+	{
+		// ...
+	}
+}
+
+
+```
+###  Path: `/src/Modules/Intelligence/Infrastructure/LLM/KeywordClassifier.php`
+
+```php
+namespace Modules\Intelligence\Infrastructure\LLM;
+
+use Modules\Intelligence\Domain\Contracts\Classifier as Classifier;
+
+final class KeywordClassifier implements Classifier
+{
+	/** @var array<string, array{category:string,tags:array<int,string>}> */
+	private array $map = [
+		'laravel' => ['category' => 'IT', 'tags' => ['it', 'laravel', 'php']],
+		'php' => ['category' => 'IT', 'tags' => ['it', 'php']],
+		'ai' => ['category' => 'IT', 'tags' => ['it', 'ai']],
+		'econom' => ['category' => 'Экономика', 'tags' => ['economy']],
+		'market' => ['category' => 'Экономика', 'tags' => ['markets']],
+		'polit' => ['category' => 'Политика', 'tags' => ['politics']],
+		'crime' => ['category' => 'Криминал', 'tags' => ['crime']],
+		'медицин' => ['category' => 'Медицина', 'tags' => ['medicine']],
+		'кримин' => ['category' => 'Криминал', 'tags' => ['crime']],
+	];
+
+
+	public function classify(string $content): array
+	{
+		// ...
+	}
+}
+
+
+```
+###  Path: `/src/Modules/Intelligence/Infrastructure/LLM/KeywordSentimentAnalyzer.php`
+
+```php
+namespace Modules\Intelligence\Infrastructure\LLM;
+
+use Modules\Intelligence\Domain\Contracts\SentimentAnalyzer as SentimentAnalyzer;
+
+final class KeywordSentimentAnalyzer implements SentimentAnalyzer
+{
+	/** @var array<int, string> */
+	private array $positiveWords = [
+		'good',
+		'great',
+		'excellent',
+		'growth',
+		'success',
+		'улучш',
+		'рост',
+		'успех',
+	];
+
+	/** @var array<int, string> */
+	private array $negativeWords = ['bad', 'crisis', 'drop', 'loss', 'decline', 'паден', 'кризис', 'убыт'];
+
+
+	public function score(string $content): int
+	{
+		// ...
+	}
+}
+
+
+```
+###  Path: `/src/Modules/Intelligence/Infrastructure/LLM/ObjectivelyTitleGenerator.php`
+
+```php
+namespace Modules\Intelligence\Infrastructure\LLM;
+
+use Modules\Intelligence\Domain\Contracts\TitleGenerator as TitleGenerator;
+
+final class ObjectivelyTitleGenerator implements TitleGenerator
+{
+	/** @var array<int, string> */
+	private array $clickbaitTokens = ['шок', 'сенсац', 'не поверите', '!!!', 'срочно', 'breaking'];
+
+
+	public function generate(string $content, string $originalTitle): string
+	{
+		// ...
+	}
+
+
+	private function truncate(string $value, int $limit = 140): string
+	{
+		// ...
+	}
+}
+
+
+```
+###  Path: `/src/Modules/Intelligence/Infrastructure/Messaging/EnrichedPublisher.php`
+
+```php
+namespace Modules\Intelligence\Infrastructure\Messaging;
+
+use Modules\Intelligence\Domain\Contracts\EnrichedPublisher as EnrichedPublisherContract;
+use Modules\Shared\Domain\DTO\EnrichedNewsData as EnrichedNewsData;
+use Modules\Shared\Domain\Enum\NewsStatus as NewsStatus;
+use PhpAmqpLib\Connection\AMQPStreamConnection as AMQPStreamConnection;
+use PhpAmqpLib\Message\AMQPMessage as AMQPMessage;
+use PhpAmqpLib\Wire\AMQPTable as AMQPTable;
+
+final class EnrichedPublisher implements EnrichedPublisherContract
+{
+	public function __construct(
+		private AMQPStreamConnection $connection,
+		private string $exchange = 'news_flow',
+		private string $readyRoutingKey = 'enriched.ready',
+		private string $importantRoutingKey = 'enriched.ready.important',
+		private string $rejectedRoutingKey = 'enriched.rejected',
+	) {
+		// ...
+	}
+
+
+	public function publish(EnrichedNewsData $enriched): void
+	{
+		// ...
+	}
+}
+
+
+```
+###  Path: `/src/Modules/Intelligence/IntelligenceServiceProvider.php`
+
+```php
+namespace Modules\Intelligence;
+
+use Illuminate\Support\ServiceProvider as ServiceProvider;
+use Modules\Catalog\Domain\Contracts\NewsRepository as NewsRepository;
+use Modules\Intelligence\Application\Pipeline\NewsProcessingPipeline as NewsProcessingPipeline;
+use Modules\Intelligence\Application\Pipeline\Steps\AntiClickbaitStep as AntiClickbaitStep;
+use Modules\Intelligence\Application\Pipeline\Steps\ClassifyStep as ClassifyStep;
+use Modules\Intelligence\Application\Pipeline\Steps\DeduplicateStep as DeduplicateStep;
+use Modules\Intelligence\Application\Pipeline\Steps\FinalizeStep as FinalizeStep;
+use Modules\Intelligence\Application\Pipeline\Steps\ImportanceStep as ImportanceStep;
+use Modules\Intelligence\Application\Pipeline\Steps\LanguageDetectStep as LanguageDetectStep;
+use Modules\Intelligence\Application\Pipeline\Steps\ModerationStep as ModerationStep;
+use Modules\Intelligence\Application\Pipeline\Steps\SentimentStep as SentimentStep;
+use Modules\Intelligence\Application\Pipeline\Steps\TranslateStep as TranslateStep;
+use Modules\Intelligence\Domain\Contracts\Classifier as Classifier;
+use Modules\Intelligence\Domain\Contracts\EnrichedPublisher as EnrichedPublisherContract;
+use Modules\Intelligence\Domain\Contracts\SentimentAnalyzer as SentimentAnalyzer;
+use Modules\Intelligence\Domain\Contracts\TitleGenerator as TitleGenerator;
+use Modules\Intelligence\Domain\Contracts\Translator as Translator;
+use Modules\Intelligence\Infrastructure\LLM\HeuristicTranslator as HeuristicTranslator;
+use Modules\Intelligence\Infrastructure\LLM\KeywordClassifier as KeywordClassifier;
+use Modules\Intelligence\Infrastructure\LLM\KeywordSentimentAnalyzer as KeywordSentimentAnalyzer;
+use Modules\Intelligence\Infrastructure\LLM\ObjectivelyTitleGenerator as ObjectivelyTitleGenerator;
+use Modules\Intelligence\Infrastructure\Messaging\EnrichedPublisher as EnrichedPublisher;
+
+final class IntelligenceServiceProvider extends ServiceProvider
+{
+	public function register(): void
+	{
+		// ...
+	}
+}
+
+
+```
+###  Path: `/src/Modules/Shared/Application/Services/FingerprintGenerator.php`
+
+```php
+namespace Modules\Shared\Application\Services;
+
+use Carbon\CarbonImmutable as CarbonImmutable;
+use Modules\Shared\Domain\DTO\RawNewsData as RawNewsData;
+
+final class FingerprintGenerator
+{
+	public function generate(
+		int $sourceId,
+		string $link,
+		string $publishedAt,
+		?string $title = null,
+		?string $externalId = null,
+	): string
+	{
+		// ...
+	}
+
+
+	public function attachFingerprint(RawNewsData $raw): RawNewsData
+	{
+		// ...
+	}
+
+
+	private function normalizeTitle(string $title): string
+	{
+		// ...
+	}
+
+
+	private function normalizeLink(string $link): string
+	{
+		// ...
+	}
+}
+
+
+```
+###  Path: `/src/Modules/Shared/Domain/DTO/EnrichedNewsData.php`
+
+```php
+namespace Modules\Shared\Domain\DTO;
+
+use Modules\Shared\Domain\Enum\NewsStatus as NewsStatus;
+
+readonly class EnrichedNewsData
+{
+	/**
+	 * @param  array<int, string>  $tags
+	 */
+	public function __construct(
+		public string $rawId,
+		public string $titleGenerated,
+		public string $contentTranslated,
+		public int $sentiment,
+		public string $category,
+		public array $tags,
+		public bool $importance,
+		public NewsStatus $status,
+		public ?string $moderationReason,
+		public string $fingerprint,
+	) {
+		// ...
+	}
+
+
+	/**
+	 * Копия с подменой выбранных полей.
+	 *
+	 * @param array{
+	 *     rawId?: string,
+	 *     titleGenerated?: string,
+	 *     contentTranslated?: string,
+	 *     sentiment?: int,
+	 *     category?: string,
+	 *     tags?: array<int, string>,
+	 *     importance?: bool,
+	 *     status?: NewsStatus,
+	 *     moderationReason?: ?string,
+	 *     fingerprint?: string
+	 * } $overrides
+	 */
+	public function with(array $overrides): self
+	{
+		// ...
+	}
+}
+
+
+```
+###  Path: `/src/Modules/Shared/Domain/DTO/RawNewsData.php`
+
+```php
+namespace Modules\Shared\Domain\DTO;
+
+use Carbon\CarbonImmutable as CarbonImmutable;
+
+/**
+ * Стандартизированное сырьё из источника.
+ */
+readonly class RawNewsData
+{
+	/**
+	 * @param  array<string, mixed>  $metadata
+	 */
+	public function __construct(
+		public int $sourceId,
+		public ?string $externalId,
+		public string $title,
+		public string $link,
+		public string $content,
+		public CarbonImmutable $publishedAt,
+		public string $language,
+		public array $metadata,
+		public ?string $imageUrl,
+		/** @var array<int, array{url:string,type:?string}> */
+		public array $media,
+		public string $fingerprint,
+		public ?string $rawId = null,
+	) {
+		// ...
+	}
+
+
+	/**
+	 * Копия с подменой выбранных полей.
+	 *
+	 * @param array{
+	 *     sourceId?: int,
+	 *     externalId?: ?string,
+	 *     title?: string,
+	 *     link?: string,
+	 *     content?: string,
+	 *     publishedAt?: CarbonImmutable,
+	 *     language?: string,
+	 *     metadata?: array<string,mixed>,
+	 *     imageUrl?: ?string,
+	 *     media?: array<int, array{url:string,type:?string}>,
+	 *     fingerprint?: string,
+	 *     rawId?: ?string
+	 * } $overrides
+	 */
+	public function with(array $overrides): self
+	{
+		// ...
+	}
+}
+
+
+```
+###  Path: `/src/Modules/Shared/Domain/Enum/NewsStatus.php`
+
+```php
+namespace Modules\Shared\Domain\Enum;
+
+enum NewsStatus: string
+{
+	case PROCESSING = 'processing';
+	case PUBLISHED = 'published';
+	case REJECTED = 'rejected';
+}
+
+
+```
+---
+**File Statistics**
+- **Size**: 46.8 KB
+- **Lines**: 2107
+File: `../docs/BUSINESS_LOGIC_DEPENDENCIES.md`

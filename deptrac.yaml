@@ -1,0 +1,46 @@
+parameters:
+  paths:
+    - ./app
+    - ./src/Modules
+  layers:
+    - name: App
+      collectors:
+        - type: classNameRegex
+          value: /^App\\.*/
+    - name: Catalog
+      collectors:
+        - type: classNameRegex
+          value: /^Modules\\Catalog\\.*/
+    - name: Crawler
+      collectors:
+        - type: classNameRegex
+          value: /^Modules\\Crawler\\.*/
+    - name: Intelligence
+      collectors:
+        - type: classNameRegex
+          value: /^Modules\\Intelligence\\.*/
+    - name: Shared
+      collectors:
+        - type: classNameRegex
+          value: /^Modules\\Shared\\.*/
+    - name: Delivery
+      collectors:
+        - type: classNameRegex
+          value: /^Modules\\Delivery\\.*/
+  ruleset:
+    App:
+      - Catalog
+      - Crawler
+      - Intelligence
+      - Shared
+      - Delivery
+    Catalog:
+      - Shared
+    Crawler:
+      - Shared
+    Intelligence:
+      - Catalog
+      - Shared
+    Delivery:
+      - Shared
+    Shared: ~

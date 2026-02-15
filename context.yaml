@@ -1,0 +1,39 @@
+$schema: 'https://raw.githubusercontent.com/context-hub/generator/refs/heads/main/json-schema.json'
+documents:
+  -
+    description: 'Business Logic Dependencies'
+    outputPath: ../docs/BUSINESS_LOGIC_DEPENDENCIES.md
+    overwrite: true
+    sources:
+      -
+        type: file
+        description: 'Application Core'
+        sourcePaths:
+          - app
+        filePattern: '*.php'
+        modifiers:
+          -
+            name: php-content-filter
+            options:
+              include_methods_pattern: '/.*/'
+              include_properties_pattern: '/.*/'
+              keep_method_bodies: false
+              method_body_placeholder: '// ...'
+              keep_doc_comments: true
+              keep_attributes: true
+      -
+        type: file
+        description: 'Modules'
+        sourcePaths:
+          - src/Modules
+        filePattern: '*.php'
+        modifiers:
+          -
+            name: php-content-filter
+            options:
+              include_methods_pattern: '/.*/'
+              include_properties_pattern: '/.*/'
+              keep_method_bodies: false
+              method_body_placeholder: '// ...'
+              keep_doc_comments: true
+              keep_attributes: true
