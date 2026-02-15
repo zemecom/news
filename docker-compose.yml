@@ -20,6 +20,24 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
+  worker:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      args:
+        WITH_XDEBUG: 0
+    command: ["php", "artisan", "news:process", "--declare-topology"]
+    volumes:
+      - ./:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    restart: unless-stopped
+
   nginx:
     image: nginx:alpine
     ports:
