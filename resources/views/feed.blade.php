@@ -437,8 +437,14 @@
             <div class="brand">
                 <h1>SmartNews</h1>
             </div>
-            <div class="stats-badge">
-                Новостей: <strong id="total-articles">...</strong>
+            <div style="display: flex; gap: 12px; align-items: center;">
+                <a href="/admin" class="btn btn-secondary"
+                    style="padding: 8px 16px; font-size: 13px; text-decoration: none;">
+                    Admin Panel
+                </a>
+                <div class="stats-badge">
+                    Новостей: <strong id="total-articles">...</strong>
+                </div>
             </div>
         </header>
 
