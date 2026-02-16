@@ -11,5 +11,5 @@ interface RssClient
     /**
      * @return Collection<int, array<string, mixed>>
      */
-    public function fetch(string $url): Collection;
+    public function fetch(string $url, ?\Carbon\Carbon $dateFrom = null, ?\Carbon\Carbon $dateTo = null, ?int $limit = null): Collection;
 }

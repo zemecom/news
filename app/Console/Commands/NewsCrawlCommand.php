@@ -10,7 +10,11 @@ use Modules\Crawler\Application\Actions\FeedFetcherAction;
 
 final class NewsCrawlCommand extends Command
 {
-    protected $signature = 'news:crawl {--source-id= : Crawl only one source id}';
+    protected $signature = 'news:crawl 
+                            {--source-id= : Crawl only one source id}
+                            {--date-from= : Parse articles from this date (Y-m-d H:i:s)}
+                            {--date-to= : Parse articles until this date (Y-m-d H:i:s)}
+                            {--limit= : Maximum number of articles to parse per source}';
 
     protected $description = 'Fetch active sources and publish raw messages to RabbitMQ.';
 
@@ -33,17 +37,26 @@ final class NewsCrawlCommand extends Command
             return self::SUCCESS;
         }
 
+        $dateFrom = $this->option('date-from') ? \Carbon\Carbon::parse($this->option('date-from')) : null;
+        $dateTo = $this->option('date-to') ? \Carbon\Carbon::parse($this->option('date-to')) : null;
+        $limit = $this->option('limit') ? (int) $this->option('limit') : null;
+
         /** @var Source $source */
         foreach ($sources as $source) {
             try {
                 $sourceId = (int) $source->getAttribute('id');
 
-                ($fetchFeed)([
-                    'id' => $sourceId,
-                    'url' => (string) $source->getAttribute('url'),
-                    'type' => (string) $source->getAttribute('type'),
-                    'language_default' => $source->getAttribute('language_default'),
-                ]);
+                ($fetchFeed)(
+                    source: [
+                        'id' => $sourceId,
+                        'url' => (string) $source->getAttribute('url'),
+                        'type' => (string) $source->getAttribute('type'),
+                        'language_default' => $source->getAttribute('language_default'),
+                    ],
+                    dateFrom: $dateFrom,
+                    dateTo: $dateTo,
+                    limit: $limit
+                );
 
                 $this->line(sprintf('Fetched source #%d.', $sourceId));
             } catch (\Throwable $e) {

@@ -12,24 +12,52 @@ class CrawlerLog extends Component
 
     public string $logFile = '';
 
+    public ?string $dateFrom = null;
+
+    public ?string $dateTo = null;
+
+    public ?int $limit = null;
+
+    public bool $isStarted = false;
+
     public function mount(?int $sourceId = null): void
     {
         $this->sourceId = $sourceId;
         $this->logFile = storage_path('logs/crawler-run.log');
+    }
+
+    public function startParsing(): void
+    {
+        $params = [];
+        if ($this->sourceId) {
+            $params[] = "--source-id={$this->sourceId}";
+        }
+        if ($this->dateFrom) {
+            $params[] = "--date-from='{$this->dateFrom}'";
+        }
+        if ($this->dateTo) {
+            $params[] = "--date-to='{$this->dateTo}'";
+        }
+        if ($this->limit) {
+            $params[] = "--limit={$this->limit}";
+        }
+
+        $paramString = implode(' ', $params);
 
         // Clear previous log
-        file_put_contents($this->logFile, "Starting crawler...\n");
+        file_put_contents($this->logFile, "Starting crawler with params: {$paramString}\n");
 
-        $params = $sourceId ? "--source-id={$sourceId}" : '';
-        $cmd = "php artisan news:crawl {$params} > {$this->logFile} 2>&1 &";
+        $cmd = "php artisan news:crawl {$paramString} > {$this->logFile} 2>&1 &";
 
         // Run in background
         pclose(popen($cmd, 'r'));
+
+        $this->isStarted = true;
     }
 
     public function updateLog(): void
     {
-        if (file_exists($this->logFile)) {
+        if ($this->isStarted && file_exists($this->logFile)) {
             $this->output = file_get_contents($this->logFile) ?: 'Running...';
         }
     }

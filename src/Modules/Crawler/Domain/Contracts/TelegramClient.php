@@ -11,5 +11,5 @@ interface TelegramClient
     /**
      * @return Collection<int, array<string, mixed>>
      */
-    public function fetch(string $channel): Collection;
+    public function fetch(string $channel, ?\Carbon\Carbon $dateFrom = null, ?\Carbon\Carbon $dateTo = null, ?int $limit = null): Collection;
 }

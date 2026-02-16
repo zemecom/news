@@ -17,13 +17,13 @@ final class TelegramClient implements TelegramClientContract
         private TelegramParserResolver $resolver
     ) {}
 
-    public function fetch(string $channel): Collection
+    public function fetch(string $channel, ?\Carbon\Carbon $dateFrom = null, ?\Carbon\Carbon $dateTo = null, ?int $limit = null): Collection
     {
         $channelName = $this->resolveChannelName($channel);
         $baseUrl = sprintf('https://t.me/s/%s', $channelName);
         $this->assertAllowedHost($baseUrl);
 
-        $limit = max(1, (int) config('crawler.telegram.max_items', 50));
+        $limit = $limit ?? max(1, (int) config('crawler.telegram.max_items', 50));
         $before = null;
         $seen = [];
         $items = [];
@@ -44,6 +44,19 @@ final class TelegramClient implements TelegramClientContract
             $newItems = 0;
             /** @var array<string, mixed> $item */
             foreach ($pageItems as $item) {
+                // Date filtering
+                if (isset($item['pubDate'])) {
+                    $pubDate = \Carbon\Carbon::parse($item['pubDate']);
+                    if ($dateFrom && $pubDate->lt($dateFrom)) {
+                        // Reached messages older than dateFrom, stop fetching
+                        break 2;
+                    }
+                    if ($dateTo && $pubDate->gt($dateTo)) {
+                        // Message newer than dateTo, skip
+                        continue;
+                    }
+                }
+
                 $externalId = (string) ($item['guid'] ?? '');
                 if ($externalId === '' || isset($seen[$externalId])) {
                     continue;
@@ -75,7 +88,7 @@ final class TelegramClient implements TelegramClientContract
             $before = $nextBefore;
         }
 
-        return collect(array_slice($items, 0, $limit));
+        return collect($items);
     }
 
     private function request(string $url): Response

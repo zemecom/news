@@ -19,7 +19,7 @@ final class RssClient implements RssClientContract
     /**
      * @return Collection<int, array<string, mixed>>
      */
-    public function fetch(string $url): Collection
+    public function fetch(string $url, ?\Carbon\Carbon $dateFrom = null, ?\Carbon\Carbon $dateTo = null, ?int $limit = null): Collection
     {
         $this->assertAllowedHost($url);
         $response = $this->connector->send(
@@ -44,8 +44,31 @@ final class RssClient implements RssClientContract
         );
 
         $parser = $this->resolver->resolve($url);
+        $items = $parser->parse($response->body());
 
-        return $parser->parse($response->body());
+        if ($dateFrom || $dateTo) {
+            $items = $items->filter(function ($item) use ($dateFrom, $dateTo) {
+                if (! isset($item['pubDate'])) {
+                    return true;
+                }
+                $pubDate = \Carbon\Carbon::parse($item['pubDate']);
+
+                if ($dateFrom && $pubDate->lt($dateFrom)) {
+                    return false;
+                }
+                if ($dateTo && $pubDate->gt($dateTo)) {
+                    return false;
+                }
+
+                return true;
+            });
+        }
+
+        if ($limit) {
+            $items = $items->take($limit);
+        }
+
+        return $items;
     }
 
     private function assertAllowedHost(string $url): void
