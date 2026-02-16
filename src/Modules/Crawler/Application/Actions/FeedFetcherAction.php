@@ -16,6 +16,7 @@ final class FeedFetcherAction
         private TelegramClient $telegramClient,
         private RawPublisher $publisher,
         private RawNewsFactory $rawNewsFactory,
+        private \Modules\Crawler\Domain\Contracts\Deduplicator $deduplicator,
     ) {}
 
     /**
@@ -31,6 +32,11 @@ final class FeedFetcherAction
 
         $items->each(function (array $item) use ($source): void {
             $raw = $this->rawNewsFactory->fromRss($source, $item);
+
+            if ($this->deduplicator->exists($raw->fingerprint)) {
+                return;
+            }
+
             $this->publisher->publish($raw);
         });
     }

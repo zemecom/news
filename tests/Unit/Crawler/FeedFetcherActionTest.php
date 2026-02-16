@@ -60,7 +60,10 @@ final class FeedFetcherActionTest extends TestCase
                 return true;
             }));
 
-        $action = new FeedFetcherAction($rssClient, $telegramClient, $publisher, $rawNewsFactory);
+        $deduplicator = $this->createMock(\Modules\Crawler\Domain\Contracts\Deduplicator::class);
+        $deduplicator->method('exists')->willReturn(false);
+
+        $action = new FeedFetcherAction($rssClient, $telegramClient, $publisher, $rawNewsFactory, $deduplicator);
         $action($source);
     }
 
@@ -86,7 +89,9 @@ final class FeedFetcherActionTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Unsupported source type: custom');
 
-        $action = new FeedFetcherAction($rssClient, $telegramClient, $publisher, $rawNewsFactory);
+        $deduplicator = $this->createMock(\Modules\Crawler\Domain\Contracts\Deduplicator::class);
+
+        $action = new FeedFetcherAction($rssClient, $telegramClient, $publisher, $rawNewsFactory, $deduplicator);
         $action([
             'id' => 1,
             'url' => 'https://example.com/feed.xml',

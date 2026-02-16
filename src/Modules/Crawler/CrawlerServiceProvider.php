@@ -74,6 +74,7 @@ final class CrawlerServiceProvider extends ServiceProvider
         $this->app->bind(TelegramClientContract::class, TelegramClient::class);
         $this->app->bind(RawPublisherContract::class, RawPublisher::class);
         $this->app->singleton(FingerprintGenerator::class);
+        $this->app->bind(\Modules\Crawler\Domain\Contracts\Deduplicator::class, \Modules\Crawler\Infrastructure\Services\DbDeduplicator::class);
 
     }
 }
