@@ -3,7 +3,11 @@
     "name": "smartnews/aggregator",
     "type": "project",
     "description": "SmartNews Aggregator modular monolith.",
-    "keywords": ["laravel", "news", "aggregator"],
+    "keywords": [
+        "laravel",
+        "news",
+        "aggregator"
+    ],
     "license": "MIT",
     "require": {
         "php": "^8.5",
@@ -79,7 +83,8 @@
         "qa:audit": "composer audit --format=plain",
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
-            "@php artisan package:discover --ansi"
+            "@php artisan package:discover --ansi",
+            "@php artisan filament:upgrade"
         ],
         "post-update-cmd": [
             "@php artisan vendor:publish --tag=laravel-assets --ansi --force"

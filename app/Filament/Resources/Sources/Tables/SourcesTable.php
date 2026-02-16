@@ -1,0 +1,66 @@
+<?php
+
+namespace App\Filament\Resources\Sources\Tables;
+
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
+use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Table;
+
+class SourcesTable
+{
+    public static function configure(Table $table): Table
+    {
+        return $table
+            ->columns([
+                TextColumn::make('name')
+                    ->searchable()
+                    ->sortable(),
+                TextColumn::make('url')
+                    ->searchable()
+                    ->url(fn ($record) => $record->url)
+                    ->openUrlInNewTab(),
+                TextColumn::make('type')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'rss' => 'success',
+                        'telegram' => 'info',
+                        default => 'gray',
+                    }),
+                IconColumn::make('is_active')
+                    ->boolean()
+                    ->action(function ($record, $column) {
+                        $name = $column->getName();
+                        $record->update([$name => ! $record->$name]);
+                    }),
+                TextColumn::make('last_success_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->since(),
+                TextColumn::make('error_streak')
+                    ->numeric()
+                    ->sortable()
+                    ->color(fn (int $state): string => $state > 0 ? 'danger' : 'success'),
+            ])
+            ->filters([
+                //
+            ])
+            ->actions([
+                EditAction::make(),
+                \Filament\Tables\Actions\Action::make('parse')
+                    ->label('Run')
+                    ->icon('heroicon-o-play')
+                    ->modalContent(fn ($record) => view('livewire.crawler-log', ['sourceId' => $record->id]))
+                    ->modalSubmitAction(false)
+                    ->modalCancelAction(false)
+                    ->modalWidth('xl'),
+            ])
+            ->bulkActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
+                ]),
+            ]);
+    }
+}
