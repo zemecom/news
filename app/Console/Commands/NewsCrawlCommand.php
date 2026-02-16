@@ -37,9 +37,14 @@ final class NewsCrawlCommand extends Command
             return self::SUCCESS;
         }
 
-        $dateFrom = $this->option('date-from') ? \Carbon\Carbon::parse($this->option('date-from')) : null;
-        $dateTo = $this->option('date-to') ? \Carbon\Carbon::parse($this->option('date-to')) : null;
-        $limit = $this->option('limit') ? (int) $this->option('limit') : null;
+        $dateFromOption = $this->option('date-from');
+        $dateFrom = is_string($dateFromOption) ? \Carbon\Carbon::parse($dateFromOption) : null;
+
+        $dateToOption = $this->option('date-to');
+        $dateTo = is_string($dateToOption) ? \Carbon\Carbon::parse($dateToOption) : null;
+
+        $limitOption = $this->option('limit');
+        $limit = is_numeric($limitOption) ? (int) $limitOption : null;
 
         /** @var Source $source */
         foreach ($sources as $source) {

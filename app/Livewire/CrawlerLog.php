@@ -50,7 +50,10 @@ class CrawlerLog extends Component
         $cmd = "php artisan news:crawl {$paramString} > {$this->logFile} 2>&1 &";
 
         // Run in background
-        pclose(popen($cmd, 'r'));
+        $handle = popen($cmd, 'r');
+        if (is_resource($handle)) {
+            pclose($handle);
+        }
 
         $this->isStarted = true;
     }
@@ -62,7 +65,7 @@ class CrawlerLog extends Component
         }
     }
 
-    public function render()
+    public function render(): \Illuminate\Contracts\View\View
     {
         return view('livewire.crawler-log', [
             'isStarted' => $this->isStarted,

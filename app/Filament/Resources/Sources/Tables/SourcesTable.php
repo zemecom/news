@@ -32,7 +32,7 @@ class SourcesTable
                     }),
                 IconColumn::make('is_active')
                     ->boolean()
-                    ->action(function ($record, $column) {
+                    ->action(function (\Illuminate\Database\Eloquent\Model $record, $column) {
                         $name = $column->getName();
                         $record->update([$name => ! $record->$name]);
                     }),

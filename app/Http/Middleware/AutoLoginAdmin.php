@@ -18,7 +18,7 @@ class AutoLoginAdmin
     public function handle(Request $request, Closure $next): Response
     {
         if (app()->isLocal() && env('ADMIN_AUTO_LOGIN', false) && ! Auth::check()) {
-            $user = User::first();
+            $user = User::query()->first();
             if ($user) {
                 Auth::login($user);
             }
