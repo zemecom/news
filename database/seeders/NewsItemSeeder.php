@@ -16,9 +16,13 @@ final class NewsItemSeeder extends Seeder
     {
         $now = CarbonImmutable::now();
 
+        $hnId = \Modules\Catalog\Infrastructure\Persistence\Models\Source::query()->where('name', 'Hacker News')->value('id') ?? 1;
+        $tcId = \Modules\Catalog\Infrastructure\Persistence\Models\Source::query()->where('name', 'TechCrunch')->value('id') ?? 2;
+        $atId = \Modules\Catalog\Infrastructure\Persistence\Models\Source::query()->where('name', 'Ars Technica')->value('id') ?? 4;
+
         $items = [
             [
-                'source_id' => 1,
+                'source_id' => $hnId,
                 'title_original' => 'New AI model released',
                 'content_original' => 'A new AI model has been announced with promising benchmarks.',
                 'title_generated' => 'Вышла новая модель ИИ',
@@ -37,7 +41,7 @@ final class NewsItemSeeder extends Seeder
                 ],
             ],
             [
-                'source_id' => 2,
+                'source_id' => $tcId,
                 'title_original' => 'Market reacts to rate changes',
                 'content_original' => 'Markets showed mixed reaction to recent rate adjustments.',
                 'title_generated' => 'Рынок реагирует на изменения ставок',
@@ -55,7 +59,7 @@ final class NewsItemSeeder extends Seeder
                 ],
             ],
             [
-                'source_id' => 4,
+                'source_id' => $atId,
                 'title_original' => 'Новая версия Laravel вышла',
                 'content_original' => 'Laravel представил новую версию с улучшенной производительностью.',
                 'title_generated' => 'Laravel обновился',

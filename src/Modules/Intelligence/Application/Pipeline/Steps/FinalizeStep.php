@@ -10,7 +10,7 @@ use Modules\Shared\Domain\Enum\NewsStatus;
 
 final class FinalizeStep implements PipelineStep
 {
-    public function process(RawNewsData|EnrichedNewsData $input): RawNewsData|EnrichedNewsData
+    public function process(RawNewsData|EnrichedNewsData $input): EnrichedNewsData
     {
         if ($input instanceof EnrichedNewsData) {
             return $input;

@@ -14,7 +14,9 @@ use Saloon\Http\Response;
 
 final class TelegramClient implements TelegramClientContract
 {
-    public function __construct(private RssConnector $connector) {}
+    public function __construct(private RssConnector $connector)
+    {
+    }
 
     public function fetch(string $channel): Collection
     {
@@ -30,7 +32,7 @@ final class TelegramClient implements TelegramClientContract
         while (count($items) < $limit) {
             $url = $before === null ? $baseUrl : sprintf('%s?before=%d', $baseUrl, $before);
             $response = $this->request($url);
-            $pageItems = $this->mapToItems($response, '@'.$channelName);
+            $pageItems = $this->mapToItems($response, '@' . $channelName);
             if ($pageItems->isEmpty()) {
                 break;
             }
@@ -76,23 +78,23 @@ final class TelegramClient implements TelegramClientContract
     private function request(string $url): Response
     {
         return $this->connector->send(
-            new class($url) extends \Saloon\Http\Request
+            new class ($url) extends \Saloon\Http\Request {
+            protected Method $method = Method::GET;
+
+            public function __construct(private string $url)
+            {}
+
+            public function resolveEndpoint(): string
             {
-                protected Method $method = Method::GET;
+                return $this->url;
+            }
 
-                public function __construct(private string $url) {}
-
-                public function resolveEndpoint(): string
-                {
-                    return $this->url;
-                }
-
-                public function defaultHeaders(): array
-                {
-                    return [
-                        'User-Agent' => 'SmartNewsBot/1.0',
-                    ];
-                }
+            public function defaultHeaders(): array
+            {
+                return [
+                'User-Agent' => 'SmartNewsBot/1.0',
+                ];
+            }
             }
         );
     }
@@ -144,7 +146,7 @@ final class TelegramClient implements TelegramClientContract
             throw new \InvalidArgumentException('Invalid Telegram URL host.');
         }
 
-        if ($allowlist !== [] && ! in_array($host, $allowlist, true)) {
+        if ($allowlist !== [] && !in_array($host, $allowlist, true)) {
             throw new \InvalidArgumentException('Telegram host is not in allowlist.');
         }
     }
@@ -174,6 +176,7 @@ final class TelegramClient implements TelegramClientContract
 
         $items = [];
         foreach ($nodes as $node) {
+            /** @var DOMNode $node */
             $externalId = $this->evalString($xpath, $node, 'string(@data-post)');
             if ($externalId === '') {
                 continue;
@@ -269,7 +272,7 @@ final class TelegramClient implements TelegramClientContract
     private function extractPostId(string $externalId): ?int
     {
         $parts = explode('/', $externalId);
-        if (count($parts) !== 2 || ! ctype_digit($parts[1])) {
+        if (count($parts) !== 2 || !ctype_digit($parts[1])) {
             return null;
         }
 
@@ -279,14 +282,14 @@ final class TelegramClient implements TelegramClientContract
     private function extractTitle(string $content, string $externalId): string
     {
         if ($content === '') {
-            return 'Telegram post '.$externalId;
+            return 'Telegram post ' . $externalId;
         }
 
         if (mb_strlen($content) <= 140) {
             return $content;
         }
 
-        return rtrim(mb_substr($content, 0, 139)).'…';
+        return rtrim(mb_substr($content, 0, 139)) . '…';
     }
 
     private function normalizeWhitespace(string $value): string
@@ -302,11 +305,11 @@ final class TelegramClient implements TelegramClientContract
         }
 
         if (str_starts_with($link, '//')) {
-            return 'https:'.$link;
+            return 'https:' . $link;
         }
 
         if (str_starts_with($link, '/')) {
-            return 'https://t.me'.$link;
+            return 'https://t.me' . $link;
         }
 
         return $link;
@@ -328,7 +331,7 @@ final class TelegramClient implements TelegramClientContract
             return '';
         }
 
-        if (! preg_match("/url\\(['\\\"]?(.*?)['\\\"]?\\)/", $style, $matches)) {
+        if (!preg_match("/url\\(['\\\"]?(.*?)['\\\"]?\\)/", $style, $matches)) {
             return '';
         }
 
@@ -338,7 +341,7 @@ final class TelegramClient implements TelegramClientContract
     private function evalString(DOMXPath $xpath, DOMNode $node, string $expression): string
     {
         $value = $xpath->evaluate($expression, $node);
-        if (! is_string($value)) {
+        if (!is_string($value)) {
             return '';
         }
 
