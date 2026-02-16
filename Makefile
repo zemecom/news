@@ -1,9 +1,12 @@
 
-.PHONY: acceptance analyze audit build crawl dev docs-deps down help lint lint-check logs messaging-setup migrate process-once psalm psalm-taint queue rector rector-check serve setup-local smoke-api test test-all test-arch up validate
+.PHONY: acceptance analyze audit build ci-check crawl dev docs-deps down help lint lint-check logs messaging-setup migrate process-once psalm psalm-taint queue rector rector-check serve setup-local smoke-api test test-all test-arch up validate
 
 acceptance:
 	@# Run acceptance tests
 	docker compose exec -T app composer test:acceptance
+
+ci-check: validate audit lint-check analyze psalm-taint test
+	@# Run all CI pipeline checks (validate, audit, lint, phpstan, psalm, tests)
 
 analyze:
 	@# Run PHPStan static analysis
