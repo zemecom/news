@@ -19,8 +19,7 @@ final class NewsController extends Controller
         private ListNewsAction $listNews,
         private ShowNewsAction $showNews,
         private DatabaseManager $db,
-    ) {
-    }
+    ) {}
 
     public function index(NewsIndexRequest $request): JsonResponse
     {
@@ -71,7 +70,7 @@ final class NewsController extends Controller
             ->where('is_active', true)
             ->orderBy('name')
             ->get(['id', 'name'])
-            ->map(fn(object $row): array => [
+            ->map(fn (object $row): array => [
                 'id' => (int) $row->id,
                 'name' => (string) $row->name,
             ]);

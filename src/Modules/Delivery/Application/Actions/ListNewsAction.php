@@ -10,9 +10,7 @@ use Modules\Delivery\Domain\DTO\NewsFeedFilters;
 
 final class ListNewsAction
 {
-    public function __construct(private NewsFeedReader $reader)
-    {
-    }
+    public function __construct(private NewsFeedReader $reader) {}
 
     /**
      * @return CursorPaginator<int, array<string, mixed>>

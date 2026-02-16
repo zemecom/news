@@ -17,6 +17,5 @@ readonly class NewsFeedFilters
         public ?CarbonImmutable $dateTo = null,
         public ?string $query = null,
         public ?int $sourceId = null,
-    ) {
-    }
+    ) {}
 }

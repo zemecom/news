@@ -14,9 +14,7 @@ use Modules\Shared\Domain\Enum\NewsStatus;
 
 final class EloquentNewsFeedReader implements NewsFeedReader
 {
-    public function __construct(private DatabaseManager $db)
-    {
-    }
+    public function __construct(private DatabaseManager $db) {}
 
     /**
      * @return CursorPaginator<int, array<string, mixed>>
@@ -52,7 +50,7 @@ final class EloquentNewsFeedReader implements NewsFeedReader
             );
 
         return $paginator->through(
-            fn(object $row): array => $this->mapRow($row),
+            fn (object $row): array => $this->mapRow($row),
         );
     }
 
@@ -129,7 +127,7 @@ final class EloquentNewsFeedReader implements NewsFeedReader
         if ($filters->query !== null && $filters->query !== '') {
             $driver = $this->db->connection()->getDriverName();
             $operator = $driver === 'pgsql' ? 'ILIKE' : 'LIKE';
-            $search = '%' . $filters->query . '%';
+            $search = '%'.$filters->query.'%';
             $query->where(function (Builder $nested) use ($operator, $search): void {
                 $nested
                     ->where('news_items.title_original', $operator, $search)
@@ -185,7 +183,7 @@ final class EloquentNewsFeedReader implements NewsFeedReader
             return $value;
         }
 
-        if (!is_string($value) || trim($value) === '') {
+        if (! is_string($value) || trim($value) === '') {
             return [];
         }
 

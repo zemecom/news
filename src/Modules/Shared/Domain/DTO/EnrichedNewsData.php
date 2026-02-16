@@ -22,8 +22,7 @@ readonly class EnrichedNewsData
         public NewsStatus $status,
         public ?string $moderationReason,
         public string $fingerprint,
-    ) {
-    }
+    ) {}
 
     /**
      * Копия с подменой выбранных полей.
