@@ -16,7 +16,7 @@ final class RssConnector extends Connector
     public function defaultConfig(): array
     {
         return [
-            'timeout' => 5,
+            'timeout' => 60,
             'allow_redirects' => [
                 'max' => 3,
             ],

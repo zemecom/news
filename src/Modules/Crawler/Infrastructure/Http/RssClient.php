@@ -6,12 +6,15 @@ namespace Modules\Crawler\Infrastructure\Http;
 
 use Illuminate\Support\Collection;
 use Modules\Crawler\Domain\Contracts\RssClient as RssClientContract;
+use Modules\Crawler\Infrastructure\Services\RssParserResolver;
 use Saloon\Enums\Method;
-use Saloon\Http\Response;
 
 final class RssClient implements RssClientContract
 {
-    public function __construct(private RssConnector $connector) {}
+    public function __construct(
+        private RssConnector $connector,
+        private RssParserResolver $resolver
+    ) {}
 
     /**
      * @return Collection<int, array<string, mixed>>
@@ -40,7 +43,9 @@ final class RssClient implements RssClientContract
             }
         );
 
-        return $this->mapToItems($response);
+        $parser = $this->resolver->resolve($url);
+
+        return $parser->parse($response->body());
     }
 
     private function assertAllowedHost(string $url): void
@@ -55,66 +60,5 @@ final class RssClient implements RssClientContract
         if ($allowlist !== [] && ! in_array($host, $allowlist, true)) {
             throw new \InvalidArgumentException('RSS host is not in allowlist.');
         }
-    }
-
-    /**
-     * @return Collection<int, array<string, mixed>>
-     */
-    private function mapToItems(Response $response): Collection
-    {
-        // Простая обёртка: парсинг RSS/Atom можно заменить на более надёжный парсер
-        $body = $response->body();
-        $xml = @simplexml_load_string($body, 'SimpleXMLElement', LIBXML_NOCDATA);
-        $items = [];
-        if ($xml && isset($xml->channel->item)) {
-            foreach ($xml->channel->item as $item) {
-                $media = [];
-                $imageUrl = null;
-
-                // RSS enclosure
-                if (isset($item->enclosure)) {
-                    foreach ($item->enclosure as $enclosure) {
-                        $url = (string) ($enclosure['url'] ?? '');
-                        $type = (string) ($enclosure['type'] ?? '');
-                        if ($url !== '') {
-                            $media[] = ['url' => $url, 'type' => $type ?: null];
-                            if ($imageUrl === null && str_starts_with($type, 'image/')) {
-                                $imageUrl = $url;
-                            }
-                        }
-                    }
-                }
-
-                // media:content
-                if (isset($item->{'media:content'})) {
-                    foreach ($item->{'media:content'} as $mc) {
-                        $url = (string) ($mc['url'] ?? '');
-                        $type = (string) ($mc['type'] ?? '');
-                        if ($url !== '') {
-                            $media[] = ['url' => $url, 'type' => $type ?: null];
-                            if ($imageUrl === null && str_starts_with($type, 'image/')) {
-                                $imageUrl = $url;
-                            }
-                        }
-                    }
-                }
-
-                $items[] = [
-                    'title' => (string) ($item->title ?? ''),
-                    'link' => (string) ($item->link ?? ''),
-                    'description' => (string) ($item->description ?? ''),
-                    'content' => (string) ($item->{'content:encoded'} ?? ''),
-                    'pubDate' => (string) ($item->pubDate ?? ''),
-                    'guid' => (string) ($item->guid ?? ''),
-                    'language' => (string) ($item->language ?? ''),
-                    'categories' => array_map('strval', iterator_to_array($item->category ?? [])),
-                    'author' => (string) ($item->author ?? ''),
-                    'image_url' => $imageUrl,
-                    'media' => $media,
-                ];
-            }
-        }
-
-        return collect($items);
     }
 }
