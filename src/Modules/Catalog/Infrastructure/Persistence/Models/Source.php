@@ -30,4 +30,10 @@ final class Source extends Model
         'last_success_at' => 'datetime',
         'last_error_at' => 'datetime',
     ];
+
+    /** @return \Illuminate\Database\Eloquent\Relations\HasMany<NewsItem, $this> */
+    public function newsItems(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(NewsItem::class, 'source_id');
+    }
 }
