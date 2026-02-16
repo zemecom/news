@@ -11,13 +11,11 @@ use Modules\Shared\Domain\DTO\RawNewsData;
 
 final class DeduplicateStep implements PipelineStep
 {
-    public function __construct(private NewsRepository $news)
-    {
-    }
+    public function __construct(private NewsRepository $news) {}
 
     public function process(RawNewsData|EnrichedNewsData $input): RawNewsData|EnrichedNewsData
     {
-        if (!$input instanceof RawNewsData) {
+        if (! $input instanceof RawNewsData) {
             return $input;
         }
 
