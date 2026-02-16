@@ -1,0 +1,7 @@
+#!/bin/sh
+
+# Auto-fix code style before commit
+docker compose exec -T app vendor/bin/pint --quiet 2>/dev/null
+
+# Stage any files that were fixed
+git add -u
