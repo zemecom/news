@@ -12,7 +12,7 @@ use Illuminate\Notifications\Notifiable;
 /**
  * @property string $role
  */
-class User extends Authenticatable
+class User extends Authenticatable implements \Filament\Models\Contracts\FilamentUser
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
@@ -56,5 +56,14 @@ class User extends Authenticatable
     public function isAdmin(): bool
     {
         return $this->role === 'admin';
+    }
+
+    public function canAccessPanel(\Filament\Panel $panel): bool
+    {
+        if ($panel->getId() === 'admin') {
+            return $this->isAdmin() || (app()->isLocal() && env('ADMIN_AUTO_LOGIN', false));
+        }
+
+        return false;
     }
 }

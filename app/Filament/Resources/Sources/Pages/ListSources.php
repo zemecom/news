@@ -17,7 +17,7 @@ class ListSources extends ListRecords
                 ->label('Run Crawler (All)')
                 ->icon('heroicon-o-play')
                 ->color('success')
-                ->modalContent(view('livewire.crawler-log'))
+                ->modalContent(view('filament.components.crawler-modal', ['sourceId' => null]))
                 ->modalSubmitAction(false)
                 ->modalCancelAction(false)
                 ->modalWidth('xl'),

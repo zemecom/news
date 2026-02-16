@@ -66,7 +66,7 @@ class SourcesTable
                 \Filament\Actions\Action::make('parse')
                     ->label('Run')
                     ->icon('heroicon-o-play')
-                    ->modalContent(fn ($record) => view('livewire.crawler-log', ['sourceId' => $record->id]))
+                    ->modalContent(fn ($record) => view('filament.components.crawler-modal', ['sourceId' => $record->id]))
                     ->modalSubmitAction(false)
                     ->modalCancelAction(false)
                     ->modalWidth('xl'),

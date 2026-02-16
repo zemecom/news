@@ -64,6 +64,8 @@ class CrawlerLog extends Component
 
     public function render()
     {
-        return view('livewire.crawler-log');
+        return view('livewire.crawler-log', [
+            'isStarted' => $this->isStarted,
+        ]);
     }
 }
