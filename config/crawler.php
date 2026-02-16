@@ -10,5 +10,4 @@ return [
     'telegram' => [
         'max_items' => (int) env('TELEGRAM_FETCH_LIMIT', 50),
     ],
-    'allowed_sources' => env('CRAWLER_ALLOWED_SOURCES'),
 ];

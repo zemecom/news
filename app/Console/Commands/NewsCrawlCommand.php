@@ -25,12 +25,6 @@ final class NewsCrawlCommand extends Command
             $query->where('id', (int) $sourceId);
         }
 
-        $allowedSources = config('crawler.allowed_sources');
-        if (! empty($allowedSources) && is_string($allowedSources)) {
-            $allowedIds = array_map('intval', explode(',', $allowedSources));
-            $query->whereIn('id', $allowedIds);
-        }
-
         /** @var \Illuminate\Database\Eloquent\Collection<int, Source> $sources */
         $sources = $query->get(['id', 'url', 'type', 'language_default']);
         if ($sources->isEmpty()) {
