@@ -17,7 +17,7 @@
                         </label>
                         <input type="datetime-local" wire:model="dateFrom"
                             class="block w-full rounded-lg border-0 bg-white py-1.5 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 dark:bg-white/5 dark:text-white dark:ring-white/10 dark:focus:ring-primary-500"
-                            style="width: 100%; padding: 0.5rem; border-radius: 0.5rem; border: 1px solid #d1d5db;">
+                            style="width: 100%; padding: 0.5rem; border-radius: 0.5rem; border: 1px solid #d1d5db; color-scheme: dark; accent-color: #d97706;">
                     </div>
                     <div class="space-y-2">
                         <label class="text-sm font-medium leading-6 text-gray-950 dark:text-white"
@@ -31,7 +31,7 @@
                         </label>
                         <input type="datetime-local" wire:model="dateTo"
                             class="block w-full rounded-lg border-0 bg-white py-1.5 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 dark:bg-white/5 dark:text-white dark:ring-white/10 dark:focus:ring-primary-500"
-                            style="width: 100%; padding: 0.5rem; border-radius: 0.5rem; border: 1px solid #d1d5db;">
+                            style="width: 100%; padding: 0.5rem; border-radius: 0.5rem; border: 1px solid #d1d5db; color-scheme: dark; accent-color: #d97706;">
                     </div>
                 </div>
 
