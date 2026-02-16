@@ -14,7 +14,9 @@ use Saloon\Http\Response;
 
 final class TelegramClient implements TelegramClientContract
 {
-    public function __construct(private RssConnector $connector) {}
+    public function __construct(private RssConnector $connector)
+    {
+    }
 
     public function fetch(string $channel): Collection
     {
@@ -30,7 +32,7 @@ final class TelegramClient implements TelegramClientContract
         while (count($items) < $limit) {
             $url = $before === null ? $baseUrl : sprintf('%s?before=%d', $baseUrl, $before);
             $response = $this->request($url);
-            $pageItems = $this->mapToItems($response, '@'.$channelName);
+            $pageItems = $this->mapToItems($response, '@' . $channelName);
             if ($pageItems->isEmpty()) {
                 break;
             }
@@ -76,23 +78,23 @@ final class TelegramClient implements TelegramClientContract
     private function request(string $url): Response
     {
         return $this->connector->send(
-            new class($url) extends \Saloon\Http\Request
+            new class ($url) extends \Saloon\Http\Request {
+            protected Method $method = Method::GET;
+
+            public function __construct(private string $url)
+            {}
+
+            public function resolveEndpoint(): string
             {
-                protected Method $method = Method::GET;
+                return $this->url;
+            }
 
-                public function __construct(private string $url) {}
-
-                public function resolveEndpoint(): string
-                {
-                    return $this->url;
-                }
-
-                public function defaultHeaders(): array
-                {
-                    return [
-                        'User-Agent' => 'SmartNewsBot/1.0',
-                    ];
-                }
+            public function defaultHeaders(): array
+            {
+                return [
+                'User-Agent' => 'SmartNewsBot/1.0',
+                ];
+            }
             }
         );
     }
@@ -144,7 +146,7 @@ final class TelegramClient implements TelegramClientContract
             throw new \InvalidArgumentException('Invalid Telegram URL host.');
         }
 
-        if ($allowlist !== [] && ! in_array($host, $allowlist, true)) {
+        if ($allowlist !== [] && !in_array($host, $allowlist, true)) {
             throw new \InvalidArgumentException('Telegram host is not in allowlist.');
         }
     }
@@ -193,11 +195,7 @@ final class TelegramClient implements TelegramClientContract
                 "string(.//*[contains(concat(' ', normalize-space(@class), ' '), ' tgme_widget_message_date ')]/time/@datetime)"
             );
             $content = $this->normalizeWhitespace(
-                $this->evalString(
-                    $xpath,
-                    $node,
-                    "string(.//*[contains(concat(' ', normalize-space(@class), ' '), ' tgme_widget_message_text ')])"
-                )
+                $this->extractMainMessageText($xpath, $node)
             );
             $media = $this->extractMedia($xpath, $node);
             $imageUrl = null;
@@ -209,7 +207,7 @@ final class TelegramClient implements TelegramClientContract
             }
 
             $items[] = [
-                'title' => $this->extractTitle($content, $externalId),
+                'title' => $this->extractTitleFromNode($xpath, $node, $content, $externalId),
                 'link' => $link !== '' ? $link : $this->buildLinkFromExternalId($externalId),
                 'description' => $content,
                 'content' => $content,
@@ -270,24 +268,66 @@ final class TelegramClient implements TelegramClientContract
     private function extractPostId(string $externalId): ?int
     {
         $parts = explode('/', $externalId);
-        if (count($parts) !== 2 || ! ctype_digit($parts[1])) {
+        if (count($parts) !== 2 || !ctype_digit($parts[1])) {
             return null;
         }
 
         return (int) $parts[1];
     }
 
+    private function extractTitleFromNode(DOMXPath $xpath, DOMNode $node, string $content, string $externalId): string
+    {
+        // Find the main message text element (not inside reply block)
+        $textNodes = $xpath->query(
+            ".//*[contains(concat(' ', normalize-space(@class), ' '), ' tgme_widget_message_text ')]"
+            . "[not(ancestor::*[contains(concat(' ', normalize-space(@class), ' '), ' tgme_widget_message_reply ')])]"
+            . "[not(contains(concat(' ', normalize-space(@class), ' '), ' js-message_reply_text '))]",
+            $node
+        );
+
+        if ($textNodes !== false && $textNodes->length > 0) {
+            $textEl = $textNodes->item(0);
+
+            // Try to find bold element within the main text
+            $boldTitle = $this->evalString($xpath, $textEl, 'string(./b[1] | ./strong[1])');
+            if ($boldTitle !== '') {
+                return $boldTitle;
+            }
+        }
+
+        return $this->extractTitle($content, $externalId);
+    }
+
+    /**
+     * Extract the main message text, excluding reply/quote blocks.
+     */
+    private function extractMainMessageText(DOMXPath $xpath, DOMNode $node): string
+    {
+        $textNodes = $xpath->query(
+            ".//*[contains(concat(' ', normalize-space(@class), ' '), ' tgme_widget_message_text ')]"
+            . "[not(ancestor::*[contains(concat(' ', normalize-space(@class), ' '), ' tgme_widget_message_reply ')])]"
+            . "[not(contains(concat(' ', normalize-space(@class), ' '), ' js-message_reply_text '))]",
+            $node
+        );
+
+        if ($textNodes === false || $textNodes->length === 0) {
+            return '';
+        }
+
+        return (string) $textNodes->item(0)->textContent;
+    }
+
     private function extractTitle(string $content, string $externalId): string
     {
         if ($content === '') {
-            return 'Telegram post '.$externalId;
+            return 'Telegram post ' . $externalId;
         }
 
-        if (mb_strlen($content) <= 140) {
+        if (mb_strlen($content) <= 4096) {
             return $content;
         }
 
-        return rtrim(mb_substr($content, 0, 139)).'…';
+        return rtrim(mb_substr($content, 0, 4095)) . '…';
     }
 
     private function normalizeWhitespace(string $value): string
@@ -303,11 +343,11 @@ final class TelegramClient implements TelegramClientContract
         }
 
         if (str_starts_with($link, '//')) {
-            return 'https:'.$link;
+            return 'https:' . $link;
         }
 
         if (str_starts_with($link, '/')) {
-            return 'https://t.me'.$link;
+            return 'https://t.me' . $link;
         }
 
         return $link;
@@ -329,7 +369,7 @@ final class TelegramClient implements TelegramClientContract
             return '';
         }
 
-        if (! preg_match("/url\\(['\\\"]?(.*?)['\\\"]?\\)/", $style, $matches)) {
+        if (!preg_match("/url\\(['\\\"]?(.*?)['\\\"]?\\)/", $style, $matches)) {
             return '';
         }
 
@@ -339,7 +379,7 @@ final class TelegramClient implements TelegramClientContract
     private function evalString(DOMXPath $xpath, DOMNode $node, string $expression): string
     {
         $value = $xpath->evaluate($expression, $node);
-        if (! is_string($value)) {
+        if (!is_string($value)) {
             return '';
         }
 

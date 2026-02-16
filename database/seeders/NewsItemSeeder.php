@@ -4,90 +4,83 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
-use Carbon\CarbonImmutable;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use Modules\Catalog\Infrastructure\Persistence\Models\NewsItem;
-use Modules\Shared\Domain\Enum\NewsStatus;
 
 final class NewsItemSeeder extends Seeder
 {
     public function run(): void
     {
-        $now = CarbonImmutable::now();
+        $sourceId = (int) DB::table('sources')->value('id');
 
-        $hnId = \Modules\Catalog\Infrastructure\Persistence\Models\Source::query()->where('name', 'Hacker News')->value('id') ?? 1;
-        $tcId = \Modules\Catalog\Infrastructure\Persistence\Models\Source::query()->where('name', 'TechCrunch')->value('id') ?? 2;
-        $atId = \Modules\Catalog\Infrastructure\Persistence\Models\Source::query()->where('name', 'Ars Technica')->value('id') ?? 4;
+        if ($sourceId === 0) {
+            return;
+        }
 
         $items = [
             [
-                'source_id' => $hnId,
-                'title_original' => 'New AI model released',
-                'content_original' => 'A new AI model has been announced with promising benchmarks.',
-                'title_generated' => 'Вышла новая модель ИИ',
-                'content_translated' => 'Объявлена новая модель ИИ с многообещающими результатами.',
-                'sentiment_score' => 6,
-                'tags' => ['ai', 'ml', 'release'],
-                'is_important' => true,
-                'status' => NewsStatus::PUBLISHED->value,
-                'source_metadata' => ['external_id' => 'ai-001', 'link' => 'https://example.com/ai-001', 'language' => 'en'],
-                'raw_fingerprint' => 'fp-ai-001',
-                'published_at' => $now->subMinutes(30),
-                'image_url' => 'https://picsum.photos/seed/ai/800/400',
-                'media' => [
-                    ['url' => 'https://picsum.photos/seed/ai/800/400', 'type' => 'image/jpeg'],
-                    ['url' => 'https://example.com/video/ai-001.mp4', 'type' => 'video/mp4'],
-                ],
-            ],
-            [
-                'source_id' => $tcId,
-                'title_original' => 'Market reacts to rate changes',
-                'content_original' => 'Markets showed mixed reaction to recent rate adjustments.',
-                'title_generated' => 'Рынок реагирует на изменения ставок',
-                'content_translated' => 'Рынки показали смешанную реакцию на недавние изменения ставок.',
-                'sentiment_score' => -1,
-                'tags' => ['economy', 'markets'],
-                'is_important' => true,
-                'status' => NewsStatus::PUBLISHED->value,
-                'source_metadata' => ['external_id' => 'eco-010', 'link' => 'https://example.com/eco-010', 'language' => 'en'],
-                'raw_fingerprint' => 'fp-eco-010',
-                'published_at' => $now->subHours(1),
-                'image_url' => 'https://picsum.photos/seed/market/800/400',
-                'media' => [
-                    ['url' => 'https://picsum.photos/seed/market/800/400', 'type' => 'image/jpeg'],
-                ],
-            ],
-            [
-                'source_id' => $atId,
-                'title_original' => 'Новая версия Laravel вышла',
-                'content_original' => 'Laravel представил новую версию с улучшенной производительностью.',
-                'title_generated' => 'Laravel обновился',
-                'content_translated' => 'Laravel представил новую версию с улучшенной производительностью.',
+                'id' => Str::uuid7()->toString(),
+                'source_id' => $sourceId,
+                'title_original' => 'Laravel 12 Released with New Features',
+                'content_original' => 'Laravel 12 introduces several new features and improvements.',
+                'title_generated' => null,
+                'content_translated' => null,
                 'sentiment_score' => 4,
-                'tags' => ['laravel', 'release', 'php'],
+                'tags' => json_encode(['laravel']),
                 'is_important' => false,
-                'status' => NewsStatus::PUBLISHED->value,
-                'source_metadata' => ['external_id' => 'it-777', 'link' => 'https://example.com/it-777', 'language' => 'ru'],
-                'raw_fingerprint' => 'fp-it-777',
-                'published_at' => $now->subMinutes(10),
-                'image_url' => 'https://picsum.photos/seed/laravel/800/400',
-                'media' => [
-                    ['url' => 'https://picsum.photos/seed/laravel/800/400', 'type' => 'image/jpeg'],
-                ],
+                'status' => 'published',
+                'source_metadata' => json_encode(['link' => 'https://example.com/laravel-12', 'external_id' => 'seed-1', 'language' => 'en']),
+                'raw_fingerprint' => 'seed-fp-1',
+                'moderation_reason' => null,
+                'published_at' => now()->subHours(1)->toIso8601String(),
+                'image_url' => null,
+                'media' => json_encode([]),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'id' => Str::uuid7()->toString(),
+                'source_id' => $sourceId,
+                'title_original' => 'Breaking: Major Tech Announcement',
+                'content_original' => 'A major tech company has made an important announcement.',
+                'title_generated' => 'Massive Tech News',
+                'content_translated' => 'Крупная компания сделала важное объявление.',
+                'sentiment_score' => 7,
+                'tags' => json_encode(['it']),
+                'is_important' => true,
+                'status' => 'published',
+                'source_metadata' => json_encode(['link' => 'https://example.com/tech-news', 'external_id' => 'seed-2', 'language' => 'en']),
+                'raw_fingerprint' => 'seed-fp-2',
+                'moderation_reason' => null,
+                'published_at' => now()->subHours(2)->toIso8601String(),
+                'image_url' => 'https://example.com/image.jpg',
+                'media' => json_encode([['url' => 'https://example.com/image.jpg', 'type' => 'image/jpeg']]),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'id' => Str::uuid7()->toString(),
+                'source_id' => $sourceId,
+                'title_original' => 'Economy Update: Markets Rally',
+                'content_original' => 'Stock markets have rallied following positive economic data.',
+                'title_generated' => null,
+                'content_translated' => null,
+                'sentiment_score' => 5,
+                'tags' => json_encode(['economy', 'markets']),
+                'is_important' => false,
+                'status' => 'published',
+                'source_metadata' => json_encode(['link' => 'https://example.com/economy', 'external_id' => 'seed-3', 'language' => 'en']),
+                'raw_fingerprint' => 'seed-fp-3',
+                'moderation_reason' => null,
+                'published_at' => now()->subHours(3)->toIso8601String(),
+                'image_url' => null,
+                'media' => json_encode([]),
+                'created_at' => now(),
+                'updated_at' => now(),
             ],
         ];
 
-        foreach ($items as $item) {
-            NewsItem::query()->updateOrCreate(
-                ['raw_fingerprint' => $item['raw_fingerprint']],
-                array_merge(
-                    [
-                        'id' => Str::uuid()->toString(),
-                    ],
-                    $item,
-                ),
-            );
-        }
+        DB::table('news_items')->insert($items);
     }
 }

@@ -34,8 +34,8 @@ final class KeywordClassifier implements Classifier
         }
 
         return [
-            'category' => 'IT',
-            'tags' => ['it'],
+            'category' => null,
+            'tags' => [],
         ];
     }
 }

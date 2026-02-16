@@ -4,304 +4,428 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>SmartNews Feed</title>
+    <title>SmartNews • Feed</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #0f172a;
-            --bg-soft: #111827;
-            --panel: #1e293b;
-            --panel-soft: #334155;
-            --text: #e2e8f0;
-            --muted: #94a3b8;
-            --accent: #fb923c;
-            --accent-soft: #fdba74;
-            --good: #22c55e;
-            --bad: #ef4444;
-            --radius: 14px;
+            /* iOS 26 Dark Theme Palette */
+            --bg-deep: #000000;
+            --bg-gradient-start: #0a0a0a;
+            --bg-gradient-end: #121214;
+
+            --glass-panel: rgba(30, 30, 35, 0.6);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-highlight: rgba(255, 255, 255, 0.03);
+
+            --text-primary: #ffffff;
+            --text-secondary: #a1a1aa;
+            --text-tertiary: #52525b;
+
+            --accent-primary: #0A84FF;
+            /* System Blue */
+            --accent-glow: rgba(10, 132, 255, 0.25);
+
+            --radius-xl: 28px;
+            --radius-lg: 20px;
+            --radius-md: 14px;
+            --radius-sm: 8px;
+
+            --font-main: 'Outfit', sans-serif;
+
+            --status-good: #32d74b;
+            --status-bad: #ff453a;
         }
 
         * {
             box-sizing: border-box;
+            outline: none;
         }
 
         body {
             margin: 0;
-            font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
-            background:
-                radial-gradient(1200px 600px at -10% -20%, rgba(56, 189, 248, 0.25), transparent 60%),
-                radial-gradient(900px 500px at 110% 0%, rgba(251, 146, 60, 0.22), transparent 60%),
-                radial-gradient(900px 700px at 50% 120%, rgba(14, 165, 233, 0.14), transparent 70%),
-                linear-gradient(135deg, #020617 0%, #0b1023 38%, #111827 100%);
-            color: var(--text);
+            font-family: var(--font-main);
+            background-color: var(--bg-deep);
+            background-image:
+                radial-gradient(circle at 15% 0%, rgba(10, 132, 255, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 85% 100%, rgba(191, 90, 242, 0.08) 0%, transparent 40%);
+            color: var(--text-primary);
             min-height: 100vh;
-            position: relative;
-            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
         }
 
-        body::before,
-        body::after {
-            content: "";
-            position: fixed;
-            inset: 0;
-            pointer-events: none;
-            z-index: 0;
-        }
-
+        /* Ambient Glow effect */
         body::before {
-            background:
-                linear-gradient(rgba(148, 163, 184, 0.08) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(148, 163, 184, 0.08) 1px, transparent 1px);
-            background-size: 34px 34px, 34px 34px;
-            mask-image: radial-gradient(circle at 50% 35%, black 35%, transparent 80%);
-        }
-
-        body::after {
-            background:
-                radial-gradient(circle at 18% 30%, rgba(59, 130, 246, 0.18), transparent 28%),
-                radial-gradient(circle at 82% 18%, rgba(249, 115, 22, 0.18), transparent 24%),
-                radial-gradient(circle at 68% 78%, rgba(6, 182, 212, 0.15), transparent 30%);
-            filter: blur(8px);
-            animation: drift 16s ease-in-out infinite alternate;
-        }
-
-        @keyframes drift {
-            from {
-                transform: translate3d(0, 0, 0) scale(1);
-            }
-
-            to {
-                transform: translate3d(0, -18px, 0) scale(1.03);
-            }
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.03'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: -1;
         }
 
         .shell {
-            max-width: 1280px;
+            max-width: 1600px;
             margin: 0 auto;
-            padding: 24px 16px 32px;
-            position: relative;
-            z-index: 1;
+            padding: 40px 24px;
         }
 
+        /* Header Area */
         .header {
             display: flex;
-            align-items: center;
+            align-items: flex-end;
             justify-content: space-between;
-            gap: 16px;
-            margin-bottom: 18px;
+            margin-bottom: 40px;
+            padding: 0 12px;
         }
 
-        .title {
-            margin: 0;
-            font-size: 30px;
+        .brand h1 {
+            font-size: 42px;
             font-weight: 700;
-            letter-spacing: 0.3px;
+            margin: 0;
+            background: linear-gradient(135deg, #fff 0%, #a1a1aa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.02em;
         }
 
-        .subtitle {
-            color: var(--muted);
-            font-size: 14px;
-            margin: 4px 0 0;
+        .brand p {
+            margin: 8px 0 0;
+            color: var(--text-secondary);
+            font-size: 15px;
+            font-weight: 400;
         }
 
-        .grid {
+        .stats-badge {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            padding: 8px 16px;
+            border-radius: 99px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            backdrop-filter: blur(10px);
+        }
+
+        .stats-badge strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        /* Layout Grid */
+        .layout {
             display: grid;
-            grid-template-columns: 320px 1fr;
-            gap: 16px;
+            grid-template-columns: 280px 1fr;
+            gap: 32px;
+            align-items: start;
         }
 
-        .panel {
-            background: linear-gradient(180deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.95));
-            border: 1px solid rgba(148, 163, 184, 0.25);
-            border-radius: var(--radius);
-        }
-
+        /* Sidebar Filters */
         .filters {
-            padding: 16px;
+            background: var(--glass-panel);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: 24px;
             position: sticky;
-            top: 16px;
-            height: fit-content;
+            top: 40px;
         }
 
-        .filters h2 {
-            margin: 0 0 14px;
-            font-size: 16px;
-            color: var(--accent-soft);
+        .filters h3 {
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-tertiary);
+            margin: 0 0 20px 0;
+            font-weight: 600;
         }
 
-        .field {
-            margin-bottom: 12px;
+        .filter-group {
+            margin-bottom: 24px;
         }
 
-        .field label {
+        .filter-group label {
             display: block;
-            margin-bottom: 6px;
-            font-size: 12px;
-            color: var(--muted);
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+            font-weight: 500;
         }
 
-        .field input,
-        .field select {
+        .input-glass {
             width: 100%;
-            border-radius: 10px;
-            border: 1px solid rgba(148, 163, 184, 0.35);
-            background: rgba(15, 23, 42, 0.75);
-            color: var(--text);
-            padding: 8px 10px;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            padding: 12px 16px;
+            color: var(--text-primary);
+            font-family: inherit;
             font-size: 14px;
+            transition: all 0.2s ease;
         }
 
-        .range {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
+        .input-glass:focus {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 2px var(--accent-glow);
         }
 
-        .buttons {
-            display: flex;
-            gap: 8px;
-            margin-top: 8px;
-        }
-
-        button {
-            border: 0;
-            border-radius: 10px;
-            padding: 9px 12px;
-            font-size: 14px;
+        select.input-glass {
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23ffffff'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 16px;
+            padding-right: 40px;
             cursor: pointer;
         }
 
-        .btn-primary {
-            background: linear-gradient(90deg, var(--accent), #f97316);
-            color: #111827;
-            font-weight: 700;
+        input[type="date"].input-glass {
+            color-scheme: dark;
+            min-width: 0;
+            padding-left: 10px;
+            padding-right: 4px;
         }
 
-        .btn-ghost {
-            background: rgba(148, 163, 184, 0.2);
-            color: var(--text);
+        /* Darken calendar icon */
+        ::-webkit-calendar-picker-indicator {
+            filter: invert(1);
+            opacity: 0.5;
+            cursor: pointer;
         }
 
-        .feed {
-            padding: 14px;
-        }
-
-        .status {
-            display: flex;
-            justify-content: space-between;
-            color: var(--muted);
-            font-size: 13px;
-            margin-bottom: 12px;
-        }
-
-        .list {
+        .range-row {
             display: grid;
+            grid-template-columns: 1fr 1fr;
             gap: 12px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 8px;
+        }
+
+        .btn {
+            border: none;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: 600;
+            font-size: 14px;
+            border-radius: var(--radius-md);
+            padding: 12px 20px;
+            transition: transform 0.1s active;
+            letter-spacing: -0.01em;
+            width: 100%;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-primary {
+            background: var(--accent-primary);
+            color: #fff;
+            box-shadow: 0 4px 20px var(--accent-glow);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+            border: 1px solid var(--glass-border);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* News Grid */
+        .news-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            /* 3 Columns as requested */
+            gap: 24px;
         }
 
         .card {
-            border: 1px solid rgba(148, 163, 184, 0.2);
-            border-radius: 12px;
-            padding: 14px;
-            background: linear-gradient(160deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.9));
+            background: var(--glass-panel);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s ease, border-color 0.3s ease;
+            height: 100%;
         }
 
-        .card-top {
+        .card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
+        }
+
+        .card-preview {
+            aspect-ratio: 16/9;
+            background: #1a1a1a;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card-preview img,
+        .card-preview video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: opacity 0.3s ease;
+        }
+
+        .card-body {
+            padding: 24px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-meta {
             display: flex;
             justify-content: space-between;
-            gap: 12px;
-            margin-bottom: 10px;
+            align-items: center;
+            margin-bottom: 12px;
             font-size: 12px;
-            color: var(--muted);
+        }
+
+        .date {
+            color: var(--text-tertiary);
+            font-weight: 500;
         }
 
         .badges {
             display: flex;
-            flex-wrap: wrap;
             gap: 6px;
         }
 
         .badge {
-            padding: 3px 8px;
-            border-radius: 999px;
-            background: rgba(51, 65, 85, 0.8);
+            padding: 4px 10px;
+            border-radius: 99px;
             font-size: 11px;
-            color: #cbd5e1;
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-secondary);
+            border: 1px solid var(--glass-border);
         }
 
-        .badge-important {
-            background: rgba(251, 146, 60, 0.2);
-            color: var(--accent-soft);
-            border: 1px solid rgba(251, 146, 60, 0.4);
+        .badge.important {
+            background: rgba(255, 69, 58, 0.15);
+            color: #ff453a;
+            border-color: rgba(255, 69, 58, 0.3);
         }
 
-        .card h3 {
-            margin: 0 0 8px;
-            font-size: 19px;
-            line-height: 1.35;
+        .badge.sentiment-good {
+            color: var(--status-good);
+            background: rgba(50, 215, 75, 0.1);
+            border-color: rgba(50, 215, 75, 0.2);
         }
 
-        .card p {
-            margin: 0;
-            color: #cbd5e1;
-            line-height: 1.55;
+        .badge.sentiment-bad {
+            color: var(--status-bad);
+            background: rgba(255, 69, 58, 0.1);
+            border-color: rgba(255, 69, 58, 0.2);
+        }
+
+        .card-title {
+            font-size: 18px;
+            line-height: 1.4;
+            font-weight: 600;
+            margin: 0 0 12px;
+            color: var(--text-primary);
+        }
+
+        .card-text {
             font-size: 14px;
+            line-height: 1.6;
+            color: var(--text-secondary);
+            margin: 0 0 20px;
+            flex-grow: 1;
         }
 
-        .media {
-            display: grid;
-            gap: 8px;
-            margin-top: 12px;
-        }
-
-        .media img,
-        .media video {
-            width: 100%;
-            border-radius: 10px;
-            border: 1px solid rgba(148, 163, 184, 0.2);
-        }
-
-        .meta {
-            margin-top: 12px;
+        .card-footer {
+            margin-top: auto;
+            border-top: 1px solid var(--glass-border);
+            padding-top: 16px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            gap: 12px;
+        }
+
+        .tags {
             font-size: 12px;
-            color: var(--muted);
+            color: var(--text-tertiary);
+            max-width: 70%;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
-        .meta a {
-            color: #93c5fd;
+        .source-link a {
+            color: var(--accent-primary);
             text-decoration: none;
+            font-size: 12px;
+            font-weight: 600;
+            transition: opacity 0.2s;
         }
 
-        .load-more {
-            margin-top: 14px;
-            width: 100%;
-            background: rgba(148, 163, 184, 0.2);
-            color: var(--text);
-            border: 1px solid rgba(148, 163, 184, 0.3);
+        .source-link a:hover {
+            opacity: 0.8;
         }
 
-        .empty {
-            border: 1px dashed rgba(148, 163, 184, 0.35);
-            border-radius: 12px;
-            padding: 18px;
+        .load-more-container {
+            grid-column: 1 / -1;
             text-align: center;
-            color: var(--muted);
+            margin-top: 40px;
+            padding-bottom: 40px;
         }
 
-        @media (max-width: 980px) {
-            .grid {
+        .status-msg {
+            text-align: center;
+            grid-column: 1 / -1;
+            padding: 40px;
+            color: var(--text-secondary);
+            font-size: 15px;
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .news-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 900px) {
+            .layout {
                 grid-template-columns: 1fr;
             }
 
             .filters {
                 position: static;
+                margin-bottom: 32px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .news-grid {
+                grid-template-columns: 1fr;
             }
 
-            .title {
-                font-size: 24px;
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 16px;
             }
         }
     </style>
@@ -309,27 +433,36 @@
 
 <body>
     <div class="shell">
-        <div class="header">
-            <div>
-                <h1 class="title">SmartNews</h1>
-                <p class="subtitle">Лента новостей с фильтрами по категориям, тональности и важности.</p>
+        <header class="header">
+            <div class="brand">
+                <h1>SmartNews</h1>
             </div>
-        </div>
+            <div class="stats-badge">
+                Новостей: <strong id="total-articles">...</strong>
+            </div>
+        </header>
 
-        <div class="grid">
-            <aside class="panel filters">
-                <h2>Фильтры</h2>
+        <div class="layout">
+            <aside class="filters">
+                <h3>Фильтры</h3>
                 <form id="filters-form">
-                    <div class="field">
+                    <div class="filter-group">
                         <label for="q">Поиск</label>
-                        <input id="q" name="q" type="text" placeholder="Ключевое слово">
+                        <input id="q" name="q" class="input-glass" type="text" placeholder="Ключевые слова...">
                     </div>
 
-                    <div class="field">
+                    <div class="filter-group">
+                        <label for="source_id">Источник</label>
+                        <select id="source_id" name="source_id" class="input-glass">
+                            <option value="">Все источники</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
                         <label for="category">Категория</label>
-                        <select id="category" name="category">
-                            <option value="">Все</option>
-                            <option value="it">IT</option>
+                        <select id="category" name="category" class="input-glass">
+                            <option value="">Все категории</option>
+                            <option value="it">Технологии (IT)</option>
                             <option value="economy">Экономика</option>
                             <option value="markets">Рынки</option>
                             <option value="politics">Политика</option>
@@ -339,47 +472,51 @@
                         </select>
                     </div>
 
-                    <div class="field">
-                        <label for="important">Важность</label>
-                        <select id="important" name="important">
-                            <option value="">Все</option>
-                            <option value="1">Только важные</option>
-                            <option value="0">Только обычные</option>
+                    <div class="filter-group">
+                        <label for="important">Приоритет</label>
+                        <select id="important" name="important" class="input-glass">
+                            <option value="">Все новости</option>
+                            <option value="1">Важные</option>
+                            <option value="0">Обычные</option>
                         </select>
                     </div>
 
-                    <div class="field">
+                    <div class="filter-group">
                         <label>Тональность</label>
-                        <div class="range">
-                            <input id="sentiment_min" name="sentiment_min" type="number" min="-10" max="10"
-                                placeholder="от -10">
-                            <input id="sentiment_max" name="sentiment_max" type="number" min="-10" max="10"
-                                placeholder="до 10">
+                        <div class="range-row">
+                            <input id="sentiment_min" name="sentiment_min" class="input-glass" type="number" min="-10"
+                                max="10" placeholder="Мин">
+                            <input id="sentiment_max" name="sentiment_max" class="input-glass" type="number" min="-10"
+                                max="10" placeholder="Макс">
                         </div>
                     </div>
 
-                    <div class="field">
-                        <label>Диапазон дат</label>
-                        <div class="range">
-                            <input id="date_from" name="date_from" type="date">
-                            <input id="date_to" name="date_to" type="date">
+                    <div class="filter-group">
+                        <label>Период</label>
+                        <div class="range-row">
+                            <input id="date_from" name="date_from" class="input-glass" type="date" title="С даты">
+                            <input id="date_to" name="date_to" class="input-glass" type="date" title="По дату">
                         </div>
                     </div>
 
-                    <div class="buttons">
-                        <button class="btn-primary" type="submit">Применить</button>
-                        <button class="btn-ghost" type="button" id="reset-btn">Сбросить</button>
+                    <div class="btn-group">
+                        <button class="btn btn-primary" type="submit">Применить</button>
+                        <button class="btn btn-secondary" type="button" id="reset-btn">Сбросить</button>
                     </div>
                 </form>
             </aside>
 
-            <main class="panel feed">
-                <div class="status">
-                    <span id="status-text">Загрузка...</span>
-                    <span id="counter-text">0</span>
+            <main>
+                <div id="news-grid" class="news-grid">
+                    <!-- Cards injected here -->
                 </div>
-                <div id="news-list" class="list"></div>
-                <button id="load-more" class="load-more" type="button" hidden>Показать еще</button>
+
+                <div id="status-msg" class="status-msg">Загрузка ленты...</div>
+
+                <div class="load-more-container">
+                    <button id="load-more" class="btn btn-secondary" style="width: auto; padding: 12px 32px;"
+                        type="button" hidden>Load More</button>
+                </div>
             </main>
         </div>
     </div>
@@ -387,16 +524,16 @@
     <script>
         const form = document.getElementById('filters-form');
         const resetBtn = document.getElementById('reset-btn');
-        const listEl = document.getElementById('news-list');
-        const statusEl = document.getElementById('status-text');
-        const counterEl = document.getElementById('counter-text');
+        const gridEl = document.getElementById('news-grid');
+        const statusEl = document.getElementById('status-msg');
+        const totalEl = document.getElementById('total-articles');
         const loadMoreEl = document.getElementById('load-more');
 
         let nextCursor = null;
-        let loadedCount = 0;
         let currentFilters = readFiltersFromQuery();
 
         applyFiltersToForm(currentFilters);
+        loadSources();
         loadNews(true);
 
         form.addEventListener('submit', (event) => {
@@ -415,16 +552,36 @@
 
         loadMoreEl.addEventListener('click', () => loadNews(false));
 
+        async function loadSources() {
+            try {
+                const res = await fetch('/api/sources', { headers: { 'Accept': 'application/json' } });
+                if (!res.ok) return;
+                const payload = await res.json();
+                const select = document.getElementById('source_id');
+                for (const s of payload.data || []) {
+                    const opt = document.createElement('option');
+                    opt.value = s.id;
+                    opt.textContent = s.name;
+                    select.append(opt);
+                }
+                // Restore selected source from filters
+                if (currentFilters.source_id) {
+                    select.value = currentFilters.source_id;
+                }
+            } catch (e) { console.error(e); }
+        }
+
         async function loadNews(reset) {
             if (reset) {
                 nextCursor = null;
-                loadedCount = 0;
-                listEl.innerHTML = '';
-                counterEl.textContent = '0';
+                gridEl.innerHTML = '';
+                totalEl.textContent = '...';
+                statusEl.hidden = false;
+                statusEl.textContent = 'Обновление ленты...';
             }
 
             const params = new URLSearchParams();
-            params.set('per_page', '25');
+            params.set('per_page', '24');
 
             for (const [key, value] of Object.entries(currentFilters)) {
                 if (value !== null && value !== undefined && String(value).trim() !== '') {
@@ -436,37 +593,38 @@
                 params.set('cursor', nextCursor);
             }
 
-            statusEl.textContent = 'Загрузка...';
             loadMoreEl.hidden = true;
 
             try {
                 const response = await fetch(`/api/news?${params.toString()}`, {
                     headers: { 'Accept': 'application/json' }
                 });
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}`);
-                }
+
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
                 const payload = await response.json();
                 const items = Array.isArray(payload.data) ? payload.data : [];
 
-                if (items.length === 0 && reset) {
-                    listEl.innerHTML = '<div class="empty">По текущим фильтрам ничего не найдено.</div>';
-                } else {
-                    for (const item of items) {
-                        listEl.append(createCard(item));
-                    }
+                if (payload.meta && payload.meta.total !== undefined) {
+                    totalEl.textContent = new Intl.NumberFormat('ru-RU').format(payload.meta.total);
                 }
 
-                loadedCount += items.length;
-                counterEl.textContent = `${loadedCount} новостей`;
-                statusEl.textContent = items.length > 0 ? 'Данные обновлены' : 'Больше новостей нет';
+                if (items.length === 0 && reset) {
+                    statusEl.textContent = 'Новости не найдены.';
+                    statusEl.hidden = false;
+                } else {
+                    statusEl.hidden = true;
+                    for (const item of items) {
+                        gridEl.append(createCard(item));
+                    }
+                }
 
                 nextCursor = payload?.meta?.next_cursor ?? null;
                 loadMoreEl.hidden = !nextCursor;
             } catch (error) {
-                statusEl.textContent = 'Ошибка загрузки ленты';
-                loadMoreEl.hidden = true;
+                console.error(error);
+                statusEl.textContent = 'Ошибка загрузки ленты.';
+                statusEl.hidden = false;
             }
         }
 
@@ -474,117 +632,105 @@
             const article = document.createElement('article');
             article.className = 'card';
 
-            const cardTop = document.createElement('div');
-            cardTop.className = 'card-top';
+            // Preview Media — only show if there's an actual image
+            if (item.image_url) {
+                const preview = document.createElement('div');
+                preview.className = 'card-preview';
+                const img = document.createElement('img');
+                img.src = item.image_url;
+                img.loading = 'lazy';
+                img.alt = '';
+                preview.append(img);
+                article.append(preview);
+            }
+
+            // Body
+            const body = document.createElement('div');
+            body.className = 'card-body';
+
+            // Meta Row
+            const meta = document.createElement('div');
+            meta.className = 'card-meta';
 
             const date = document.createElement('div');
+            date.className = 'date';
             date.textContent = formatDate(item.published_at);
 
             const badges = document.createElement('div');
             badges.className = 'badges';
-            if (item.important === true) {
-                const importantBadge = document.createElement('span');
-                importantBadge.className = 'badge badge-important';
-                importantBadge.textContent = 'important';
-                badges.append(importantBadge);
+
+            if (item.important) {
+                const imp = document.createElement('span');
+                imp.className = 'badge important';
+                imp.textContent = 'CORE';
+                badges.append(imp);
             }
-            const sentimentBadge = document.createElement('span');
-            sentimentBadge.className = 'badge';
-            sentimentBadge.style.color = sentimentColor(item.sentiment);
-            sentimentBadge.textContent = `sentiment: ${item.sentiment ?? 0}`;
-            badges.append(sentimentBadge);
 
-            cardTop.append(date, badges);
-            article.append(cardTop);
+            const sent = document.createElement('span');
+            sent.className = 'badge ' + (item.sentiment > 0 ? 'sentiment-good' : (item.sentiment < 0 ? 'sentiment-bad' : ''));
+            sent.textContent = item.sentiment > 0 ? '+' + item.sentiment : item.sentiment;
+            badges.append(sent);
 
-            const title = document.createElement('h3');
-            title.textContent = item.title_generated || item.title_original || 'Без заголовка';
-            article.append(title);
+            meta.append(date, badges);
+            body.append(meta);
 
+            // Title
+            const titleText = item.title_generated || item.title_original || 'Без заголовка';
+            const rawContent = item.content_translated || item.content_original || '';
+            const contentText = cleanContent(rawContent);
+
+            // Hide title only if it's exactly the same as content
+            const isDuplicate = !item.title_generated && titleText === contentText;
+
+            if (!isDuplicate) {
+                const title = document.createElement('h3');
+                title.className = 'card-title';
+                title.textContent = titleText;
+                body.append(title);
+            }
+
+            // Text
             const text = document.createElement('p');
-            text.textContent = truncate(item.content_translated || item.content_original || '', 900);
-            article.append(text);
+            text.className = 'card-text';
+            text.textContent = contentText;
+            body.append(text);
 
-            const mediaWrap = buildMedia(item);
-            if (mediaWrap !== null) {
-                article.append(mediaWrap);
+            // Footer
+            const footer = document.createElement('div');
+            footer.className = 'card-footer';
+
+            const tags = document.createElement('div');
+            tags.className = 'tags';
+            tags.textContent = renderTags(item.tags);
+
+            const linkDiv = document.createElement('div');
+            linkDiv.className = 'source-link';
+
+            if (item.source_metadata?.link) {
+                const a = document.createElement('a');
+                a.href = item.source_metadata.link;
+                a.target = '_blank';
+                a.rel = 'noopener';
+                a.textContent = (item.source_name || 'Источник') + ' →';
+                linkDiv.append(a);
             }
 
-            const meta = document.createElement('div');
-            meta.className = 'meta';
-            meta.innerHTML = `
-            <span>${renderTags(item.tags)}</span>
-            ${buildSourceLink(item)}
-        `;
-            article.append(meta);
+            footer.append(tags, linkDiv);
+            body.append(footer);
 
+            article.append(body);
             return article;
-        }
-
-        function buildMedia(item) {
-            const mediaWrap = document.createElement('div');
-            mediaWrap.className = 'media';
-
-            const used = new Set();
-            if (item.image_url) {
-                const image = document.createElement('img');
-                image.src = item.image_url;
-                image.alt = item.title_generated || item.title_original || 'preview';
-                image.loading = 'lazy';
-                mediaWrap.append(image);
-                used.add(item.image_url);
-            }
-
-            if (Array.isArray(item.media)) {
-                for (const media of item.media.slice(0, 3)) {
-                    if (!media || !media.url || used.has(media.url)) {
-                        continue;
-                    }
-
-                    const type = String(media.type || '');
-                    if (type.startsWith('video/')) {
-                        const video = document.createElement('video');
-                        video.src = media.url;
-                        video.controls = true;
-                        video.preload = 'none';
-                        mediaWrap.append(video);
-                        used.add(media.url);
-                        continue;
-                    }
-
-                    if (type.startsWith('image/')) {
-                        const image = document.createElement('img');
-                        image.src = media.url;
-                        image.alt = item.title_generated || item.title_original || 'preview';
-                        image.loading = 'lazy';
-                        mediaWrap.append(image);
-                        used.add(media.url);
-                    }
-                }
-            }
-
-            return mediaWrap.children.length > 0 ? mediaWrap : null;
-        }
-
-        function buildSourceLink(item) {
-            const link = item?.source_metadata?.link;
-            if (typeof link !== 'string' || link.trim() === '') {
-                return '<span></span>';
-            }
-
-            return `<a href="${escapeHtml(link)}" target="_blank" rel="noopener noreferrer">источник</a>`;
         }
 
         function readFiltersFromQuery() {
             const params = new URLSearchParams(window.location.search);
             const filters = {};
-            for (const key of ['q', 'category', 'important', 'sentiment_min', 'sentiment_max', 'date_from', 'date_to']) {
+            for (const key of ['q', 'category', 'important', 'sentiment_min', 'sentiment_max', 'date_from', 'date_to', 'source_id']) {
                 const value = params.get(key);
                 if (value !== null && value !== '') {
                     filters[key] = value;
                 }
             }
-
             return filters;
         }
 
@@ -608,70 +754,37 @@
                     filters[key] = value;
                 }
             }
-
             return filters;
         }
 
         function applyFiltersToForm(filters) {
             for (const [key, value] of Object.entries(filters)) {
                 const field = form.elements.namedItem(key);
-                if (field) {
-                    field.value = value;
-                }
+                if (field) field.value = value;
             }
         }
 
         function renderTags(tags) {
-            if (!Array.isArray(tags) || tags.length === 0) {
-                return 'без тегов';
-            }
-
-            return tags.map((tag) => `#${escapeHtml(String(tag))}`).join(' ');
+            if (!Array.isArray(tags) || tags.length === 0) return '';
+            return tags.map(t => `#${t}`).join(' ');
         }
 
-        function truncate(value, length) {
-            const text = String(value || '').trim();
-            if (text.length <= length) {
-                return text;
-            }
-
-            return `${text.slice(0, length - 1)}…`;
+        function truncate(str, n) {
+            return (str.length > n) ? str.slice(0, n - 1) + '…' : str;
         }
 
-        function sentimentColor(score) {
-            if (Number(score) > 0) {
-                return getComputedStyle(document.documentElement).getPropertyValue('--good');
-            }
-            if (Number(score) < 0) {
-                return getComputedStyle(document.documentElement).getPropertyValue('--bad');
-            }
-
-            return '#cbd5e1';
+        function cleanContent(text) {
+            if (!text) return '';
+            // Remove Telegram subscription spam like "👉 Топор Live. Подписаться"
+            return text.replace(/\s*👉.*(?:Подписаться|подписаться).*$/s, '').trim();
         }
 
         function formatDate(value) {
-            if (!value) {
-                return 'дата неизвестна';
-            }
-
+            if (!value) return '';
             const date = new Date(value);
-            if (Number.isNaN(date.getTime())) {
-                return String(value);
-            }
-
             return new Intl.DateTimeFormat('ru-RU', {
-                dateStyle: 'medium',
-                timeStyle: 'short'
+                day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
             }).format(date);
-        }
-
-        function escapeHtml(value) {
-            return value
-                .replaceAll('&', '&amp;')
-                .replaceAll('<', '&lt;')
-                .replaceAll('>', '&gt;')
-                .replaceAll('"', '&quot;')
-                .replaceAll("'", '&#39;');
         }
     </script>
 </body>

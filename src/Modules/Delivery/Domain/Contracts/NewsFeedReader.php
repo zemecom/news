@@ -18,4 +18,6 @@ interface NewsFeedReader
      * @return array<string, mixed>|null
      */
     public function findPublishedById(string $id): ?array;
+
+    public function count(NewsFeedFilters $filters): int;
 }

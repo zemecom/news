@@ -10,7 +10,9 @@ use Modules\Delivery\Domain\DTO\NewsFeedFilters;
 
 final class ListNewsAction
 {
-    public function __construct(private NewsFeedReader $reader) {}
+    public function __construct(private NewsFeedReader $reader)
+    {
+    }
 
     /**
      * @return CursorPaginator<int, array<string, mixed>>
@@ -18,5 +20,10 @@ final class ListNewsAction
     public function __invoke(NewsFeedFilters $filters, int $perPage = 20, ?string $cursor = null): CursorPaginator
     {
         return $this->reader->paginatePublished($filters, $perPage, $cursor);
+    }
+
+    public function count(NewsFeedFilters $filters): int
+    {
+        return $this->reader->count($filters);
     }
 }

@@ -11,13 +11,11 @@ use Illuminate\Database\Eloquent\Model;
  */
 final class NewsItem extends Model
 {
+    use \Illuminate\Database\Eloquent\Concerns\HasUuids;
+
     protected $table = 'news_items';
 
     protected $primaryKey = 'id';
-
-    public $incrementing = false;
-
-    protected $keyType = 'string';
 
     protected $fillable = [
         'id',

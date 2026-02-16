@@ -15,6 +15,6 @@ final class FeedPageTest extends TestCase
             ->assertSee('SmartNews')
             ->assertSee('Фильтры')
             ->assertSee('id="filters-form"', false)
-            ->assertSee('id="news-list"', false);
+            ->assertSee('id="news-grid"', false);
     }
 }

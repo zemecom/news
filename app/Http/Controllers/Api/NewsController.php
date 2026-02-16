@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\NewsIndexRequest;
 use Carbon\CarbonImmutable;
+use Illuminate\Database\DatabaseManager;
 use Illuminate\Http\JsonResponse;
 use Modules\Delivery\Application\Actions\ListNewsAction;
 use Modules\Delivery\Application\Actions\ShowNewsAction;
@@ -17,7 +18,9 @@ final class NewsController extends Controller
     public function __construct(
         private ListNewsAction $listNews,
         private ShowNewsAction $showNews,
-    ) {}
+        private DatabaseManager $db,
+    ) {
+    }
 
     public function index(NewsIndexRequest $request): JsonResponse
     {
@@ -29,6 +32,7 @@ final class NewsController extends Controller
             dateFrom: $request->filled('date_from') ? CarbonImmutable::parse($request->string('date_from')->toString()) : null,
             dateTo: $request->filled('date_to') ? CarbonImmutable::parse($request->string('date_to')->toString()) : null,
             query: $request->string('q')->toString() ?: null,
+            sourceId: $request->filled('source_id') ? $request->integer('source_id') : null,
         );
 
         $paginator = ($this->listNews)(
@@ -43,6 +47,7 @@ final class NewsController extends Controller
                 'per_page' => $paginator->perPage(),
                 'next_cursor' => $paginator->nextCursor()?->encode(),
                 'prev_cursor' => $paginator->previousCursor()?->encode(),
+                'total' => $this->listNews->count($filters),
             ],
         ]);
     }
@@ -57,5 +62,20 @@ final class NewsController extends Controller
         return response()->json([
             'data' => $newsItem,
         ]);
+    }
+
+    public function sources(): JsonResponse
+    {
+        $sources = $this->db->connection()
+            ->table('sources')
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get(['id', 'name'])
+            ->map(fn(object $row): array => [
+                'id' => (int) $row->id,
+                'name' => (string) $row->name,
+            ]);
+
+        return response()->json(['data' => $sources]);
     }
 }

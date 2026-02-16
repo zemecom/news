@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/news', [NewsController::class, 'index']);
 Route::get('/news/{id}', [NewsController::class, 'show'])->whereUuid('id');
+Route::get('/sources', [NewsController::class, 'sources']);
 
 Route::middleware(['auth', 'role.admin'])
     ->prefix('admin')

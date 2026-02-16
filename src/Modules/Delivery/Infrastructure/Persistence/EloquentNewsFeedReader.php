@@ -14,7 +14,9 @@ use Modules\Shared\Domain\Enum\NewsStatus;
 
 final class EloquentNewsFeedReader implements NewsFeedReader
 {
-    public function __construct(private DatabaseManager $db) {}
+    public function __construct(private DatabaseManager $db)
+    {
+    }
 
     /**
      * @return CursorPaginator<int, array<string, mixed>>
@@ -23,33 +25,34 @@ final class EloquentNewsFeedReader implements NewsFeedReader
     {
         $query = $this->baseQuery($filters);
         $paginator = $query
-            ->orderByDesc('published_at')
-            ->orderByDesc('id')
+            ->orderByDesc('news_items.published_at')
+            ->orderByDesc('news_items.id')
             ->cursorPaginate(
                 perPage: max(1, min($perPage, 100)),
                 columns: [
-                    'id',
-                    'source_id',
-                    'title_original',
-                    'content_original',
-                    'title_generated',
-                    'content_translated',
-                    'image_url',
-                    'media',
-                    'sentiment_score',
-                    'tags',
-                    'is_important',
-                    'status',
-                    'source_metadata',
-                    'raw_fingerprint',
-                    'moderation_reason',
-                    'published_at',
+                    'news_items.id',
+                    'news_items.source_id',
+                    'sources.name as source_name',
+                    'news_items.title_original',
+                    'news_items.content_original',
+                    'news_items.title_generated',
+                    'news_items.content_translated',
+                    'news_items.image_url',
+                    'news_items.media',
+                    'news_items.sentiment_score',
+                    'news_items.tags',
+                    'news_items.is_important',
+                    'news_items.status',
+                    'news_items.source_metadata',
+                    'news_items.raw_fingerprint',
+                    'news_items.moderation_reason',
+                    'news_items.published_at',
                 ],
                 cursor: $this->decodeCursor($cursor),
             );
 
         return $paginator->through(
-            fn (object $row): array => $this->mapRow($row),
+            fn(object $row): array => $this->mapRow($row),
         );
     }
 
@@ -58,34 +61,46 @@ final class EloquentNewsFeedReader implements NewsFeedReader
         $row = $this->db->connection()
             ->table('news_items')
             ->where('status', NewsStatus::PUBLISHED->value)
-            ->where('id', $id)
+            ->leftJoin('sources', 'sources.id', '=', 'news_items.source_id')
+            ->where('news_items.id', $id)
             ->first([
-                'id',
-                'source_id',
-                'title_original',
-                'content_original',
-                'title_generated',
-                'content_translated',
-                'image_url',
-                'media',
-                'sentiment_score',
-                'tags',
-                'is_important',
-                'status',
-                'source_metadata',
-                'raw_fingerprint',
-                'moderation_reason',
-                'published_at',
+                'news_items.id',
+                'news_items.source_id',
+                'sources.name as source_name',
+                'news_items.title_original',
+                'news_items.content_original',
+                'news_items.title_generated',
+                'news_items.content_translated',
+                'news_items.image_url',
+                'news_items.media',
+                'news_items.sentiment_score',
+                'news_items.tags',
+                'news_items.is_important',
+                'news_items.status',
+                'news_items.source_metadata',
+                'news_items.raw_fingerprint',
+                'news_items.moderation_reason',
+                'news_items.published_at',
             ]);
 
         return $row === null ? null : $this->mapRow($row);
+    }
+
+    public function count(NewsFeedFilters $filters): int
+    {
+        return $this->baseQuery($filters)->count();
     }
 
     private function baseQuery(NewsFeedFilters $filters): Builder
     {
         $query = $this->db->connection()
             ->table('news_items')
-            ->where('status', NewsStatus::PUBLISHED->value);
+            ->leftJoin('sources', 'sources.id', '=', 'news_items.source_id')
+            ->where('news_items.status', NewsStatus::PUBLISHED->value);
+
+        if ($filters->sourceId !== null) {
+            $query->where('news_items.source_id', $filters->sourceId);
+        }
 
         if ($filters->category !== null && $filters->category !== '') {
             $query->whereJsonContains('tags', $filters->category);
@@ -114,11 +129,11 @@ final class EloquentNewsFeedReader implements NewsFeedReader
         if ($filters->query !== null && $filters->query !== '') {
             $driver = $this->db->connection()->getDriverName();
             $operator = $driver === 'pgsql' ? 'ILIKE' : 'LIKE';
-            $search = '%'.$filters->query.'%';
+            $search = '%' . $filters->query . '%';
             $query->where(function (Builder $nested) use ($operator, $search): void {
                 $nested
-                    ->where('title_original', $operator, $search)
-                    ->orWhere('title_generated', $operator, $search);
+                    ->where('news_items.title_original', $operator, $search)
+                    ->orWhere('news_items.title_generated', $operator, $search);
             });
         }
 
@@ -143,6 +158,7 @@ final class EloquentNewsFeedReader implements NewsFeedReader
         return [
             'id' => (string) ($rowData['id'] ?? ''),
             'source_id' => (int) ($rowData['source_id'] ?? 0),
+            'source_name' => isset($rowData['source_name']) ? (string) $rowData['source_name'] : null,
             'title_original' => (string) ($rowData['title_original'] ?? ''),
             'content_original' => (string) ($rowData['content_original'] ?? ''),
             'title_generated' => isset($rowData['title_generated']) ? (string) $rowData['title_generated'] : null,
@@ -169,7 +185,7 @@ final class EloquentNewsFeedReader implements NewsFeedReader
             return $value;
         }
 
-        if (! is_string($value) || trim($value) === '') {
+        if (!is_string($value) || trim($value) === '') {
             return [];
         }
 

@@ -20,7 +20,7 @@ final class FinalizeStep implements PipelineStep
 
         return new EnrichedNewsData(
             rawId: $input->rawId ?? $input->externalId ?? $input->fingerprint,
-            titleGenerated: $input->title,
+            titleGenerated: null, // Let LLM fill this later
             contentTranslated: $input->content,
             sentiment: (int) ($metadata['sentiment'] ?? 0),
             category: (string) ($metadata['category'] ?? ''),

@@ -13,7 +13,7 @@ readonly class EnrichedNewsData
      */
     public function __construct(
         public string $rawId,
-        public string $titleGenerated,
+        public ?string $titleGenerated,
         public string $contentTranslated,
         public int $sentiment,
         public string $category,
@@ -22,14 +22,15 @@ readonly class EnrichedNewsData
         public NewsStatus $status,
         public ?string $moderationReason,
         public string $fingerprint,
-    ) {}
+    ) {
+    }
 
     /**
      * Копия с подменой выбранных полей.
      *
      * @param array{
      *     rawId?: string,
-     *     titleGenerated?: string,
+     *     titleGenerated?: ?string,
      *     contentTranslated?: string,
      *     sentiment?: int,
      *     category?: string,
