@@ -37,7 +37,8 @@ make dev
 - `make setup-local`: Сберет образы, поднимет контейнеры и настроит окружение.
 - `make dev`: Запустит сервер, очереди и Vite одновременно (внутри Docker).
 
-Доступ: `http://localhost:8080`, healthchecks: `/health/live`, `/health/ready`.
+Доступ: `http://localhost:${APP_PORT:-8080}`, healthchecks: `/health/live`, `/health/ready`.
+По умолчанию: Приложение — `8080`, Vite (HMR) — `5173`. Порты настраиваются в `.env`.
 
 ## Команды (Makefile)
 
