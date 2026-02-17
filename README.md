@@ -1,6 +1,7 @@
 # SmartNews Aggregator
 
-AI‑агрегатор новостей в формате modular monolith на Laravel. Система собирает данные из источников, обогащает (перевод/классификация/тональность), хранит и доставляет пользователю.
+AI‑агрегатор новостей в формате modular monolith на Laravel. PHP 8.5+.
+Система собирает данные из источников, обогащает (перевод/классификация/тональность), хранит и доставляет пользователю.
 
 ## Архитектура
 
@@ -10,68 +11,48 @@ AI‑агрегатор новостей в формате modular monolith на
 
 ## Быстрый старт (Docker)
 
-```bash
-make up
-make migrate
-```
-
-Доступ: `http://localhost:8080`, healthchecks: `/health/live`, `/health/ready`.
-
-## Локальный запуск (без Docker)
+Проект полностью докеризирован. Тебе нужен только **Docker** и **Make**.
 
 ```bash
-composer install
-cp .env.example .env
-php artisan key:generate
-php artisan migrate
-php artisan serve
-```
-
-Для полного дев-стека (сервер + очередь + логи + Vite):
-
-```bash
+make setup-local
 make dev
 ```
 
-## Команды
+- `make setup-local`: Сберет образы, поднимет контейнеры и настроит окружение.
+- `make dev`: Запустит сервер, очереди и Vite одновременно (внутри Docker).
 
-### Тесты
+Доступ: `http://localhost:8080`, healthchecks: `/health/live`, `/health/ready`.
+
+## Команды (Makefile)
+
+Все команды выполняются **внутри Docker-контейнера**.
+
+### Тестирование и Качество
+
 ```bash
-make smoke-api
-make test
-make test-arch
-make acceptance
-make test-all
+make test          # Unit/Feature тесты (PHPUnit)
+make test-arch     # Проверка архитектурных правил (Pest)
+make ci-check      # Полный прогон (Lint, PHPStan, Psalm, Tests)
+make smoke-api     # Базовый тест API
 ```
 
-### Очереди и краулер
+### Статический анализ и Линтинг
+
 ```bash
-make messaging-setup
-make crawl
-make process-once
+make analyze       # PHPStan
+make psalm         # Psalm
+make lint          # Pint (исправление стиля)
+make rector        # Rector (авто-рефакторинг)
 ```
 
-`news:process` обрабатывает сообщения с ретраями (5/15/60), максимум 5 попыток, затем отправляет в `queue.news_processing.dlq`.
+### Операции
 
-### Качество кода
 ```bash
-make analyze
-make lint
-make lint-check
-make rector
-make rector-check
-make psalm
-make psalm-taint
-make validate
-make audit
+make crawl         # Запуск краулера вручную
+make queue         # Прослушивание очереди
+make serve         # Запуск сервера
+make logs          # Просмотр логов контейнеров
 ```
-
-### Локальный bootstrap
-```bash
-make setup-local
-```
-
-> Цели Makefile проксируют `composer` внутри контейнера; CI использует те же скрипты.
 
 ## Архитектурные правила
 
@@ -84,18 +65,22 @@ make setup-local
 
 ## CI
 
-`.github/workflows/ci.yml`: validate → pint (test) → phpstan → psalm taint → pest.
+`.github/workflows/ci.yml`: прогоняет `make ci-check`.
 
 ## Примечания
 
-- Для LLM‑интеграций нужны ключи в `.env`, базовый запуск без них возможен.
-- Docker: `app` — php-fpm, nginx — отдельный контейнер.
-- Makefile заточен под docker compose, но есть цели для локального dev (`serve`, `queue`, `dev`).
-- Конфиг Rector: `rector.php`, лучше сначала `rector:check`.
-- Конфиг Psalm: `psalm.xml`, для безопасности — `psalm:taint`.
-- Xdebug ставится только в dev (build arg `WITH_XDEBUG`, по умолчанию 1 в compose); в прод соберите образ с `WITH_XDEBUG=0`.
-- Продовый compose-оверрайд: `docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d` (Xdebug отключён).
+- **PHP 8.5**: Код использует современные возможности (readonly classes, #[Override] и т.д.).
+- **Docker**: Образ `app` содержит PHP-FPM, Composer и Node.js/NPM.
+- **Vite**: Фронтенд собирается и обслуживается также внутри контейнера.
+- **Secrets**: `.env` копируется из `.env.example` при `setup-local`. Для LLM‑интеграций пропиши свои ключи.
+- **Xdebug**: Включён по умолчанию в dev-сборке.
 
-## Лицензия
+---
 
-MIT.
+## Альтернативный запуск (без Docker)
+
+_Не рекомендуется_, так как инфраструктура (Postgres, RabbitMQ, Redis) всё равно требует Docker. Если необходимо запустить PHP локально, используй стандартные команды Laravel, но убедись, что версия PHP >= 8.5.
+
+---
+
+Лицензия: MIT.
