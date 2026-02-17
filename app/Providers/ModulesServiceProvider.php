@@ -12,6 +12,7 @@ use Modules\Intelligence\IntelligenceServiceProvider;
 
 final class ModulesServiceProvider extends ServiceProvider
 {
+    #[\Override]
     public function register(): void
     {
         $this->app->register(CrawlerServiceProvider::class);

@@ -41,13 +41,9 @@ class SourcesTable
                     ->label('Articles'),
                 TextColumn::make('latest_article_at')
                     ->label('Latest Article')
-                    ->state(function ($record) {
-                        return $record->newsItems()->max('published_at');
-                    })
+                    ->state(fn ($record) => $record->newsItems()->max('published_at'))
                     ->dateTime()
-                    ->sortable(query: function ($query, string $direction) {
-                        return $query->withMax('newsItems', 'published_at')->orderBy('news_items_max_published_at', $direction);
-                    }),
+                    ->sortable(query: fn ($query, string $direction) => $query->withMax('newsItems', 'published_at')->orderBy('news_items_max_published_at', $direction)),
                 TextColumn::make('last_success_at')
                     ->label('Last Run')
                     ->dateTime()

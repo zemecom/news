@@ -12,7 +12,7 @@ use Modules\Delivery\Domain\Contracts\NewsFeedReader;
 use Modules\Delivery\Domain\DTO\NewsFeedFilters;
 use Modules\Shared\Domain\Enum\NewsStatus;
 
-final class EloquentNewsFeedReader implements NewsFeedReader
+final readonly class EloquentNewsFeedReader implements NewsFeedReader
 {
     public function __construct(private DatabaseManager $db) {}
 
@@ -116,11 +116,11 @@ final class EloquentNewsFeedReader implements NewsFeedReader
             $query->where('is_important', $filters->important);
         }
 
-        if ($filters->dateFrom !== null) {
+        if ($filters->dateFrom instanceof \Carbon\CarbonImmutable) {
             $query->where('published_at', '>=', $filters->dateFrom->toIso8601String());
         }
 
-        if ($filters->dateTo !== null) {
+        if ($filters->dateTo instanceof \Carbon\CarbonImmutable) {
             $query->where('published_at', '<=', $filters->dateTo->toIso8601String());
         }
 

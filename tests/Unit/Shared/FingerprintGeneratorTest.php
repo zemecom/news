@@ -40,21 +40,18 @@ final class FingerprintGeneratorTest extends TestCase
             link: 'https://example.com/news-1',
             publishedAt: '2026-02-15T12:01:05+00:00',
             title: 'ЦБ повысил ставку',
-            externalId: null,
         );
         $second = $generator->generate(
             sourceId: 2,
             link: 'https://example.com/news-1?utm_source=feed',
             publishedAt: '2026-02-15T12:01:59+00:00',
             title: 'ЦБ повысил ставку!!!',
-            externalId: null,
         );
         $third = $generator->generate(
             sourceId: 2,
             link: 'https://example.com/news-1',
             publishedAt: '2026-02-15T12:02:01+00:00',
             title: 'ЦБ повысил ставку',
-            externalId: null,
         );
 
         $this->assertSame($first, $second);

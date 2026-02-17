@@ -16,9 +16,9 @@ use Modules\Delivery\Domain\DTO\NewsFeedFilters;
 final class NewsController extends Controller
 {
     public function __construct(
-        private ListNewsAction $listNews,
-        private ShowNewsAction $showNews,
-        private DatabaseManager $db,
+        private readonly ListNewsAction $listNews,
+        private readonly ShowNewsAction $showNews,
+        private readonly DatabaseManager $db,
     ) {}
 
     public function index(NewsIndexRequest $request): JsonResponse

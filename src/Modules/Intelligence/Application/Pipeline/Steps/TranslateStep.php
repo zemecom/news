@@ -7,7 +7,7 @@ namespace Modules\Intelligence\Application\Pipeline\Steps;
 use Modules\Shared\Domain\DTO\EnrichedNewsData;
 use Modules\Shared\Domain\DTO\RawNewsData;
 
-final class TranslateStep implements PipelineStep
+final readonly class TranslateStep implements PipelineStep
 {
     public function __construct(private \Modules\Intelligence\Domain\Contracts\Translator $translator) {}
 

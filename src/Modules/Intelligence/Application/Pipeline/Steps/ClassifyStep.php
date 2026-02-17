@@ -8,7 +8,7 @@ use Modules\Intelligence\Domain\Contracts\Classifier;
 use Modules\Shared\Domain\DTO\EnrichedNewsData;
 use Modules\Shared\Domain\DTO\RawNewsData;
 
-final class ClassifyStep implements PipelineStep
+final readonly class ClassifyStep implements PipelineStep
 {
     public function __construct(private Classifier $classifier) {}
 

@@ -6,7 +6,7 @@ namespace Modules\Delivery\Application\Actions;
 
 use Modules\Delivery\Domain\Contracts\SourceAdminReader;
 
-final class ListSourcesAction
+final readonly class ListSourcesAction
 {
     public function __construct(private SourceAdminReader $reader) {}
 

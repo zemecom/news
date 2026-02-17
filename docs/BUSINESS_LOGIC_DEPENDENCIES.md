@@ -9,6 +9,18 @@ _SOURCE: Application Core_
         │   └── MessagingSetupCommand.php
         │   └── NewsCrawlCommand.php
         │   └── NewsProcessQueueCommand.php
+    └── Filament/
+        ├── Resources/
+        │   └── Sources/
+        │       └── Pages/
+        │           ├── CreateSource.php
+        │           ├── EditSource.php
+        │           ├── ListSources.php
+        │       └── Schemas/
+        │           ├── SourceForm.php
+        │       └── SourceResource.php
+        │       └── Tables/
+        │           └── SourcesTable.php
     └── Http/
         ├── Controllers/
         │   ├── Api/
@@ -20,14 +32,19 @@ _SOURCE: Application Core_
         │   ├── Web/
         │   │   └── FeedPageController.php
         ├── Middleware/
+        │   ├── AutoLoginAdmin.php
         │   ├── EnsureUserIsAdmin.php
         ├── Requests/
         │   └── Api/
         │       └── NewsIndexRequest.php
+    └── Livewire/
+        ├── CrawlerLog.php
     └── Models/
         ├── User.php
     └── Providers/
         ├── AppServiceProvider.php
+        ├── Filament/
+        │   ├── AdminPanelProvider.php
         ├── ModulesServiceProvider.php
     └── Services/
         └── HealthCheckService.php
@@ -67,7 +84,7 @@ use Modules\Crawler\Application\Actions\FeedFetcherAction as FeedFetcherAction;
 
 final class NewsCrawlCommand extends Command
 {
-	protected $signature = 'news:crawl {--source-id= : Crawl only one source id}';
+	protected $signature = "news:crawl \n                            {--source-id= : Crawl only one source id}\n                            {--date-from= : Parse articles from this date (Y-m-d H:i:s)}\n                            {--date-to= : Parse articles until this date (Y-m-d H:i:s)}\n                            {--limit= : Maximum number of articles to parse per source}";
 	protected $description = 'Fetch active sources and publish raw messages to RabbitMQ.';
 
 
@@ -195,6 +212,162 @@ final class NewsProcessQueueCommand extends Command
 
 
 ```
+###  Path: `/app/Filament/Resources/Sources/Pages/CreateSource.php`
+
+```php
+namespace App\Filament\Resources\Sources\Pages;
+
+use App\Filament\Resources\Sources\SourceResource as SourceResource;
+use Filament\Resources\Pages\CreateRecord as CreateRecord;
+
+class CreateSource extends CreateRecord
+{
+	protected static string $resource = SourceResource::class;
+}
+
+
+```
+###  Path: `/app/Filament/Resources/Sources/Pages/EditSource.php`
+
+```php
+namespace App\Filament\Resources\Sources\Pages;
+
+use App\Filament\Resources\Sources\SourceResource as SourceResource;
+use Filament\Actions\DeleteAction as DeleteAction;
+use Filament\Resources\Pages\EditRecord as EditRecord;
+
+class EditSource extends EditRecord
+{
+	protected static string $resource = SourceResource::class;
+
+
+	protected function getHeaderActions(): array
+	{
+		// ...
+	}
+}
+
+
+```
+###  Path: `/app/Filament/Resources/Sources/Pages/ListSources.php`
+
+```php
+namespace App\Filament\Resources\Sources\Pages;
+
+use App\Filament\Resources\Sources\SourceResource as SourceResource;
+use Filament\Actions\CreateAction as CreateAction;
+use Filament\Resources\Pages\ListRecords as ListRecords;
+
+class ListSources extends ListRecords
+{
+	protected static string $resource = SourceResource::class;
+
+
+	protected function getHeaderActions(): array
+	{
+		// ...
+	}
+
+
+	public function getMaxContentWidth(): \Filament\Support\Enums\Width|string|null
+	{
+		// ...
+	}
+}
+
+
+```
+###  Path: `/app/Filament/Resources/Sources/Schemas/SourceForm.php`
+
+```php
+namespace App\Filament\Resources\Sources\Schemas;
+
+use Filament\Forms\Components\DateTimePicker as DateTimePicker;
+use Filament\Forms\Components\TextInput as TextInput;
+use Filament\Forms\Components\Toggle as Toggle;
+use Filament\Schemas\Schema as Schema;
+
+class SourceForm
+{
+	public static function configure(Schema $schema): Schema
+	{
+		// ...
+	}
+}
+
+
+```
+###  Path: `/app/Filament/Resources/Sources/SourceResource.php`
+
+```php
+namespace App\Filament\Resources\Sources;
+
+use App\Filament\Resources\Sources\Pages\CreateSource as CreateSource;
+use App\Filament\Resources\Sources\Pages\EditSource as EditSource;
+use App\Filament\Resources\Sources\Pages\ListSources as ListSources;
+use App\Filament\Resources\Sources\Schemas\SourceForm as SourceForm;
+use App\Filament\Resources\Sources\Tables\SourcesTable as SourcesTable;
+use BackedEnum as BackedEnum;
+use Filament\Resources\Resource as Resource;
+use Filament\Schemas\Schema as Schema;
+use Filament\Support\Icons\Heroicon as Heroicon;
+use Filament\Tables\Table as Table;
+use Modules\Catalog\Infrastructure\Persistence\Models\Source as Source;
+
+class SourceResource extends Resource
+{
+	protected static ?string $model = Source::class;
+	protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+
+
+	public static function form(Schema $schema): Schema
+	{
+		// ...
+	}
+
+
+	public static function table(Table $table): Table
+	{
+		// ...
+	}
+
+
+	public static function getRelations(): array
+	{
+		// ...
+	}
+
+
+	public static function getPages(): array
+	{
+		// ...
+	}
+}
+
+
+```
+###  Path: `/app/Filament/Resources/Sources/Tables/SourcesTable.php`
+
+```php
+namespace App\Filament\Resources\Sources\Tables;
+
+use Filament\Actions\BulkActionGroup as BulkActionGroup;
+use Filament\Actions\DeleteBulkAction as DeleteBulkAction;
+use Filament\Actions\EditAction as EditAction;
+use Filament\Tables\Columns\IconColumn as IconColumn;
+use Filament\Tables\Columns\TextColumn as TextColumn;
+use Filament\Tables\Table as Table;
+
+class SourcesTable
+{
+	public static function configure(Table $table): Table
+	{
+		// ...
+	}
+}
+
+
+```
 ###  Path: `/app/Http/Controllers/Api/Admin/SourceController.php`
 
 ```php
@@ -229,6 +402,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller as Controller;
 use App\Http\Requests\Api\NewsIndexRequest as NewsIndexRequest;
 use Carbon\CarbonImmutable as CarbonImmutable;
+use Illuminate\Database\DatabaseManager as DatabaseManager;
 use Illuminate\Http\JsonResponse as JsonResponse;
 use Modules\Delivery\Application\Actions\ListNewsAction as ListNewsAction;
 use Modules\Delivery\Application\Actions\ShowNewsAction as ShowNewsAction;
@@ -239,6 +413,7 @@ final class NewsController extends Controller
 	public function __construct(
 		private ListNewsAction $listNews,
 		private ShowNewsAction $showNews,
+		private DatabaseManager $db,
 	) {
 		// ...
 	}
@@ -251,6 +426,12 @@ final class NewsController extends Controller
 
 
 	public function show(string $id): JsonResponse
+	{
+		// ...
+	}
+
+
+	public function sources(): JsonResponse
 	{
 		// ...
 	}
@@ -320,6 +501,32 @@ final class FeedPageController extends Controller
 
 
 ```
+###  Path: `/app/Http/Middleware/AutoLoginAdmin.php`
+
+```php
+namespace App\Http\Middleware;
+
+use App\Models\User as User;
+use Closure as Closure;
+use Illuminate\Http\Request as Request;
+use Illuminate\Support\Facades\Auth as Auth;
+use Symfony\Component\HttpFoundation\Response as Response;
+
+class AutoLoginAdmin
+{
+	/**
+	 * Handle an incoming request.
+	 *
+	 * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
+	 */
+	public function handle(Request $request, Closure $next): Response
+	{
+		// ...
+	}
+}
+
+
+```
 ###  Path: `/app/Http/Middleware/EnsureUserIsAdmin.php`
 
 ```php
@@ -377,6 +584,50 @@ final class NewsIndexRequest extends FormRequest
 
 
 ```
+###  Path: `/app/Livewire/CrawlerLog.php`
+
+```php
+namespace App\Livewire;
+
+use Livewire\Component as Component;
+
+class CrawlerLog extends Component
+{
+	public string $output = 'Starting...';
+	public ?int $sourceId = null;
+	public string $logFile = '';
+	public ?string $dateFrom = null;
+	public ?string $dateTo = null;
+	public ?int $limit = null;
+	public bool $isStarted = false;
+
+
+	public function mount(?int $sourceId = null): void
+	{
+		// ...
+	}
+
+
+	public function startParsing(): void
+	{
+		// ...
+	}
+
+
+	public function updateLog(): void
+	{
+		// ...
+	}
+
+
+	public function render(): \Illuminate\Contracts\View\View
+	{
+		// ...
+	}
+}
+
+
+```
 ###  Path: `/app/Models/User.php`
 
 ```php
@@ -389,7 +640,7 @@ use Illuminate\Notifications\Notifiable as Notifiable;
 /**
  * @property string $role
  */
-class User extends Authenticatable
+class User extends Authenticatable implements \Filament\Models\Contracts\FilamentUser
 {
 	use HasFactory;
 	/** @use HasFactory<\Database\Factories\UserFactory> */
@@ -425,6 +676,12 @@ class User extends Authenticatable
 	{
 		// ...
 	}
+
+
+	public function canAccessPanel(\Filament\Panel $panel): bool
+	{
+		// ...
+	}
 }
 
 
@@ -452,6 +709,38 @@ class AppServiceProvider extends ServiceProvider
 	 * Bootstrap any application services.
 	 */
 	public function boot(): void
+	{
+		// ...
+	}
+}
+
+
+```
+###  Path: `/app/Providers/Filament/AdminPanelProvider.php`
+
+```php
+namespace App\Providers\Filament;
+
+use Filament\Http\Middleware\Authenticate as Authenticate;
+use Filament\Http\Middleware\AuthenticateSession as AuthenticateSession;
+use Filament\Http\Middleware\DisableBladeIconComponents as DisableBladeIconComponents;
+use Filament\Http\Middleware\DispatchServingFilamentEvent as DispatchServingFilamentEvent;
+use Filament\Pages\Dashboard as Dashboard;
+use Filament\Panel as Panel;
+use Filament\PanelProvider as PanelProvider;
+use Filament\Support\Colors\Color as Color;
+use Filament\Widgets\AccountWidget as AccountWidget;
+use Filament\Widgets\FilamentInfoWidget as FilamentInfoWidget;
+use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse as AddQueuedCookiesToResponse;
+use Illuminate\Cookie\Middleware\EncryptCookies as EncryptCookies;
+use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken as VerifyCsrfToken;
+use Illuminate\Routing\Middleware\SubstituteBindings as SubstituteBindings;
+use Illuminate\Session\Middleware\StartSession as StartSession;
+use Illuminate\View\Middleware\ShareErrorsFromSession as ShareErrorsFromSession;
+
+class AdminPanelProvider extends PanelProvider
+{
+	public function panel(Panel $panel): Panel
 	{
 		// ...
 	}
@@ -573,16 +862,38 @@ _SOURCE: Modules_
             ├── CrawlerServiceProvider.php
             ├── Domain/
             │   ├── Contracts/
+            │   │   └── ApiParser.php
+            │   │   └── Deduplicator.php
             │   │   └── RawPublisher.php
             │   │   └── RssClient.php
+            │   │   └── RssParser.php
             │   │   └── TelegramClient.php
+            │   │   └── TelegramParser.php
             ├── Infrastructure/
             │   └── Http/
             │       ├── RssClient.php
             │       ├── RssConnector.php
             │       ├── TelegramClient.php
             │   └── Messaging/
-            │       └── RawPublisher.php
+            │       ├── RawPublisher.php
+            │   └── Parsers/
+            │       ├── AlJazeeraRssParser.php
+            │       ├── ArsTechnicaRssParser.php
+            │       ├── BbcRssParser.php
+            │       ├── DefaultRssParser.php
+            │       ├── HabrRssParser.php
+            │       ├── HackerNewsRssParser.php
+            │       ├── MedicalXpressRssParser.php
+            │       ├── ScienceDailyRssParser.php
+            │       ├── TechCrunchRssParser.php
+            │       ├── Telegram/
+            │       │   ├── DefaultTelegramParser.php
+            │       │   ├── ToporLiveTelegramParser.php
+            │       ├── TheVergeRssParser.php
+            │   └── Services/
+            │       └── DbDeduplicator.php
+            │       └── RssParserResolver.php
+            │       └── TelegramParserResolver.php
         └── Delivery/
             ├── Application/
             │   ├── Actions/
@@ -604,6 +915,7 @@ _SOURCE: Modules_
             ├── Application/
             │   ├── Pipeline/
             │   │   └── NewsProcessingPipeline.php
+            │   │   └── SkipMessageException.php
             │   │   └── Steps/
             │   │       └── AntiClickbaitStep.php
             │   │       └── ClassifyStep.php
@@ -738,10 +1050,10 @@ use Illuminate\Database\Eloquent\Model as Model;
  */
 final class NewsItem extends Model
 {
+	use \Illuminate\Database\Eloquent\Concerns\HasUuids;
+
 	protected $table = 'news_items';
 	protected $primaryKey = 'id';
-	public $incrementing = false;
-	protected $keyType = 'string';
 
 	protected $fillable = [
 		'id',
@@ -805,6 +1117,15 @@ final class Source extends Model
 		'last_success_at' => 'datetime',
 		'last_error_at' => 'datetime',
 	];
+
+
+	/**
+	 * @return \Illuminate\Database\Eloquent\Relations\HasMany<NewsItem, $this>
+	 */
+	public function newsItems(): \Illuminate\Database\Eloquent\Relations\HasMany
+	{
+		// ...
+	}
 }
 
 
@@ -826,6 +1147,7 @@ final class FeedFetcherAction
 		private TelegramClient $telegramClient,
 		private RawPublisher $publisher,
 		private RawNewsFactory $rawNewsFactory,
+		private \Modules\Crawler\Domain\Contracts\Deduplicator $deduplicator,
 	) {
 		// ...
 	}
@@ -834,7 +1156,12 @@ final class FeedFetcherAction
 	/**
 	 * @param  array{id:int,url:string,type:string,language_default:string|null}  $source
 	 */
-	public function __invoke(array $source): void
+	public function __invoke(
+		array $source,
+		?\Carbon\Carbon $dateFrom = null,
+		?\Carbon\Carbon $dateTo = null,
+		?int $limit = null,
+	): void
 	{
 		// ...
 	}
@@ -899,6 +1226,39 @@ final class CrawlerServiceProvider extends ServiceProvider
 
 
 ```
+###  Path: `/src/Modules/Crawler/Domain/Contracts/ApiParser.php`
+
+```php
+namespace Modules\Crawler\Domain\Contracts;
+
+use Illuminate\Support\Collection as Collection;
+
+interface ApiParser
+{
+	/**
+	 * @param  array<string, mixed>  $data
+	 * @return Collection<int, array<string, mixed>>
+	 */
+	public function parse(array $data): Collection;
+
+
+	public function supports(string $source): bool;
+}
+
+
+```
+###  Path: `/src/Modules/Crawler/Domain/Contracts/Deduplicator.php`
+
+```php
+namespace Modules\Crawler\Domain\Contracts;
+
+interface Deduplicator
+{
+	public function exists(string $fingerprint): bool;
+}
+
+
+```
 ###  Path: `/src/Modules/Crawler/Domain/Contracts/RawPublisher.php`
 
 ```php
@@ -925,7 +1285,32 @@ interface RssClient
 	/**
 	 * @return Collection<int, array<string, mixed>>
 	 */
-	public function fetch(string $url): Collection;
+	public function fetch(
+		string $url,
+		?\Carbon\Carbon $dateFrom = null,
+		?\Carbon\Carbon $dateTo = null,
+		?int $limit = null,
+	): Collection;
+}
+
+
+```
+###  Path: `/src/Modules/Crawler/Domain/Contracts/RssParser.php`
+
+```php
+namespace Modules\Crawler\Domain\Contracts;
+
+use Illuminate\Support\Collection as Collection;
+
+interface RssParser
+{
+	/**
+	 * @return Collection<int, array<string, mixed>>
+	 */
+	public function parse(string $xmlBody): Collection;
+
+
+	public function supports(string $url): bool;
 }
 
 
@@ -942,7 +1327,33 @@ interface TelegramClient
 	/**
 	 * @return Collection<int, array<string, mixed>>
 	 */
-	public function fetch(string $channel): Collection;
+	public function fetch(
+		string $channel,
+		?\Carbon\Carbon $dateFrom = null,
+		?\Carbon\Carbon $dateTo = null,
+		?int $limit = null,
+	): Collection;
+}
+
+
+```
+###  Path: `/src/Modules/Crawler/Domain/Contracts/TelegramParser.php`
+
+```php
+namespace Modules\Crawler\Domain\Contracts;
+
+use Illuminate\Support\Collection as Collection;
+
+interface TelegramParser
+{
+	/**
+	 * @param  array{channel: string}  $context
+	 * @return Collection<int, array<string, mixed>>
+	 */
+	public function parse(string $htmlBody, array $context): Collection;
+
+
+	public function supports(string $channel): bool;
 }
 
 
@@ -954,13 +1365,14 @@ namespace Modules\Crawler\Infrastructure\Http;
 
 use Illuminate\Support\Collection as Collection;
 use Modules\Crawler\Domain\Contracts\RssClient as RssClientContract;
+use Modules\Crawler\Infrastructure\Services\RssParserResolver as RssParserResolver;
 use Saloon\Enums\Method as Method;
-use Saloon\Http\Response as Response;
 
 final class RssClient implements RssClientContract
 {
 	public function __construct(
 		private RssConnector $connector,
+		private RssParserResolver $resolver,
 	) {
 		// ...
 	}
@@ -969,22 +1381,18 @@ final class RssClient implements RssClientContract
 	/**
 	 * @return Collection<int, array<string, mixed>>
 	 */
-	public function fetch(string $url): Collection
+	public function fetch(
+		string $url,
+		?\Carbon\Carbon $dateFrom = null,
+		?\Carbon\Carbon $dateTo = null,
+		?int $limit = null,
+	): Collection
 	{
 		// ...
 	}
 
 
 	private function assertAllowedHost(string $url): void
-	{
-		// ...
-	}
-
-
-	/**
-	 * @return Collection<int, array<string, mixed>>
-	 */
-	private function mapToItems(Response $response): Collection
 	{
 		// ...
 	}
@@ -1020,11 +1428,9 @@ final class RssConnector extends Connector
 ```php
 namespace Modules\Crawler\Infrastructure\Http;
 
-use DOMDocument as DOMDocument;
-use DOMNode as DOMNode;
-use DOMXPath as DOMXPath;
 use Illuminate\Support\Collection as Collection;
 use Modules\Crawler\Domain\Contracts\TelegramClient as TelegramClientContract;
+use Modules\Crawler\Infrastructure\Services\TelegramParserResolver as TelegramParserResolver;
 use Saloon\Enums\Method as Method;
 use Saloon\Http\Response as Response;
 
@@ -1032,12 +1438,18 @@ final class TelegramClient implements TelegramClientContract
 {
 	public function __construct(
 		private RssConnector $connector,
+		private TelegramParserResolver $resolver,
 	) {
 		// ...
 	}
 
 
-	public function fetch(string $channel): Collection
+	public function fetch(
+		string $channel,
+		?\Carbon\Carbon $dateFrom = null,
+		?\Carbon\Carbon $dateTo = null,
+		?int $limit = null,
+	): Collection
 	{
 		// ...
 	}
@@ -1067,61 +1479,7 @@ final class TelegramClient implements TelegramClientContract
 	}
 
 
-	/**
-	 * @return Collection<int, array<string, mixed>>
-	 */
-	private function mapToItems(Response $response, string $channel): Collection
-	{
-		// ...
-	}
-
-
-	/**
-	 * @return array<int, array{url:string,type:string|null}>
-	 */
-	private function extractMedia(DOMXPath $xpath, DOMNode $node): array
-	{
-		// ...
-	}
-
-
 	private function extractPostId(string $externalId): ?int
-	{
-		// ...
-	}
-
-
-	private function extractTitle(string $content, string $externalId): string
-	{
-		// ...
-	}
-
-
-	private function normalizeWhitespace(string $value): string
-	{
-		// ...
-	}
-
-
-	private function normalizeLink(string $link): string
-	{
-		// ...
-	}
-
-
-	private function buildLinkFromExternalId(string $externalId): string
-	{
-		// ...
-	}
-
-
-	private function extractUrlFromStyle(string $style): string
-	{
-		// ...
-	}
-
-
-	private function evalString(DOMXPath $xpath, DOMNode $node, string $expression): string
 	{
 		// ...
 	}
@@ -1158,6 +1516,377 @@ final class RawPublisher implements RawPublisherContract
 
 
 ```
+###  Path: `/src/Modules/Crawler/Infrastructure/Parsers/AlJazeeraRssParser.php`
+
+```php
+namespace Modules\Crawler\Infrastructure\Parsers;
+
+class AlJazeeraRssParser extends DefaultRssParser
+{
+	public function supports(string $url): bool
+	{
+		// ...
+	}
+}
+
+
+```
+###  Path: `/src/Modules/Crawler/Infrastructure/Parsers/ArsTechnicaRssParser.php`
+
+```php
+namespace Modules\Crawler\Infrastructure\Parsers;
+
+class ArsTechnicaRssParser extends DefaultRssParser
+{
+	public function supports(string $url): bool
+	{
+		// ...
+	}
+}
+
+
+```
+###  Path: `/src/Modules/Crawler/Infrastructure/Parsers/BbcRssParser.php`
+
+```php
+namespace Modules\Crawler\Infrastructure\Parsers;
+
+class BbcRssParser extends DefaultRssParser
+{
+	public function supports(string $url): bool
+	{
+		// ...
+	}
+}
+
+
+```
+###  Path: `/src/Modules/Crawler/Infrastructure/Parsers/DefaultRssParser.php`
+
+```php
+namespace Modules\Crawler\Infrastructure\Parsers;
+
+use Illuminate\Support\Collection as Collection;
+use Modules\Crawler\Domain\Contracts\RssParser as RssParser;
+
+class DefaultRssParser implements RssParser
+{
+	/**
+	 * @return Collection<int, array<string, mixed>>
+	 */
+	public function parse(string $xmlBody): Collection
+	{
+		// ...
+	}
+
+
+	public function supports(string $url): bool
+	{
+		// ...
+	}
+
+
+	/**
+	 * @return array<string, mixed>
+	 */
+	protected function mapItem(\SimpleXMLElement $item): array
+	{
+		// ...
+	}
+}
+
+
+```
+###  Path: `/src/Modules/Crawler/Infrastructure/Parsers/HabrRssParser.php`
+
+```php
+namespace Modules\Crawler\Infrastructure\Parsers;
+
+class HabrRssParser extends DefaultRssParser
+{
+	public function supports(string $url): bool
+	{
+		// ...
+	}
+
+
+	protected function mapItem(\SimpleXMLElement $item): array
+	{
+		// ...
+	}
+}
+
+
+```
+###  Path: `/src/Modules/Crawler/Infrastructure/Parsers/HackerNewsRssParser.php`
+
+```php
+namespace Modules\Crawler\Infrastructure\Parsers;
+
+class HackerNewsRssParser extends DefaultRssParser
+{
+	public function supports(string $url): bool
+	{
+		// ...
+	}
+}
+
+
+```
+###  Path: `/src/Modules/Crawler/Infrastructure/Parsers/MedicalXpressRssParser.php`
+
+```php
+namespace Modules\Crawler\Infrastructure\Parsers;
+
+class MedicalXpressRssParser extends DefaultRssParser
+{
+	public function supports(string $url): bool
+	{
+		// ...
+	}
+}
+
+
+```
+###  Path: `/src/Modules/Crawler/Infrastructure/Parsers/ScienceDailyRssParser.php`
+
+```php
+namespace Modules\Crawler\Infrastructure\Parsers;
+
+class ScienceDailyRssParser extends DefaultRssParser
+{
+	public function supports(string $url): bool
+	{
+		// ...
+	}
+}
+
+
+```
+###  Path: `/src/Modules/Crawler/Infrastructure/Parsers/TechCrunchRssParser.php`
+
+```php
+namespace Modules\Crawler\Infrastructure\Parsers;
+
+class TechCrunchRssParser extends DefaultRssParser
+{
+	public function supports(string $url): bool
+	{
+		// ...
+	}
+}
+
+
+```
+###  Path: `/src/Modules/Crawler/Infrastructure/Parsers/Telegram/DefaultTelegramParser.php`
+
+```php
+namespace Modules\Crawler\Infrastructure\Parsers\Telegram;
+
+use DOMDocument as DOMDocument;
+use DOMNode as DOMNode;
+use DOMXPath as DOMXPath;
+use Illuminate\Support\Collection as Collection;
+use Modules\Crawler\Domain\Contracts\TelegramParser as TelegramParser;
+
+class DefaultTelegramParser implements TelegramParser
+{
+	/**
+	 * @param  array{channel: string}  $context
+	 * @return Collection<int, array<string, mixed>>
+	 */
+	public function parse(string $htmlBody, array $context): Collection
+	{
+		// ...
+	}
+
+
+	public function supports(string $channel): bool
+	{
+		// ...
+	}
+
+
+	/**
+	 * @return array<string, mixed>
+	 */
+	protected function mapItem(DOMXPath $xpath, DOMNode $node, string $channel): array
+	{
+		// ...
+	}
+
+
+	/**
+	 * @return array<int, array{url:string,type:string|null}>
+	 */
+	protected function extractMedia(DOMXPath $xpath, DOMNode $node): array
+	{
+		// ...
+	}
+
+
+	protected function extractPostId(string $externalId): ?int
+	{
+		// ...
+	}
+
+
+	protected function extractTitleFromNode(DOMXPath $xpath, DOMNode $node, string $content, string $externalId): string
+	{
+		// ...
+	}
+
+
+	protected function extractMainMessageText(DOMXPath $xpath, DOMNode $node): string
+	{
+		// ...
+	}
+
+
+	protected function extractTitle(string $content, string $externalId): string
+	{
+		// ...
+	}
+
+
+	protected function normalizeWhitespace(string $value): string
+	{
+		// ...
+	}
+
+
+	protected function normalizeLink(string $link): string
+	{
+		// ...
+	}
+
+
+	protected function buildLinkFromExternalId(string $externalId): string
+	{
+		// ...
+	}
+
+
+	protected function extractUrlFromStyle(string $style): string
+	{
+		// ...
+	}
+
+
+	protected function evalString(DOMXPath $xpath, DOMNode $node, string $expression): string
+	{
+		// ...
+	}
+}
+
+
+```
+###  Path: `/src/Modules/Crawler/Infrastructure/Parsers/Telegram/ToporLiveTelegramParser.php`
+
+```php
+namespace Modules\Crawler\Infrastructure\Parsers\Telegram;
+
+class ToporLiveTelegramParser extends DefaultTelegramParser
+{
+	public function supports(string $channel): bool
+	{
+		// ...
+	}
+}
+
+
+```
+###  Path: `/src/Modules/Crawler/Infrastructure/Parsers/TheVergeRssParser.php`
+
+```php
+namespace Modules\Crawler\Infrastructure\Parsers;
+
+class TheVergeRssParser extends DefaultRssParser
+{
+	public function supports(string $url): bool
+	{
+		// ...
+	}
+}
+
+
+```
+###  Path: `/src/Modules/Crawler/Infrastructure/Services/DbDeduplicator.php`
+
+```php
+namespace Modules\Crawler\Infrastructure\Services;
+
+use Illuminate\Support\Facades\DB as DB;
+use Modules\Crawler\Domain\Contracts\Deduplicator as Deduplicator;
+
+final class DbDeduplicator implements Deduplicator
+{
+	public function exists(string $fingerprint): bool
+	{
+		// ...
+	}
+}
+
+
+```
+###  Path: `/src/Modules/Crawler/Infrastructure/Services/RssParserResolver.php`
+
+```php
+namespace Modules\Crawler\Infrastructure\Services;
+
+use Modules\Crawler\Domain\Contracts\RssParser as RssParser;
+use Modules\Crawler\Infrastructure\Parsers\DefaultRssParser as DefaultRssParser;
+
+class RssParserResolver
+{
+	/**
+	 * @param  iterable<RssParser>  $parsers
+	 */
+	public function __construct(
+		private iterable $parsers,
+		private DefaultRssParser $defaultParser,
+	) {
+		// ...
+	}
+
+
+	public function resolve(string $url): RssParser
+	{
+		// ...
+	}
+}
+
+
+```
+###  Path: `/src/Modules/Crawler/Infrastructure/Services/TelegramParserResolver.php`
+
+```php
+namespace Modules\Crawler\Infrastructure\Services;
+
+use Modules\Crawler\Domain\Contracts\TelegramParser as TelegramParser;
+use Modules\Crawler\Infrastructure\Parsers\Telegram\DefaultTelegramParser as DefaultTelegramParser;
+
+class TelegramParserResolver
+{
+	/**
+	 * @param  iterable<TelegramParser>  $parsers
+	 */
+	public function __construct(
+		private iterable $parsers,
+		private DefaultTelegramParser $defaultParser,
+	) {
+		// ...
+	}
+
+
+	public function resolve(string $channel): TelegramParser
+	{
+		// ...
+	}
+}
+
+
+```
 ###  Path: `/src/Modules/Delivery/Application/Actions/ListNewsAction.php`
 
 ```php
@@ -1180,6 +1909,12 @@ final class ListNewsAction
 	 * @return CursorPaginator<int, array<string, mixed>>
 	 */
 	public function __invoke(NewsFeedFilters $filters, int $perPage = 20, ?string $cursor = null): CursorPaginator
+	{
+		// ...
+	}
+
+
+	public function count(NewsFeedFilters $filters): int
 	{
 		// ...
 	}
@@ -1282,6 +2017,9 @@ interface NewsFeedReader
 	 * @return array<string, mixed>|null
 	 */
 	public function findPublishedById(string $id): ?array;
+
+
+	public function count(NewsFeedFilters $filters): int;
 }
 
 
@@ -1318,6 +2056,7 @@ readonly class NewsFeedFilters
 		public ?CarbonImmutable $dateFrom = null,
 		public ?CarbonImmutable $dateTo = null,
 		public ?string $query = null,
+		public ?int $sourceId = null,
 	) {
 		// ...
 	}
@@ -1357,6 +2096,12 @@ final class EloquentNewsFeedReader implements NewsFeedReader
 
 
 	public function findPublishedById(string $id): ?array
+	{
+		// ...
+	}
+
+
+	public function count(NewsFeedFilters $filters): int
 	{
 		// ...
 	}
@@ -1468,24 +2213,35 @@ final class NewsProcessingPipeline
 
 
 ```
+###  Path: `/src/Modules/Intelligence/Application/Pipeline/SkipMessageException.php`
+
+```php
+namespace Modules\Intelligence\Application\Pipeline;
+
+/**
+ * Thrown when a pipeline step determines that the message
+ * should be silently skipped (e.g. duplicate detection).
+ */
+final class SkipMessageException extends \RuntimeException
+{
+	public function __construct(string $reason = 'skipped')
+	{
+		// ...
+	}
+}
+
+
+```
 ###  Path: `/src/Modules/Intelligence/Application/Pipeline/Steps/AntiClickbaitStep.php`
 
 ```php
 namespace Modules\Intelligence\Application\Pipeline\Steps;
 
-use Modules\Intelligence\Domain\Contracts\TitleGenerator as TitleGenerator;
 use Modules\Shared\Domain\DTO\EnrichedNewsData as EnrichedNewsData;
 use Modules\Shared\Domain\DTO\RawNewsData as RawNewsData;
 
 final class AntiClickbaitStep implements PipelineStep
 {
-	public function __construct(
-		private TitleGenerator $titleGenerator,
-	) {
-		// ...
-	}
-
-
 	public function process(RawNewsData|EnrichedNewsData $input): RawNewsData|EnrichedNewsData
 	{
 		// ...
@@ -1526,9 +2282,9 @@ final class ClassifyStep implements PipelineStep
 namespace Modules\Intelligence\Application\Pipeline\Steps;
 
 use Modules\Catalog\Domain\Contracts\NewsRepository as NewsRepository;
+use Modules\Intelligence\Application\Pipeline\SkipMessageException as SkipMessageException;
 use Modules\Shared\Domain\DTO\EnrichedNewsData as EnrichedNewsData;
 use Modules\Shared\Domain\DTO\RawNewsData as RawNewsData;
-use Modules\Shared\Domain\Enum\NewsStatus as NewsStatus;
 
 final class DeduplicateStep implements PipelineStep
 {
@@ -1558,7 +2314,7 @@ use Modules\Shared\Domain\Enum\NewsStatus as NewsStatus;
 
 final class FinalizeStep implements PipelineStep
 {
-	public function process(RawNewsData|EnrichedNewsData $input): RawNewsData|EnrichedNewsData
+	public function process(RawNewsData|EnrichedNewsData $input): EnrichedNewsData
 	{
 		// ...
 	}
@@ -1987,7 +2743,7 @@ readonly class EnrichedNewsData
 	 */
 	public function __construct(
 		public string $rawId,
-		public string $titleGenerated,
+		public ?string $titleGenerated,
 		public string $contentTranslated,
 		public int $sentiment,
 		public string $category,
@@ -2006,7 +2762,7 @@ readonly class EnrichedNewsData
 	 *
 	 * @param array{
 	 *     rawId?: string,
-	 *     titleGenerated?: string,
+	 *     titleGenerated?: ?string,
 	 *     contentTranslated?: string,
 	 *     sentiment?: int,
 	 *     category?: string,

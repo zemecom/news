@@ -13,8 +13,8 @@ class TelegramParserResolver
      * @param  iterable<TelegramParser>  $parsers
      */
     public function __construct(
-        private iterable $parsers,
-        private DefaultTelegramParser $defaultParser
+        private readonly iterable $parsers,
+        private readonly DefaultTelegramParser $defaultParser
     ) {}
 
     public function resolve(string $channel): TelegramParser

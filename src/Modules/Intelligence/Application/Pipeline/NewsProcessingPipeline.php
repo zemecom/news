@@ -10,19 +10,10 @@ use Modules\Intelligence\Domain\Contracts\EnrichedPublisher;
 use Modules\Shared\Domain\DTO\EnrichedNewsData;
 use Modules\Shared\Domain\DTO\RawNewsData;
 
-final class NewsProcessingPipeline
+final readonly class NewsProcessingPipeline
 {
-    /** @var PipelineStep[] */
-    private array $steps;
-
     /** @param PipelineStep[] $steps */
-    public function __construct(
-        array $steps,
-        private EnrichedPublisher $publisher,
-        private NewsRepository $news,
-    ) {
-        $this->steps = $steps;
-    }
+    public function __construct(private array $steps, private EnrichedPublisher $publisher, private NewsRepository $news) {}
 
     public function handle(RawNewsData $raw): void
     {

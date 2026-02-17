@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redis;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
 
-final class HealthCheckService
+final readonly class HealthCheckService
 {
     public function __construct(private AMQPStreamConnection $amqp) {}
 

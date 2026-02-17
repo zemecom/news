@@ -13,8 +13,8 @@ class RssParserResolver
      * @param  iterable<RssParser>  $parsers
      */
     public function __construct(
-        private iterable $parsers,
-        private DefaultRssParser $defaultParser
+        private readonly iterable $parsers,
+        private readonly DefaultRssParser $defaultParser
     ) {}
 
     public function resolve(string $url): RssParser

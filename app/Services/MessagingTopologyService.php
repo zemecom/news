@@ -8,7 +8,7 @@ use PhpAmqpLib\Channel\AMQPChannel;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
 use PhpAmqpLib\Wire\AMQPTable;
 
-final class MessagingTopologyService
+final readonly class MessagingTopologyService
 {
     public function __construct(private AMQPStreamConnection $connection) {}
 

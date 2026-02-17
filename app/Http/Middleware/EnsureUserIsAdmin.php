@@ -22,7 +22,7 @@ final class EnsureUserIsAdmin
             return new JsonResponse(['message' => 'Unauthenticated.'], 401);
         }
 
-        if (! $user instanceof User || $user->isAdmin() !== true) {
+        if (! $user instanceof User || ! $user->isAdmin()) {
             return new JsonResponse(['message' => 'Forbidden.'], 403);
         }
 

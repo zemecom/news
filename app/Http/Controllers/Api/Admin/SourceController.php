@@ -10,7 +10,7 @@ use Modules\Delivery\Application\Actions\ListSourcesAction;
 
 final class SourceController extends Controller
 {
-    public function __construct(private ListSourcesAction $listSources) {}
+    public function __construct(private readonly ListSourcesAction $listSources) {}
 
     public function index(): JsonResponse
     {

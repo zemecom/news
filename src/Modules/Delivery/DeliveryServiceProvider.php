@@ -12,6 +12,7 @@ use Modules\Delivery\Infrastructure\Persistence\EloquentSourceAdminReader;
 
 final class DeliveryServiceProvider extends ServiceProvider
 {
+    #[\Override]
     public function register(): void
     {
         $this->app->bind(NewsFeedReader::class, EloquentNewsFeedReader::class);

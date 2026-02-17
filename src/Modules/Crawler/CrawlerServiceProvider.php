@@ -18,6 +18,7 @@ use Modules\Shared\Application\Services\FingerprintGenerator;
 
 final class CrawlerServiceProvider extends ServiceProvider
 {
+    #[\Override]
     public function register(): void
     {
         $this->app->singleton(FeedFetcherAction::class);
@@ -52,19 +53,15 @@ final class CrawlerServiceProvider extends ServiceProvider
         }
 
         // Resolvers
-        $this->app->bind(\Modules\Crawler\Infrastructure\Services\RssParserResolver::class, function ($app) {
-            return new \Modules\Crawler\Infrastructure\Services\RssParserResolver(
-                $app->tagged('crawler.parsers.rss'),
-                $app->make(\Modules\Crawler\Infrastructure\Parsers\DefaultRssParser::class)
-            );
-        });
+        $this->app->bind(\Modules\Crawler\Infrastructure\Services\RssParserResolver::class, fn ($app) => new \Modules\Crawler\Infrastructure\Services\RssParserResolver(
+            $app->tagged('crawler.parsers.rss'),
+            $app->make(\Modules\Crawler\Infrastructure\Parsers\DefaultRssParser::class)
+        ));
 
-        $this->app->bind(\Modules\Crawler\Infrastructure\Services\TelegramParserResolver::class, function ($app) {
-            return new \Modules\Crawler\Infrastructure\Services\TelegramParserResolver(
-                $app->tagged('crawler.parsers.telegram'),
-                $app->make(\Modules\Crawler\Infrastructure\Parsers\Telegram\DefaultTelegramParser::class)
-            );
-        });
+        $this->app->bind(\Modules\Crawler\Infrastructure\Services\TelegramParserResolver::class, fn ($app) => new \Modules\Crawler\Infrastructure\Services\TelegramParserResolver(
+            $app->tagged('crawler.parsers.telegram'),
+            $app->make(\Modules\Crawler\Infrastructure\Parsers\Telegram\DefaultTelegramParser::class)
+        ));
 
         $this->app->singleton(RssClient::class);
         $this->app->singleton(TelegramClient::class);

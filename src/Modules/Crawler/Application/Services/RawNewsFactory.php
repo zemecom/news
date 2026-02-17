@@ -8,7 +8,7 @@ use Carbon\CarbonImmutable;
 use Modules\Shared\Application\Services\FingerprintGenerator;
 use Modules\Shared\Domain\DTO\RawNewsData;
 
-final class RawNewsFactory
+final readonly class RawNewsFactory
 {
     public function __construct(private FingerprintGenerator $fingerprintGenerator) {}
 
@@ -34,7 +34,6 @@ final class RawNewsFactory
             imageUrl: $item['image_url'] ?? null,
             media: $item['media'] ?? [],
             fingerprint: '',
-            rawId: null,
         );
 
         return $this->fingerprintGenerator->attachFingerprint($raw);

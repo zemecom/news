@@ -9,7 +9,7 @@ use Modules\Intelligence\Application\Pipeline\SkipMessageException;
 use Modules\Shared\Domain\DTO\EnrichedNewsData;
 use Modules\Shared\Domain\DTO\RawNewsData;
 
-final class DeduplicateStep implements PipelineStep
+final readonly class DeduplicateStep implements PipelineStep
 {
     public function __construct(private NewsRepository $news) {}
 

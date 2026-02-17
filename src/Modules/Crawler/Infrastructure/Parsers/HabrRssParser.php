@@ -6,11 +6,13 @@ namespace Modules\Crawler\Infrastructure\Parsers;
 
 class HabrRssParser extends DefaultRssParser
 {
+    #[\Override]
     public function supports(string $url): bool
     {
         return str_contains($url, 'habr.com');
     }
 
+    #[\Override]
     protected function mapItem(\SimpleXMLElement $item): array
     {
         $mapped = parent::mapItem($item);
@@ -22,10 +24,8 @@ class HabrRssParser extends DefaultRssParser
         $imageUrl = $mapped['image_url'];
 
         // Fallback: extract image from <img> tag in description HTML
-        if ($imageUrl === null && $descriptionHtml !== '') {
-            if (preg_match('/<img[^>]+src=["\']([^"\']+)["\']/i', $descriptionHtml, $matches)) {
-                $imageUrl = $matches[1];
-            }
+        if ($imageUrl === null && $descriptionHtml !== '' && preg_match('/<img[^>]+src=["\']([^"\']+)["\']/i', $descriptionHtml, $matches)) {
+            $imageUrl = $matches[1];
         }
 
         // Extract clean text from description (remove img tags, "Читать далее" links, strip HTML)

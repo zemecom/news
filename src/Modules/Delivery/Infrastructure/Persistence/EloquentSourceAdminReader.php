@@ -7,7 +7,7 @@ namespace Modules\Delivery\Infrastructure\Persistence;
 use Illuminate\Database\DatabaseManager;
 use Modules\Delivery\Domain\Contracts\SourceAdminReader;
 
-final class EloquentSourceAdminReader implements SourceAdminReader
+final readonly class EloquentSourceAdminReader implements SourceAdminReader
 {
     public function __construct(private DatabaseManager $db) {}
 

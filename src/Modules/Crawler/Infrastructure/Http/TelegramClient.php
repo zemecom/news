@@ -10,7 +10,7 @@ use Modules\Crawler\Infrastructure\Services\TelegramParserResolver;
 use Saloon\Enums\Method;
 use Saloon\Http\Response;
 
-final class TelegramClient implements TelegramClientContract
+final readonly class TelegramClient implements TelegramClientContract
 {
     public function __construct(
         private RssConnector $connector,
@@ -23,7 +23,7 @@ final class TelegramClient implements TelegramClientContract
         $baseUrl = sprintf('https://t.me/s/%s', $channelName);
         $this->assertAllowedHost($baseUrl);
 
-        $limit = $limit ?? max(1, (int) config('crawler.telegram.max_items', 50));
+        $limit ??= max(1, (int) config('crawler.telegram.max_items', 50));
         $before = null;
         $seen = [];
         $items = [];
@@ -98,7 +98,7 @@ final class TelegramClient implements TelegramClientContract
             {
                 protected Method $method = Method::GET;
 
-                public function __construct(private string $url) {}
+                public function __construct(private readonly string $url) {}
 
                 public function resolveEndpoint(): string
                 {

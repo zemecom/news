@@ -8,7 +8,7 @@ use Modules\Intelligence\Domain\Contracts\SentimentAnalyzer;
 use Modules\Shared\Domain\DTO\EnrichedNewsData;
 use Modules\Shared\Domain\DTO\RawNewsData;
 
-final class SentimentStep implements PipelineStep
+final readonly class SentimentStep implements PipelineStep
 {
     public function __construct(private SentimentAnalyzer $sentiment) {}
 

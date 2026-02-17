@@ -6,7 +6,7 @@ namespace Modules\Delivery\Application\Actions;
 
 use Modules\Delivery\Domain\Contracts\NewsFeedReader;
 
-final class ShowNewsAction
+final readonly class ShowNewsAction
 {
     public function __construct(private NewsFeedReader $reader) {}
 

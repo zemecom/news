@@ -6,6 +6,7 @@ namespace Modules\Crawler\Infrastructure\Parsers;
 
 class HackerNewsRssParser extends DefaultRssParser
 {
+    #[\Override]
     public function supports(string $url): bool
     {
         return str_contains($url, 'hnrss.org');

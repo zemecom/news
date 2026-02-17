@@ -1,7 +1,42 @@
 #!/bin/sh
 
-# Auto-fix code style before commit
+# Auto-fix code style (Pint)
 docker compose exec -T app vendor/bin/pint --quiet 2>/dev/null
-
-# Stage any files that were fixed
 git add -u
+
+# Run checks in parallel
+echo "Running Rector (dry-run) and Tests..."
+
+# Rector
+(docker compose exec -T app vendor/bin/rector --dry-run > /dev/null 2>&1) &
+PID_RECTOR=$!
+
+# Tests
+(docker compose exec -T app php artisan test --parallel > /dev/null 2>&1) &
+PID_TEST=$!
+
+# Wait for both
+wait $PID_RECTOR
+STATUS_RECTOR=$?
+
+wait $PID_TEST
+STATUS_TEST=$?
+
+# Report results
+FAILED=0
+
+if [ $STATUS_RECTOR -ne 0 ]; then
+    echo "❌ Rector check failed! Run 'make rector' to fix."
+    FAILED=1
+fi
+
+if [ $STATUS_TEST -ne 0 ]; then
+    echo "❌ Tests failed!"
+    FAILED=1
+fi
+
+if [ $FAILED -ne 0 ]; then
+    exit 1
+fi
+
+echo "✅ All checks passed!"

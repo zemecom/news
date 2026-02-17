@@ -9,7 +9,7 @@ use Modules\Crawler\Domain\Contracts\RawPublisher;
 use Modules\Crawler\Domain\Contracts\RssClient;
 use Modules\Crawler\Domain\Contracts\TelegramClient;
 
-final class FeedFetcherAction
+final readonly class FeedFetcherAction
 {
     public function __construct(
         private RssClient $rssClient,

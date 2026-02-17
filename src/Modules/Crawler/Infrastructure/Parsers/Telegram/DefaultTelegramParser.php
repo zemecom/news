@@ -196,7 +196,7 @@ class DefaultTelegramParser implements TelegramParser
 
         $firstNode = $textNodes->item(0);
 
-        return $firstNode instanceof DOMNode ? (string) $firstNode->textContent : '';
+        return $firstNode instanceof DOMNode ? $firstNode->textContent : '';
     }
 
     protected function extractTitle(string $content, string $externalId): string
@@ -255,7 +255,7 @@ class DefaultTelegramParser implements TelegramParser
             return '';
         }
 
-        return $this->normalizeLink((string) $matches[1]);
+        return $this->normalizeLink($matches[1]);
     }
 
     protected function evalString(DOMXPath $xpath, DOMNode $node, string $expression): string

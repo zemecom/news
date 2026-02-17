@@ -11,5 +11,11 @@
 - Карта зависимостей бизнес-логики хранится в `docs/BUSINESS_LOGIC_DEPENDENCIES.md`.
 - Файл `docs/BUSINESS_LOGIC_DEPENDENCIES.md` генерируемый, не поддерживается вручную.
 - После изменений в классах `app/` и `src/Modules/` нужно перегенерировать карту:
-  - `php scripts/generate_business_deps.php`
+    - `make docs-deps`
 - Перед архитектурными изменениями сверяться с `docs/BUSINESS_LOGIC_DEPENDENCIES.md`.
+
+## Правила валидации
+
+- После любых изменений в бизнес-логике (`app/`, `src/Modules/`) или архитектуре обязательно запускать CI-тесты:
+    - `make ci-check`
+- Коммитить код можно только при успешном прохождении всех проверок.

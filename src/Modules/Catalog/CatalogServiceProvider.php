@@ -10,6 +10,7 @@ use Modules\Catalog\Infrastructure\Persistence\EloquentNewsRepository;
 
 final class CatalogServiceProvider extends ServiceProvider
 {
+    #[\Override]
     public function register(): void
     {
         $this->app->singleton(NewsRepository::class, EloquentNewsRepository::class);

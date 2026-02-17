@@ -212,7 +212,6 @@ final class NewsProcessQueueCommand extends Command
             imageUrl: isset($payload['imageUrl']) ? (string) $payload['imageUrl'] : null,
             media: is_array($payload['media'] ?? null) ? $payload['media'] : [],
             fingerprint: (string) ($payload['fingerprint'] ?? ''),
-            rawId: null,
         );
     }
 

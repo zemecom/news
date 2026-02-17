@@ -11,7 +11,7 @@ use PhpAmqpLib\Connection\AMQPStreamConnection;
 use PhpAmqpLib\Message\AMQPMessage;
 use PhpAmqpLib\Wire\AMQPTable;
 
-final class EnrichedPublisher implements EnrichedPublisherContract
+final readonly class EnrichedPublisher implements EnrichedPublisherContract
 {
     public function __construct(
         private AMQPStreamConnection $connection,
@@ -39,7 +39,7 @@ final class EnrichedPublisher implements EnrichedPublisherContract
         ], JSON_THROW_ON_ERROR);
 
         $headers = new AMQPTable;
-        if ($enriched->importance === true) {
+        if ($enriched->importance) {
             $headers->set('x-important', 1);
         }
 
@@ -56,7 +56,7 @@ final class EnrichedPublisher implements EnrichedPublisherContract
 
         $channel->basic_publish($message, $this->exchange, $routingKey, true);
 
-        if ($enriched->status !== NewsStatus::REJECTED && $enriched->importance === true) {
+        if ($enriched->status !== NewsStatus::REJECTED && $enriched->importance) {
             $channel->basic_publish($message, $this->exchange, $this->importantRoutingKey, true);
         }
 

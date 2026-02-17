@@ -9,7 +9,7 @@ use Modules\Crawler\Domain\Contracts\RssClient as RssClientContract;
 use Modules\Crawler\Infrastructure\Services\RssParserResolver;
 use Saloon\Enums\Method;
 
-final class RssClient implements RssClientContract
+final readonly class RssClient implements RssClientContract
 {
     public function __construct(
         private RssConnector $connector,
@@ -27,7 +27,7 @@ final class RssClient implements RssClientContract
             {
                 protected Method $method = Method::GET;
 
-                public function __construct(private string $url) {}
+                public function __construct(private readonly string $url) {}
 
                 public function resolveEndpoint(): string
                 {
@@ -56,11 +56,8 @@ final class RssClient implements RssClientContract
                 if ($dateFrom && $pubDate->lt($dateFrom)) {
                     return false;
                 }
-                if ($dateTo && $pubDate->gt($dateTo)) {
-                    return false;
-                }
 
-                return true;
+                return ! ($dateTo && $pubDate->gt($dateTo));
             });
         }
 

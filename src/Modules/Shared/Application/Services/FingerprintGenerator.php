@@ -97,8 +97,8 @@ final class FingerprintGenerator
             return mb_strtolower($link);
         }
 
-        $host = isset($parts['host']) ? mb_strtolower((string) $parts['host']) : '';
-        $path = isset($parts['path']) ? rtrim((string) $parts['path'], '/') : '';
+        $host = isset($parts['host']) ? mb_strtolower($parts['host']) : '';
+        $path = isset($parts['path']) ? rtrim($parts['path'], '/') : '';
 
         return $host.$path;
     }

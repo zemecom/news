@@ -29,24 +29,21 @@ use Modules\Intelligence\Infrastructure\Messaging\EnrichedPublisher;
 
 final class IntelligenceServiceProvider extends ServiceProvider
 {
+    #[\Override]
     public function register(): void
     {
-        $this->app->singleton(NewsProcessingPipeline::class, function ($app) {
-            return new NewsProcessingPipeline(
-                steps: $app->make('news.pipeline.steps.ordered'),
-                publisher: $app->make(EnrichedPublisherContract::class),
-                news: $app->make(NewsRepository::class),
-            );
-        });
-        $this->app->singleton(EnrichedPublisher::class, function ($app) {
-            return new EnrichedPublisher(
-                connection: $app->make(\PhpAmqpLib\Connection\AMQPStreamConnection::class),
-                exchange: (string) config('messaging.exchange.news_flow.name', 'news_flow'),
-                readyRoutingKey: (string) config('messaging.routing_keys.enriched_ready', 'enriched.ready'),
-                importantRoutingKey: (string) config('messaging.routing_keys.enriched_ready_important', 'enriched.ready.important'),
-                rejectedRoutingKey: (string) config('messaging.routing_keys.enriched_rejected', 'enriched.rejected'),
-            );
-        });
+        $this->app->singleton(NewsProcessingPipeline::class, fn ($app) => new NewsProcessingPipeline(
+            steps: $app->make('news.pipeline.steps.ordered'),
+            publisher: $app->make(EnrichedPublisherContract::class),
+            news: $app->make(NewsRepository::class),
+        ));
+        $this->app->singleton(EnrichedPublisher::class, fn ($app) => new EnrichedPublisher(
+            connection: $app->make(\PhpAmqpLib\Connection\AMQPStreamConnection::class),
+            exchange: (string) config('messaging.exchange.news_flow.name', 'news_flow'),
+            readyRoutingKey: (string) config('messaging.routing_keys.enriched_ready', 'enriched.ready'),
+            importantRoutingKey: (string) config('messaging.routing_keys.enriched_ready_important', 'enriched.ready.important'),
+            rejectedRoutingKey: (string) config('messaging.routing_keys.enriched_rejected', 'enriched.rejected'),
+        ));
         $this->app->bind(EnrichedPublisherContract::class, EnrichedPublisher::class);
         $this->app->bind(Translator::class, HeuristicTranslator::class);
         $this->app->bind(Classifier::class, KeywordClassifier::class);
@@ -65,18 +62,16 @@ final class IntelligenceServiceProvider extends ServiceProvider
             FinalizeStep::class,
         ], 'news.pipeline.steps');
 
-        $this->app->bind('news.pipeline.steps.ordered', function ($app) {
-            return [
-                $app->make(DeduplicateStep::class),
-                $app->make(LanguageDetectStep::class),
-                $app->make(TranslateStep::class),
-                $app->make(ClassifyStep::class),
-                $app->make(SentimentStep::class),
-                $app->make(AntiClickbaitStep::class),
-                $app->make(ImportanceStep::class),
-                $app->make(ModerationStep::class),
-                $app->make(FinalizeStep::class),
-            ];
-        });
+        $this->app->bind('news.pipeline.steps.ordered', fn ($app) => [
+            $app->make(DeduplicateStep::class),
+            $app->make(LanguageDetectStep::class),
+            $app->make(TranslateStep::class),
+            $app->make(ClassifyStep::class),
+            $app->make(SentimentStep::class),
+            $app->make(AntiClickbaitStep::class),
+            $app->make(ImportanceStep::class),
+            $app->make(ModerationStep::class),
+            $app->make(FinalizeStep::class),
+        ]);
     }
 }

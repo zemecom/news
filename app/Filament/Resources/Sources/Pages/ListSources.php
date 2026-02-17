@@ -10,6 +10,7 @@ class ListSources extends ListRecords
 {
     protected static string $resource = SourceResource::class;
 
+    #[\Override]
     protected function getHeaderActions(): array
     {
         return [
@@ -25,6 +26,7 @@ class ListSources extends ListRecords
         ];
     }
 
+    #[\Override]
     public function getMaxContentWidth(): \Filament\Support\Enums\Width|string|null
     {
         return \Filament\Support\Enums\Width::Full;

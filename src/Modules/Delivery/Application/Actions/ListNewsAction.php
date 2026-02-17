@@ -8,7 +8,7 @@ use Illuminate\Contracts\Pagination\CursorPaginator;
 use Modules\Delivery\Domain\Contracts\NewsFeedReader;
 use Modules\Delivery\Domain\DTO\NewsFeedFilters;
 
-final class ListNewsAction
+final readonly class ListNewsAction
 {
     public function __construct(private NewsFeedReader $reader) {}
 

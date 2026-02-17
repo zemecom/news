@@ -9,7 +9,7 @@ arch('controllers_do_not_use_models_directly', function () {
 
 arch('disallow_http_facade', function () {
     expect('App')
-        ->not->toUse(['Illuminate\\Support\\Facades\\Http']);
+        ->not->toUse([\Illuminate\Support\Facades\Http::class]);
 });
 
 arch('modules_respect_boundaries', function () {
@@ -44,11 +44,11 @@ arch('application_layer_does_not_depend_on_infrastructure', function () {
 arch('controllers_are_thin', function () {
     expect('App\\Http\\Controllers')
         ->not->toUse([
-            'Illuminate\\Support\\Facades\\DB',
-            'Illuminate\\Support\\Facades\\Cache',
-            'Illuminate\\Support\\Facades\\Http',
-            'Illuminate\\Support\\Facades\\Redis',
-            'Illuminate\\Database\\Eloquent\\Model',
-            'Illuminate\\Database\\Query\\Builder',
+            \Illuminate\Support\Facades\DB::class,
+            \Illuminate\Support\Facades\Cache::class,
+            \Illuminate\Support\Facades\Http::class,
+            \Illuminate\Support\Facades\Redis::class,
+            \Illuminate\Database\Eloquent\Model::class,
+            \Illuminate\Database\Query\Builder::class,
         ]);
 });

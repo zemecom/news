@@ -17,5 +17,6 @@ return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->sets([
         SetList::CODE_QUALITY,
         SetList::DEAD_CODE,
+        \Rector\Set\ValueObject\LevelSetList::UP_TO_PHP_85,
     ]);
 };

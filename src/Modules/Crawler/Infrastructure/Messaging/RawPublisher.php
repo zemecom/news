@@ -9,7 +9,7 @@ use Modules\Shared\Domain\DTO\RawNewsData;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
 use PhpAmqpLib\Message\AMQPMessage;
 
-final class RawPublisher implements RawPublisherContract
+final readonly class RawPublisher implements RawPublisherContract
 {
     public function __construct(
         private AMQPStreamConnection $connection,

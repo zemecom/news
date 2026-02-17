@@ -44,6 +44,7 @@ class User extends Authenticatable implements \Filament\Models\Contracts\Filamen
      *
      * @return array<string, string>
      */
+    #[\Override]
     protected function casts(): array
     {
         return [

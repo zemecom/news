@@ -19,7 +19,7 @@ class DefaultRssParser implements RssParser
         $xml = @simplexml_load_string($xmlBody, 'SimpleXMLElement', LIBXML_NOCDATA);
         $items = [];
 
-        if ($xml && isset($xml->channel->item)) {
+        if ($xml && (property_exists($xml->channel, 'item') && $xml->channel->item !== null)) {
             foreach ($xml->channel->item as $item) {
                 // Передаем элемент для обработки в защищенный метод, чтобы наследники могли переопределить логику
                 $mapped = $this->mapItem($item);
@@ -46,7 +46,7 @@ class DefaultRssParser implements RssParser
         $imageUrl = null;
 
         // RSS enclosure
-        if (isset($item->enclosure)) {
+        if (property_exists($item, 'enclosure') && $item->enclosure !== null) {
             foreach ($item->enclosure as $enclosure) {
                 $url = (string) ($enclosure['url'] ?? '');
                 $type = (string) ($enclosure['type'] ?? '');
@@ -81,7 +81,7 @@ class DefaultRssParser implements RssParser
             'pubDate' => (string) ($item->pubDate ?? ''),
             'guid' => (string) ($item->guid ?? ''),
             'language' => (string) ($item->language ?? ''),
-            'categories' => array_map('strval', iterator_to_array($item->category ?? [])),
+            'categories' => array_map(strval(...), iterator_to_array($item->category ?? [])),
             'author' => (string) ($item->author ?? ''),
             'image_url' => $imageUrl,
             'media' => $media,

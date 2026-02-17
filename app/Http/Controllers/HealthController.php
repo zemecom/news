@@ -8,7 +8,7 @@ use App\Services\HealthCheckService;
 
 final class HealthController extends Controller
 {
-    public function __construct(private HealthCheckService $health) {}
+    public function __construct(private readonly HealthCheckService $health) {}
 
     /**
      * @return array{status:string}
