@@ -25,7 +25,7 @@ ARG WITH_XDEBUG=0
 
 # Separate build-time and runtime dependencies
 RUN apk add --no-cache --virtual .build-deps $PHPIZE_DEPS linux-headers \
-    && apk add --no-cache libzip icu-libs libpq oniguruma libxml2 \
+    && apk add --no-cache libzip icu-libs libpq oniguruma libxml2 nodejs npm \
     && if [ "$WITH_XDEBUG" = "1" ]; then pecl install xdebug && docker-php-ext-enable xdebug; fi \
     && apk add --no-cache --virtual .ext-build-deps libzip-dev libxml2-dev oniguruma-dev icu-dev postgresql-dev \
     && docker-php-ext-install pdo pdo_pgsql zip xml mbstring intl sockets \

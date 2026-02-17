@@ -1,46 +1,158 @@
+# Executables variables
+DOCKER_APP = docker compose exec -T app
+COMPOSER   = $(DOCKER_APP) composer
+ARTISAN    = $(DOCKER_APP) php artisan
+NPM        = $(DOCKER_APP) npm
 
-.PHONY: acceptance analyze audit build ci-check crawl dev docs-deps down help lint lint-check logs messaging-setup migrate process-once psalm psalm-taint queue rector rector-check serve setup-local smoke-api test test-all test-arch up validate
+.PHONY: up down build dev npm-dev help logs docs-deps
+.PHONY: setup-local setup-ci migrate messaging-setup
+.PHONY: test test-arch test-all acceptance smoke-api ci-check
+.PHONY: analyze psalm psalm-taint lint lint-check rector rector-check validate audit
+.PHONY: crawl process-once queue serving
 
-acceptance:
-	@# Run acceptance tests
-	docker compose exec -T app composer test:acceptance
+# --- Main Commands ---
 
-ci-check: validate audit lint-check analyze psalm-taint test
-	@# Run all CI pipeline checks (validate, audit, lint, phpstan, psalm, tests)
+up:
+	@# Start the application in detached mode (background)
+	docker compose up -d
 
-analyze:
-	@# Run PHPStan static analysis
-	docker compose exec -T app composer analyze
-
-audit:
-	@# Audit composer dependencies for security vulnerabilities
-	docker compose exec -T app composer qa:audit
+down:
+	@# Stop and remove containers, networks, images, and volumes
+	docker compose down
 
 build:
 	@# Build or rebuild services
 	docker compose build app
 
-crawl:
-	@# Run the crawler command manually
-	docker compose exec -T app php artisan news:crawl
-
 dev:
-	@# Run development servers concurrently (server, queue, logs, vite)
-	npx concurrently -c "#93c5fd,#c4b5fd,#fb7185,#fdba74" \
-		"php artisan serve" \
+	@# Run development servers concurrently (server, queue, logs, vite) inside Docker
+	$(DOCKER_APP) npx concurrently -c "#93c5fd,#c4b5fd,#fb7185,#fdba74" \
+		"php artisan serve --host=0.0.0.0 --port=80" \
 		"php artisan queue:listen --tries=1 --timeout=0" \
 		"php artisan pail --timeout=0" \
 		"npm run dev" \
 		--names=server,queue,logs,vite \
 		--kill-others
 
+npm-dev:
+	@# Run only frontend dev server inside Docker
+	$(NPM) run dev
+
+# --- Setup & Configuration ---
+
+setup-local:
+	@# Install dependencies and setup environment for local development via Docker
+	docker compose up -d --build
+	$(COMPOSER) install
+	cp .env.example .env || true
+	$(ARTISAN) key:generate
+	$(ARTISAN) migrate
+	@echo "Setup complete! Run 'make dev' to start."
+
+setup-ci:
+	@# Setup environment for CI (headless, no server start) inside Docker
+	$(COMPOSER) install --no-interaction --prefer-dist
+	cp .env.example .env || true
+	$(ARTISAN) key:generate
+	$(ARTISAN) migrate --force
+
+migrate:
+	@# Run database migrations for the application
+	$(ARTISAN) migrate --force
+
+messaging-setup:
+	@# Setup RabbitMQ topology (exchanges, queues, bindings)
+	$(ARTISAN) news:messaging:setup
+
+# --- Testing & Quality Assurance ---
+
+test:
+	@# Run PHPUnit tests inside the container
+	$(COMPOSER) test
+
+test-arch:
+	@# Run architecture tests (Pest) to verify architectural rules
+	$(COMPOSER) test:arch
+
+test-all: smoke-api test test-arch acceptance
+	@# Run all test suites: smoke, unit/feature, architecture, and acceptance
+
+acceptance:
+	@# Run acceptance tests
+	$(COMPOSER) test:acceptance
+
+smoke-api:
+	@# Run basic smoke tests against the API (inside container)
+	$(DOCKER_APP) sh scripts/smoke-api.sh http://nginx
+
+ci-check: validate audit lint-check analyze psalm-taint test
+	@# Run all CI pipeline checks (validate, audit, lint, phpstan, psalm, tests)
+
+# --- Static Analysis & Linting ---
+
+analyze:
+	@# Run PHPStan static analysis
+	$(COMPOSER) analyze
+
+psalm:
+	@# Run Psalm static analysis
+	$(COMPOSER) psalm
+
+psalm-taint:
+	@# Run Psalm taint analysis (security check)
+	$(COMPOSER) psalm:taint
+
+lint:
+	@# Fix coding standards using Pint (auto-fix)
+	$(COMPOSER) lint
+
+lint-check:
+	@# Check coding standards using Pint (dry-run)
+	$(COMPOSER) lint:check
+
+rector:
+	@# Run Rector to automatically refactor code
+	$(COMPOSER) rector
+
+rector-check:
+	@# Check code for Rector refactoring opportunities (dry-run)
+	$(COMPOSER) rector:check
+
+validate:
+	@# Validate composer.json and lock file
+	$(COMPOSER) qa:validate
+
+audit:
+	@# Audit composer dependencies for security vulnerabilities
+	$(COMPOSER) qa:audit
+
+# --- Application Operations ---
+
+crawl:
+	@# Run the crawler command manually
+	$(ARTISAN) news:crawl
+
+process-once:
+	@# Process a single news item from the queue
+	$(ARTISAN) news:process --once
+
+queue:
+	@# Listen to the queue inside Docker
+	$(ARTISAN) queue:listen --tries=1 --timeout=0
+
+serve:
+	@# Serve the application inside Docker
+	$(ARTISAN) serve --host=0.0.0.0 --port=80
+
+logs:
+	@# View output from containers
+	docker compose logs -f --tail=200
+
 docs-deps:
 	@# Generate business logic dependency documentation (docs/BUSINESS_LOGIC_DEPENDENCIES.md) using Context Hub Generator
 	ctx generate --no-interaction
 
-down:
-	@# Stop and remove containers, networks, images, and volumes
-	docker compose down
+# --- Help ---
 
 help:
 	@# Show available commands
@@ -56,82 +168,3 @@ help:
 			} \
 		} \
 	}' $(MAKEFILE_LIST)
-
-lint:
-	@# Fix coding standards using Pint (auto-fix)
-	docker compose exec -T app composer lint
-
-lint-check:
-	@# Check coding standards using Pint (dry-run)
-	docker compose exec -T app composer lint:check
-
-logs:
-	@# View output from containers
-	docker compose logs -f --tail=200
-
-messaging-setup:
-	@# Setup RabbitMQ topology (exchanges, queues, bindings)
-	docker compose exec -T app php artisan news:messaging:setup
-
-migrate:
-	@# Run database migrations for the application
-	docker compose exec -T app php artisan migrate --force
-
-process-once:
-	@# Process a single news item from the queue
-	docker compose exec -T app php artisan news:process --once
-
-psalm:
-	@# Run Psalm static analysis
-	docker compose exec -T app composer psalm
-
-psalm-taint:
-	@# Run Psalm taint analysis (security check)
-	docker compose exec -T app composer psalm:taint
-
-queue:
-	@# Listen to the queue
-	php artisan queue:listen --tries=1 --timeout=0
-
-rector:
-	@# Run Rector to automatically refactor code
-	docker compose exec -T app composer rector
-
-rector-check:
-	@# Check code for Rector refactoring opportunities (dry-run)
-	docker compose exec -T app composer rector:check
-
-serve:
-	@# Serve the application on the PHP development server
-	php artisan serve
-
-setup-local:
-	@# Install dependencies and setup environment for local development
-	composer install
-	cp .env.example .env || true
-	php artisan key:generate
-	php artisan migrate
-	php artisan serve
-
-smoke-api:
-	@# Run basic smoke tests against the API
-	sh scripts/smoke-api.sh
-
-test:
-	@# Run PHPUnit tests inside the container
-	docker compose exec -T app composer test
-
-test-all: smoke-api test test-arch acceptance
-	@# Run all test suites: smoke, unit/feature, architecture, and acceptance
-
-test-arch:
-	@# Run architecture tests (Pest) to verify architectural rules
-	docker compose exec -T app composer test:arch
-
-up:
-	@# Start the application in detached mode (background)
-	docker compose up -d
-
-validate:
-	@# Validate composer.json and lock file
-	docker compose exec -T app composer qa:validate
