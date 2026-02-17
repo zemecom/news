@@ -9,6 +9,22 @@ AI‑агрегатор новостей в формате modular monolith на
 - Слои в каждом модуле: `Domain`, `Application`, `Infrastructure`
 - Контракты: зависимости между слоями только через интерфейсы (Domain/Contracts)
 
+## Требования и установка
+
+Для работы с проектом вам понадобятся **Docker** и **GNU Make**.
+
+### 1. Docker
+
+Установите [Docker Desktop](https://www.docker.com/products/docker-desktop/) (macOS/Windows) или Docker Engine (Linux).
+
+### 2. GNU Make
+
+- **macOS**: Обычно уже установлен. Если нет, выполните `xcode-select --install` или используйте Homebrew: `brew install make`.
+- **Linux (Ubuntu/Debian)**: `sudo apt update && sudo apt install build-essential`.
+- **Windows**: Рекомендуется использовать **WSL2** (Make там есть по умолчанию) или установить через [Chocolatey](https://chocolatey.org/): `choco install make`.
+
+---
+
 ## Быстрый старт (Docker)
 
 Проект полностью докеризирован. Тебе нужен только **Docker** и **Make**.
