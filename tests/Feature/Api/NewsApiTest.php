@@ -89,4 +89,18 @@ final class NewsApiTest extends TestCase
         $this->getJson('/api/news/99999999')
             ->assertNotFound();
     }
+
+    public function test_sources_returns_active_sources_list(): void
+    {
+        $this->getJson('/api/sources')
+            ->assertOk()
+            ->assertJsonStructure([
+                'data' => [
+                    '*' => [
+                        'id',
+                        'name',
+                    ],
+                ],
+            ]);
+    }
 }

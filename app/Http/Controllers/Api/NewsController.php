@@ -6,10 +6,9 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\NewsIndexRequest;
-use Carbon\CarbonImmutable;
-use Illuminate\Database\DatabaseManager;
 use Illuminate\Http\JsonResponse;
 use Modules\Delivery\Application\Actions\ListNewsAction;
+use Modules\Delivery\Application\Actions\ListPublicSourcesAction;
 use Modules\Delivery\Application\Actions\ShowNewsAction;
 use Modules\Delivery\Domain\DTO\NewsFeedFilters;
 
@@ -18,21 +17,12 @@ final class NewsController extends Controller
     public function __construct(
         private readonly ListNewsAction $listNews,
         private readonly ShowNewsAction $showNews,
-        private readonly DatabaseManager $db,
+        private readonly ListPublicSourcesAction $listPublicSources,
     ) {}
 
     public function index(NewsIndexRequest $request): JsonResponse
     {
-        $filters = new NewsFeedFilters(
-            category: $request->string('category')->toString() ?: null,
-            sentimentMin: $request->filled('sentiment_min') ? $request->integer('sentiment_min') : null,
-            sentimentMax: $request->filled('sentiment_max') ? $request->integer('sentiment_max') : null,
-            important: $request->has('important') ? $request->boolean('important') : null,
-            dateFrom: $request->filled('date_from') ? CarbonImmutable::parse($request->string('date_from')->toString()) : null,
-            dateTo: $request->filled('date_to') ? CarbonImmutable::parse($request->string('date_to')->toString()) : null,
-            query: $request->string('q')->toString() ?: null,
-            sourceId: $request->filled('source_id') ? $request->integer('source_id') : null,
-        );
+        $filters = NewsFeedFilters::fromRequest($request);
 
         $paginator = ($this->listNews)(
             filters: $filters,
@@ -65,16 +55,8 @@ final class NewsController extends Controller
 
     public function sources(): JsonResponse
     {
-        $sources = $this->db->connection()
-            ->table('sources')
-            ->where('is_active', true)
-            ->orderBy('name')
-            ->get(['id', 'name'])
-            ->map(fn (object $row): array => [
-                'id' => (int) $row->id,
-                'name' => (string) $row->name,
-            ]);
-
-        return response()->json(['data' => $sources]);
+        return response()->json([
+            'data' => ($this->listPublicSources)(),
+        ]);
     }
 }
