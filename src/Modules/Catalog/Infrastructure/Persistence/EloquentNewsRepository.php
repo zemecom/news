@@ -20,21 +20,21 @@ final class EloquentNewsRepository implements NewsRepository
             ->exists();
     }
 
-    public function findIdByFingerprint(string $fingerprint): string
+    public function findIdByFingerprint(string $fingerprint): int
     {
-        return (string) NewsItem::query()
+        return (int) NewsItem::query()
             ->where('raw_fingerprint', $fingerprint)
             ->value('id');
     }
 
-    public function storeRaw(RawNewsData $raw): string
+    public function storeRaw(RawNewsData $raw): int
     {
-        $id = $raw->rawId ?? Str::uuid()->toString();
+        // $id = $raw->rawId ?? Str::uuid()->toString();
 
         $item = NewsItem::query()->firstOrCreate(
             ['raw_fingerprint' => $raw->fingerprint],
             [
-                'id' => $id,
+                // 'id' => $id,
                 'source_id' => $raw->sourceId,
                 'title_original' => $raw->title,
                 'content_original' => $raw->content,
@@ -50,7 +50,7 @@ final class EloquentNewsRepository implements NewsRepository
             ],
         );
 
-        return (string) $item->id;
+        return (int) $item->id;
     }
 
     public function storeEnriched(EnrichedNewsData $enriched): void

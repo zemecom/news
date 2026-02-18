@@ -12,7 +12,7 @@ readonly class EnrichedNewsData
      * @param  array<int, string>  $tags
      */
     public function __construct(
-        public string $rawId,
+        public int $rawId,
         public ?string $titleGenerated,
         public string $contentTranslated,
         public int $sentiment,
@@ -28,7 +28,7 @@ readonly class EnrichedNewsData
      * Копия с подменой выбранных полей.
      *
      * @param array{
-     *     rawId?: string,
+     *     rawId?: int,
      *     titleGenerated?: ?string,
      *     contentTranslated?: string,
      *     sentiment?: int,

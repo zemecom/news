@@ -20,7 +20,7 @@ final class NewsItemSeeder extends Seeder
 
         $items = [
             [
-                'id' => Str::uuid7()->toString(),
+                // 'id' => Str::uuid7()->toString(),
                 'source_id' => $sourceId,
                 'title_original' => 'Laravel 12 Released with New Features',
                 'content_original' => 'Laravel 12 introduces several new features and improvements.',
@@ -40,7 +40,7 @@ final class NewsItemSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
-                'id' => Str::uuid7()->toString(),
+                // 'id' => Str::uuid7()->toString(),
                 'source_id' => $sourceId,
                 'title_original' => 'Breaking: Major Tech Announcement',
                 'content_original' => 'A major tech company has made an important announcement.',
@@ -60,7 +60,7 @@ final class NewsItemSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
-                'id' => Str::uuid7()->toString(),
+                // 'id' => Str::uuid7()->toString(),
                 'source_id' => $sourceId,
                 'title_original' => 'Economy Update: Markets Rally',
                 'content_original' => 'Stock markets have rallied following positive economic data.',

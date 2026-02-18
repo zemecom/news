@@ -1,6 +1,10 @@
 *.log
+*.txt
+*.cache
+.agent
 .DS_Store
 .env
+.env.local
 .env.backup
 .env.production
 .phpactor.json
@@ -23,5 +27,4 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
-.deptrac.cache
-.agent
+docker-compose.override.yml

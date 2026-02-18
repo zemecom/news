@@ -86,7 +86,7 @@ final class NewsApiTest extends TestCase
 
     public function test_show_returns_404_for_unknown_news_item(): void
     {
-        $this->getJson('/api/news/00000000-0000-0000-0000-000000000001')
+        $this->getJson('/api/news/99999999')
             ->assertNotFound();
     }
 }

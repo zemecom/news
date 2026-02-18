@@ -7,11 +7,11 @@ namespace Modules\Catalog\Infrastructure\Persistence\Models;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * @property string $id
+ * @property int $id
  */
 final class NewsItem extends Model
 {
-    use \Illuminate\Database\Eloquent\Concerns\HasUuids;
+    // use \Illuminate\Database\Eloquent\Concerns\HasUuids;
 
     protected $table = 'news_items';
 

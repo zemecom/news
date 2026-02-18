@@ -27,7 +27,7 @@ readonly class RawNewsData
         /** @var array<int, array{url:string,type:?string}> */
         public array $media,
         public string $fingerprint,
-        public ?string $rawId = null,
+        public ?int $rawId = null,
     ) {}
 
     /**
@@ -45,7 +45,7 @@ readonly class RawNewsData
      *     imageUrl?: ?string,
      *     media?: array<int, array{url:string,type:?string}>,
      *     fingerprint?: string,
-     *     rawId?: ?string
+     *     rawId?: ?int
      * } $overrides
      */
     public function with(array $overrides): self

@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('news_items', function (Blueprint $table) {
-            $table->uuid('id')->primary();
+            $table->id();
             $table->unsignedBigInteger('source_id');
             $table->string('title_original');
             $table->text('content_original');
@@ -32,9 +32,8 @@ return new class extends Migration
         });
 
         Schema::create('news_vectors', function (Blueprint $table) {
-            $table->uuid('news_item_id')->primary();
+            $table->foreignId('news_item_id')->primary()->constrained('news_items')->cascadeOnDelete();
             $table->binary('embedding');
-            $table->foreign('news_item_id')->references('id')->on('news_items')->cascadeOnDelete();
         });
     }
 

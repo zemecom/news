@@ -11,9 +11,9 @@ interface NewsRepository
 {
     public function existsByFingerprint(string $fingerprint): bool;
 
-    public function findIdByFingerprint(string $fingerprint): string;
+    public function findIdByFingerprint(string $fingerprint): int;
 
-    public function storeRaw(RawNewsData $raw): string;
+    public function storeRaw(RawNewsData $raw): int;
 
     public function storeEnriched(EnrichedNewsData $enriched): void;
 }
