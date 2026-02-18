@@ -9,7 +9,7 @@ use Carbon\CarbonImmutable;
 /**
  * Стандартизированное сырьё из источника.
  */
-readonly class RawNewsData
+final readonly class RawNewsData
 {
     /**
      * @param  array<string, mixed>  $metadata

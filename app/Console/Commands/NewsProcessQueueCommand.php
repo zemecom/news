@@ -12,6 +12,8 @@ use Modules\Intelligence\Application\Pipeline\NewsProcessingPipeline;
 use Modules\Shared\Domain\DTO\RawNewsData;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
 use PhpAmqpLib\Message\AMQPMessage;
+use RuntimeException;
+use Throwable;
 
 final class NewsProcessQueueCommand extends Command
 {
@@ -119,7 +121,7 @@ final class NewsProcessQueueCommand extends Command
         try {
             $payload = json_decode($message->getBody(), true, 512, JSON_THROW_ON_ERROR);
             if (! is_array($payload)) {
-                throw new \RuntimeException('Invalid payload type.');
+                throw new RuntimeException('Invalid payload type.');
             }
 
             $attempt = $this->readAttempt($payload);
@@ -136,7 +138,7 @@ final class NewsProcessQueueCommand extends Command
                 'duration_ms' => (int) round((microtime(true) - $startedAt) * 1000),
                 'status' => 'ok',
             ]);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $payload = json_decode($message->getBody(), true);
             $attempt = is_array($payload) ? $this->readAttempt($payload) : 1;
             $fingerprint = is_array($payload) ? (string) ($payload['fingerprint'] ?? '') : '';
@@ -219,7 +221,7 @@ final class NewsProcessQueueCommand extends Command
         \PhpAmqpLib\Channel\AMQPChannel $channel,
         string $dlq,
         AMQPMessage $failedMessage,
-        \Throwable $e,
+        Throwable $e,
         int $attempt,
     ): void {
         $dlqPayload = json_encode([
@@ -298,7 +300,7 @@ final class NewsProcessQueueCommand extends Command
         string $retryRoutingKey,
         int $nextAttempt,
         int $delaySeconds,
-        \Throwable $error,
+        Throwable $error,
     ): void {
         $payload['_meta'] = [
             'attempt' => $nextAttempt,

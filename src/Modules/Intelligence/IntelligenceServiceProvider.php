@@ -26,10 +26,11 @@ use Modules\Intelligence\Infrastructure\LLM\KeywordClassifier;
 use Modules\Intelligence\Infrastructure\LLM\KeywordSentimentAnalyzer;
 use Modules\Intelligence\Infrastructure\LLM\ObjectivelyTitleGenerator;
 use Modules\Intelligence\Infrastructure\Messaging\EnrichedPublisher;
+use Override;
 
 final class IntelligenceServiceProvider extends ServiceProvider
 {
-    #[\Override]
+    #[Override]
     public function register(): void
     {
         $this->app->singleton(NewsProcessingPipeline::class, fn ($app) => new NewsProcessingPipeline(

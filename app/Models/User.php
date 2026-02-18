@@ -8,6 +8,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Override;
 
 /**
  * @property string $role
@@ -44,7 +45,7 @@ class User extends Authenticatable implements \Filament\Models\Contracts\Filamen
      *
      * @return array<string, string>
      */
-    #[\Override]
+    #[Override]
     protected function casts(): array
     {
         return [

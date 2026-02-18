@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Modules\Catalog\Infrastructure\Persistence;
 
-use Illuminate\Support\Str;
 use Modules\Catalog\Domain\Contracts\NewsRepository;
 use Modules\Catalog\Infrastructure\Persistence\Models\NewsItem;
 use Modules\Shared\Domain\DTO\EnrichedNewsData;
@@ -29,12 +28,9 @@ final class EloquentNewsRepository implements NewsRepository
 
     public function storeRaw(RawNewsData $raw): int
     {
-        // $id = $raw->rawId ?? Str::uuid()->toString();
-
         $item = NewsItem::query()->firstOrCreate(
             ['raw_fingerprint' => $raw->fingerprint],
             [
-                // 'id' => $id,
                 'source_id' => $raw->sourceId,
                 'title_original' => $raw->title,
                 'content_original' => $raw->content,

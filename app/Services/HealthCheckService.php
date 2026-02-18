@@ -7,6 +7,7 @@ namespace App\Services;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redis;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
+use Throwable;
 
 final readonly class HealthCheckService
 {
@@ -26,20 +27,20 @@ final readonly class HealthCheckService
         try {
             DB::connection()->getPdo();
             $checks['db'] = 'ok';
-        } catch (\Throwable) {
+        } catch (Throwable) {
         }
 
         try {
             Redis::command('ping');
             $checks['redis'] = 'ok';
-        } catch (\Throwable) {
+        } catch (Throwable) {
         }
 
         try {
             $channel = $this->amqp->channel();
             $channel->close();
             $checks['rabbitmq'] = 'ok';
-        } catch (\Throwable) {
+        } catch (Throwable) {
         }
 
         return $checks;

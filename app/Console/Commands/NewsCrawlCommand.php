@@ -7,6 +7,7 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use Modules\Catalog\Infrastructure\Persistence\Models\Source;
 use Modules\Crawler\Application\Actions\FeedFetcherAction;
+use Throwable;
 
 final class NewsCrawlCommand extends Command
 {
@@ -64,7 +65,7 @@ final class NewsCrawlCommand extends Command
                 );
 
                 $this->line(sprintf('Fetched source #%d.', $sourceId));
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 $this->error(sprintf(
                     'Failed source #%d: %s',
                     (int) $source->getAttribute('id'),

@@ -4,16 +4,19 @@ declare(strict_types=1);
 
 namespace Modules\Crawler\Infrastructure\Parsers;
 
-class HabrRssParser extends DefaultRssParser
+use Override;
+use SimpleXMLElement;
+
+final class HabrRssParser extends DefaultRssParser
 {
-    #[\Override]
+    #[Override]
     public function supports(string $url): bool
     {
         return str_contains($url, 'habr.com');
     }
 
-    #[\Override]
-    protected function mapItem(\SimpleXMLElement $item): array
+    #[Override]
+    protected function mapItem(SimpleXMLElement $item): array
     {
         $mapped = parent::mapItem($item);
         if ($mapped === []) {

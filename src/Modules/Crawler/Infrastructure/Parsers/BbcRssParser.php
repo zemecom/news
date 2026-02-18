@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Modules\Crawler\Infrastructure\Parsers;
 
-class BbcRssParser extends DefaultRssParser
+use Override;
+
+final class BbcRssParser extends DefaultRssParser
 {
-    #[\Override]
+    #[Override]
     public function supports(string $url): bool
     {
         return str_contains($url, 'bbci.co.uk');

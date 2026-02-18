@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Resources\Sources;
 
 use App\Filament\Resources\Sources\Pages\CreateSource;
@@ -13,6 +15,7 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Modules\Catalog\Infrastructure\Persistence\Models\Source;
+use Override;
 
 class SourceResource extends Resource
 {
@@ -20,19 +23,19 @@ class SourceResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
-    #[\Override]
+    #[Override]
     public static function form(Schema $schema): Schema
     {
         return SourceForm::configure($schema);
     }
 
-    #[\Override]
+    #[Override]
     public static function table(Table $table): Table
     {
         return SourcesTable::configure($table);
     }
 
-    #[\Override]
+    #[Override]
     public static function getRelations(): array
     {
         return [
@@ -40,7 +43,7 @@ class SourceResource extends Resource
         ];
     }
 
-    #[\Override]
+    #[Override]
     public static function getPages(): array
     {
         return [

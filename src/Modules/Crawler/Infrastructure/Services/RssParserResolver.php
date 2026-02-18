@@ -7,14 +7,14 @@ namespace Modules\Crawler\Infrastructure\Services;
 use Modules\Crawler\Domain\Contracts\RssParser;
 use Modules\Crawler\Infrastructure\Parsers\DefaultRssParser;
 
-class RssParserResolver
+final readonly class RssParserResolver
 {
     /**
      * @param  iterable<RssParser>  $parsers
      */
     public function __construct(
-        private readonly iterable $parsers,
-        private readonly DefaultRssParser $defaultParser
+        private iterable $parsers,
+        private DefaultRssParser $defaultParser
     ) {}
 
     public function resolve(string $url): RssParser

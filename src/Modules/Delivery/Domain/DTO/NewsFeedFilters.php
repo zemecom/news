@@ -6,7 +6,7 @@ namespace Modules\Delivery\Domain\DTO;
 
 use Carbon\CarbonImmutable;
 
-readonly class NewsFeedFilters
+final readonly class NewsFeedFilters
 {
     public function __construct(
         public ?string $category = null,

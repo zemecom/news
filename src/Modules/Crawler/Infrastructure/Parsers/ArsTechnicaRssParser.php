@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Modules\Crawler\Infrastructure\Parsers;
 
-class ArsTechnicaRssParser extends DefaultRssParser
+use Override;
+
+final class ArsTechnicaRssParser extends DefaultRssParser
 {
-    #[\Override]
+    #[Override]
     public function supports(string $url): bool
     {
         return str_contains($url, 'arstechnica.com');

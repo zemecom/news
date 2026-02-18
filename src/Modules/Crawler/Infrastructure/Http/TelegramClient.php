@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Modules\Crawler\Infrastructure\Http;
 
 use Illuminate\Support\Collection;
+use InvalidArgumentException;
 use Modules\Crawler\Domain\Contracts\TelegramClient as TelegramClientContract;
 use Modules\Crawler\Infrastructure\Services\TelegramParserResolver;
 use Saloon\Enums\Method;
@@ -119,7 +120,7 @@ final readonly class TelegramClient implements TelegramClientContract
     {
         $channel = trim($channel);
         if ($channel === '') {
-            throw new \InvalidArgumentException('Telegram channel is empty.');
+            throw new InvalidArgumentException('Telegram channel is empty.');
         }
 
         if (str_starts_with($channel, '@')) {
@@ -147,7 +148,7 @@ final readonly class TelegramClient implements TelegramClientContract
     {
         $normalized = preg_replace('/[^a-zA-Z0-9_]/', '', $name) ?? '';
         if ($normalized === '') {
-            throw new \InvalidArgumentException('Invalid telegram channel name.');
+            throw new InvalidArgumentException('Invalid telegram channel name.');
         }
 
         return $normalized;
@@ -159,11 +160,11 @@ final readonly class TelegramClient implements TelegramClientContract
         $allowlist = config('crawler.allowlist', []);
 
         if ($host === null || $host === '') {
-            throw new \InvalidArgumentException('Invalid Telegram URL host.');
+            throw new InvalidArgumentException('Invalid Telegram URL host.');
         }
 
         if ($allowlist !== [] && ! in_array($host, $allowlist, true)) {
-            throw new \InvalidArgumentException('Telegram host is not in allowlist.');
+            throw new InvalidArgumentException('Telegram host is not in allowlist.');
         }
     }
 

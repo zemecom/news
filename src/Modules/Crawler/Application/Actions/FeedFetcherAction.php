@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Modules\Crawler\Application\Actions;
 
+use InvalidArgumentException;
 use Modules\Crawler\Application\Services\RawNewsFactory;
 use Modules\Crawler\Domain\Contracts\RawPublisher;
 use Modules\Crawler\Domain\Contracts\RssClient;
@@ -27,7 +28,7 @@ final readonly class FeedFetcherAction
         $items = match ($source['type']) {
             'rss' => $this->rssClient->fetch($source['url'], $dateFrom, $dateTo, $limit),
             'telegram' => $this->telegramClient->fetch($source['url'], $dateFrom, $dateTo, $limit),
-            default => throw new \InvalidArgumentException('Unsupported source type: '.$source['type']),
+            default => throw new InvalidArgumentException('Unsupported source type: '.$source['type']),
         };
 
         $items->each(function (array $item) use ($source): void {

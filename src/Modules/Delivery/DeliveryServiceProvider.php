@@ -11,10 +11,11 @@ use Modules\Delivery\Domain\Contracts\SourcePublicReader;
 use Modules\Delivery\Infrastructure\Persistence\EloquentNewsFeedReader;
 use Modules\Delivery\Infrastructure\Persistence\EloquentSourceAdminReader;
 use Modules\Delivery\Infrastructure\Persistence\EloquentSourcePublicReader;
+use Override;
 
 final class DeliveryServiceProvider extends ServiceProvider
 {
-    #[\Override]
+    #[Override]
     public function register(): void
     {
         $this->app->bind(NewsFeedReader::class, EloquentNewsFeedReader::class);

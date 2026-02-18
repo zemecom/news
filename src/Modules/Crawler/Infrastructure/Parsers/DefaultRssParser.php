@@ -6,6 +6,7 @@ namespace Modules\Crawler\Infrastructure\Parsers;
 
 use Illuminate\Support\Collection;
 use Modules\Crawler\Domain\Contracts\RssParser;
+use SimpleXMLElement;
 
 class DefaultRssParser implements RssParser
 {
@@ -40,7 +41,7 @@ class DefaultRssParser implements RssParser
     /**
      * @return array<string, mixed>
      */
-    protected function mapItem(\SimpleXMLElement $item): array
+    protected function mapItem(SimpleXMLElement $item): array
     {
         $media = [];
         $imageUrl = null;

@@ -7,14 +7,14 @@ namespace Modules\Crawler\Infrastructure\Services;
 use Modules\Crawler\Domain\Contracts\TelegramParser;
 use Modules\Crawler\Infrastructure\Parsers\Telegram\DefaultTelegramParser;
 
-class TelegramParserResolver
+final readonly class TelegramParserResolver
 {
     /**
      * @param  iterable<TelegramParser>  $parsers
      */
     public function __construct(
-        private readonly iterable $parsers,
-        private readonly DefaultTelegramParser $defaultParser
+        private iterable $parsers,
+        private DefaultTelegramParser $defaultParser
     ) {}
 
     public function resolve(string $channel): TelegramParser

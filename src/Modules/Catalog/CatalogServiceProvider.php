@@ -7,10 +7,11 @@ namespace Modules\Catalog;
 use Illuminate\Support\ServiceProvider;
 use Modules\Catalog\Domain\Contracts\NewsRepository;
 use Modules\Catalog\Infrastructure\Persistence\EloquentNewsRepository;
+use Override;
 
 final class CatalogServiceProvider extends ServiceProvider
 {
-    #[\Override]
+    #[Override]
     public function register(): void
     {
         $this->app->singleton(NewsRepository::class, EloquentNewsRepository::class);

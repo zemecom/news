@@ -1,16 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Resources\Sources\Pages;
 
 use App\Filament\Resources\Sources\SourceResource;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
+use Override;
 
 class ListSources extends ListRecords
 {
     protected static string $resource = SourceResource::class;
 
-    #[\Override]
+    #[Override]
     protected function getHeaderActions(): array
     {
         return [
@@ -26,7 +29,7 @@ class ListSources extends ListRecords
         ];
     }
 
-    #[\Override]
+    #[Override]
     public function getMaxContentWidth(): \Filament\Support\Enums\Width|string|null
     {
         return \Filament\Support\Enums\Width::Full;

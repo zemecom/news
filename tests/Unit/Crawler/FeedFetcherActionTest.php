@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Crawler;
 
 use Illuminate\Support\Collection;
+use InvalidArgumentException;
 use Modules\Crawler\Application\Actions\FeedFetcherAction;
 use Modules\Crawler\Application\Services\RawNewsFactory;
 use Modules\Crawler\Domain\Contracts\RawPublisher;
@@ -86,7 +87,7 @@ final class FeedFetcherActionTest extends TestCase
             ->expects($this->never())
             ->method('publish');
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Unsupported source type: custom');
 
         $deduplicator = $this->createMock(\Modules\Crawler\Domain\Contracts\Deduplicator::class);

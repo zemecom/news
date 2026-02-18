@@ -6,7 +6,7 @@ namespace Modules\Shared\Domain\DTO;
 
 use Modules\Shared\Domain\Enum\NewsStatus;
 
-readonly class EnrichedNewsData
+final readonly class EnrichedNewsData
 {
     /**
      * @param  array<int, string>  $tags

@@ -15,10 +15,11 @@ use Modules\Crawler\Infrastructure\Http\RssConnector;
 use Modules\Crawler\Infrastructure\Http\TelegramClient;
 use Modules\Crawler\Infrastructure\Messaging\RawPublisher;
 use Modules\Shared\Application\Services\FingerprintGenerator;
+use Override;
 
 final class CrawlerServiceProvider extends ServiceProvider
 {
-    #[\Override]
+    #[Override]
     public function register(): void
     {
         $this->app->singleton(FeedFetcherAction::class);

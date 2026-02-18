@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Modules\Crawler\Infrastructure\Parsers\Telegram;
 
-class ToporLiveTelegramParser extends DefaultTelegramParser
+use Override;
+
+final class ToporLiveTelegramParser extends DefaultTelegramParser
 {
-    #[\Override]
+    #[Override]
     public function supports(string $channel): bool
     {
         // Проверяем как чистое имя, так и c @, так и URL (на случай если передали URL)

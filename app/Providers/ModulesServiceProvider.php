@@ -9,10 +9,11 @@ use Modules\Catalog\CatalogServiceProvider;
 use Modules\Crawler\CrawlerServiceProvider;
 use Modules\Delivery\DeliveryServiceProvider;
 use Modules\Intelligence\IntelligenceServiceProvider;
+use Override;
 
 final class ModulesServiceProvider extends ServiceProvider
 {
-    #[\Override]
+    #[Override]
     public function register(): void
     {
         $this->app->register(CrawlerServiceProvider::class);
