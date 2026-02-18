@@ -19,7 +19,7 @@ final class ModerationStep implements PipelineStep
         $category = $input->metadata['category'] ?? '';
         if (strtolower($category) === 'бытовой криминал') {
             return new EnrichedNewsData(
-                rawId: $input->rawId ?? $input->externalId ?? $input->fingerprint,
+                rawId: (int) $input->rawId,
                 titleGenerated: $input->title,
                 contentTranslated: $input->content,
                 sentiment: (int) ($input->metadata['sentiment'] ?? 0),
