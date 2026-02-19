@@ -1,18 +1,18 @@
 services:
-  app:
+  app: &app_base
     build:
       context: .
       dockerfile: docker/Dockerfile
-      args:
+      args: &app_build_args
         WITH_XDEBUG: ${WITH_XDEBUG:-1}
-    volumes:
+    volumes: &app_volumes
       - ./:/app
-    environment:
+    environment: &app_env
+      APP_URL: http://localhost:${APP_PORT:-8080}
       XDEBUG_MODE: ${XDEBUG_MODE:-off}
       XDEBUG_CLIENT_HOST: ${XDEBUG_CLIENT_HOST:-host.docker.internal}
       XDEBUG_CLIENT_PORT: ${XDEBUG_CLIENT_PORT:-9003}
       VITE_PORT: ${VITE_PORT:-5173}
-      APP_PORT: ${APP_PORT:-8080}
       PHP_IDE_CONFIG: "serverName=smartnews"
     ports:
       - "${VITE_PORT:-5173}:${VITE_PORT:-5173}"
@@ -31,64 +31,26 @@ services:
     restart: unless-stopped
 
   worker:
+    <<: *app_base
     build:
       context: .
       dockerfile: docker/Dockerfile
       args:
+        <<: *app_build_args
         WITH_XDEBUG: ${WITH_XDEBUG_WORKER:-0}
     command: ["php", "artisan", "news:process", "--declare-topology"]
-    volumes:
-      - ./:/app
-    environment:
-      XDEBUG_MODE: ${XDEBUG_MODE:-off}
-      XDEBUG_CLIENT_HOST: ${XDEBUG_CLIENT_HOST:-host.docker.internal}
-      XDEBUG_CLIENT_PORT: ${XDEBUG_CLIENT_PORT:-9003}
-      VITE_PORT: ${VITE_PORT:-5173}
-      APP_PORT: ${APP_PORT:-8080}
-      PHP_IDE_CONFIG: "serverName=smartnews"
-    healthcheck:
-      test: ["CMD", "php", "artisan", "app:health-check"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
-    restart: unless-stopped
+    ports: []
 
   crawler-worker:
+    <<: *app_base
     build:
       context: .
       dockerfile: docker/Dockerfile
       args:
+        <<: *app_build_args
         WITH_XDEBUG: ${WITH_XDEBUG_WORKER:-0}
     command: ["php", "artisan", "queue:work", "--queue=crawler_tasks", "--tries=3"]
-    volumes:
-      - ./:/app
-    environment:
-      XDEBUG_MODE: ${XDEBUG_MODE:-off}
-      XDEBUG_CLIENT_HOST: ${XDEBUG_CLIENT_HOST:-host.docker.internal}
-      XDEBUG_CLIENT_PORT: ${XDEBUG_CLIENT_PORT:-9003}
-      VITE_PORT: ${VITE_PORT:-5173}
-      APP_PORT: ${APP_PORT:-8080}
-      PHP_IDE_CONFIG: "serverName=smartnews"
-    healthcheck:
-      test: ["CMD", "php", "artisan", "app:health-check"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
-    restart: unless-stopped
+    ports: []
 
   nginx:
     image: nginx:alpine
