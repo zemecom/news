@@ -2,7 +2,7 @@
 
 ## 1) Контекст проекта
 
-- Проект: **SmartNews Aggregator** (Laravel 12, PHP 8.4, Modular Monolith).
+- Проект: **SmartNews Aggregator** (Laravel 12, PHP 8.5, Modular Monolith).
 - Цель: сбор, обработка и доставка новостей с AI-обогащением, с готовностью к запуску в Docker/Kubernetes.
 - Текущее состояние: рабочий backend-контур + web-лента + Telegram crawler + очереди RabbitMQ.
 - Основной URL в локальной среде: `http://localhost:8080`.

@@ -1,7 +1,6 @@
 *.log
 *.txt
 *.cache
-.agent
 .DS_Store
 .env
 .env.local
