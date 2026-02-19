@@ -6,7 +6,6 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use Modules\Catalog\Infrastructure\Persistence\Models\Source;
-use Modules\Crawler\Application\Actions\FeedFetcherAction;
 use Throwable;
 
 final class NewsCrawlCommand extends Command
@@ -19,7 +18,7 @@ final class NewsCrawlCommand extends Command
 
     protected $description = 'Fetch active sources and publish raw messages to RabbitMQ.';
 
-    public function handle(FeedFetcherAction $fetchFeed): int
+    public function handle(): int
     {
         $query = Source::query()
             ->where('is_active', true)
@@ -52,7 +51,7 @@ final class NewsCrawlCommand extends Command
             try {
                 $sourceId = (int) $source->getAttribute('id');
 
-                ($fetchFeed)(
+                \Modules\Crawler\Application\Jobs\FetchSourceJob::dispatch(
                     source: [
                         'id' => $sourceId,
                         'url' => (string) $source->getAttribute('url'),

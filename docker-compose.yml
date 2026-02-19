@@ -60,6 +60,34 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
+  crawler-worker:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      args:
+        WITH_XDEBUG: ${WITH_XDEBUG_WORKER:-0}
+    command: ["php", "artisan", "queue:work", "--queue=crawler_tasks", "--tries=3"]
+    volumes:
+      - ./:/app
+    environment:
+      XDEBUG_MODE: ${XDEBUG_MODE:-off}
+      XDEBUG_CLIENT_HOST: ${XDEBUG_CLIENT_HOST:-host.docker.internal}
+      XDEBUG_CLIENT_PORT: ${XDEBUG_CLIENT_PORT:-9003}
+      VITE_PORT: ${VITE_PORT:-5173}
+      APP_PORT: ${APP_PORT:-8080}
+      PHP_IDE_CONFIG: "serverName=smartnews"
+    healthcheck:
+      test: ["CMD", "php", "artisan", "app:health-check"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
   nginx:
     image: nginx:alpine
     ports:

@@ -64,6 +64,10 @@ messaging-setup:
 	@# Setup RabbitMQ topology (exchanges, queues, bindings)
 	$(ARTISAN) news:messaging:setup
 
+setup-hooks:
+	@# Setup git hooks path
+	git config core.hooksPath .githooks
+
 # --- Testing & Quality Assurance ---
 
 test:

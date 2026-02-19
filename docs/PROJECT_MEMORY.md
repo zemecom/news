@@ -72,7 +72,8 @@
     - Есть `FeedFetcherAction`, `RawNewsFactory`, `RssClient`, `TelegramClient`, `RawPublisher`.
     - Источники `rss` и `telegram` реально обрабатываются.
     - Поддержан массовый Telegram fetch через pagination (`before`) с лимитом.
-    - Команда: `php artisan news:crawl`.
+    - Парсинг асинхронный: команда `news:crawl` распределяет задания (`FetchSourceJob`) в очередь `crawler_tasks`, которые параллельно разбирают воркеры.
+    - Команда диспетчеризации: `php artisan news:crawl`.
 
 - **Intelligence**
     - Pipeline реализован: dedup -> lang detect -> translate -> classify -> sentiment -> anti-clickbait -> importance -> moderation -> finalize.
@@ -112,7 +113,7 @@
 
 ## 2.5 Инфраструктура и локальное хранение данных
 
-- Docker Compose поднимает `app`, `nginx`, `postgres`, `redis`, `rabbitmq`.
+- Docker Compose поднимает `app`, `nginx`, `postgres`, `redis`, `rabbitmq`, `worker` (Intelligence pipeline), `crawler-worker` (Async Jobs crawler_tasks).
 - Данные Postgres теперь персистятся на диск проекта:
     - `./.docker-data/postgres:/var/lib/postgresql/data`.
 - Папка `.docker-data` добавлена в `.gitignore`.

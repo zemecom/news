@@ -6,6 +6,7 @@ _SOURCE: Application Core_
 └── app/
     └── Console/
         ├── Commands/
+        │   └── HealthCheckCommand.php
         │   └── MessagingSetupCommand.php
         │   └── NewsCrawlCommand.php
         │   └── NewsProcessQueueCommand.php
@@ -51,6 +52,44 @@ _SOURCE: Application Core_
         └── MessagingTopologyService.php
 
 ```
+###  Path: `/app/Console/Commands/HealthCheckCommand.php`
+
+```php
+namespace App\Console\Commands;
+
+use Illuminate\Console\Command as Command;
+use Illuminate\Support\Facades\DB as DB;
+use Illuminate\Support\Facades\Redis as Redis;
+use Throwable as Throwable;
+
+final class HealthCheckCommand extends Command
+{
+	/**
+	 * The name and signature of the console command.
+	 *
+	 * @var string
+	 */
+	protected $signature = 'app:health-check';
+
+	/**
+	 * The console command description.
+	 *
+	 * @var string
+	 */
+	protected $description = 'Check if the application is healthy (DB, Redis)';
+
+
+	/**
+	 * Execute the console command.
+	 */
+	public function handle(): int
+	{
+		// ...
+	}
+}
+
+
+```
 ###  Path: `/app/Console/Commands/MessagingSetupCommand.php`
 
 ```php
@@ -80,7 +119,7 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command as Command;
 use Modules\Catalog\Infrastructure\Persistence\Models\Source as Source;
-use Modules\Crawler\Application\Actions\FeedFetcherAction as FeedFetcherAction;
+use Throwable as Throwable;
 
 final class NewsCrawlCommand extends Command
 {
@@ -88,7 +127,7 @@ final class NewsCrawlCommand extends Command
 	protected $description = 'Fetch active sources and publish raw messages to RabbitMQ.';
 
 
-	public function handle(FeedFetcherAction $fetchFeed): int
+	public function handle(): int
 	{
 		// ...
 	}
@@ -109,6 +148,8 @@ use Modules\Intelligence\Application\Pipeline\NewsProcessingPipeline as NewsProc
 use Modules\Shared\Domain\DTO\RawNewsData as RawNewsData;
 use PhpAmqpLib\Connection\AMQPStreamConnection as AMQPStreamConnection;
 use PhpAmqpLib\Message\AMQPMessage as AMQPMessage;
+use RuntimeException as RuntimeException;
+use Throwable as Throwable;
 
 final class NewsProcessQueueCommand extends Command
 {
@@ -157,7 +198,7 @@ final class NewsProcessQueueCommand extends Command
 		\PhpAmqpLib\Channel\AMQPChannel $channel,
 		string $dlq,
 		AMQPMessage $failedMessage,
-		\Throwable $e,
+		Throwable $e,
 		int $attempt,
 	): void
 	{
@@ -203,7 +244,7 @@ final class NewsProcessQueueCommand extends Command
 		string $retryRoutingKey,
 		int $nextAttempt,
 		int $delaySeconds,
-		\Throwable $error,
+		Throwable $error,
 	): void
 	{
 		// ...
@@ -235,12 +276,14 @@ namespace App\Filament\Resources\Sources\Pages;
 use App\Filament\Resources\Sources\SourceResource as SourceResource;
 use Filament\Actions\DeleteAction as DeleteAction;
 use Filament\Resources\Pages\EditRecord as EditRecord;
+use Override as Override;
 
 class EditSource extends EditRecord
 {
 	protected static string $resource = SourceResource::class;
 
 
+	#[Override]
 	protected function getHeaderActions(): array
 	{
 		// ...
@@ -257,18 +300,21 @@ namespace App\Filament\Resources\Sources\Pages;
 use App\Filament\Resources\Sources\SourceResource as SourceResource;
 use Filament\Actions\CreateAction as CreateAction;
 use Filament\Resources\Pages\ListRecords as ListRecords;
+use Override as Override;
 
 class ListSources extends ListRecords
 {
 	protected static string $resource = SourceResource::class;
 
 
+	#[Override]
 	protected function getHeaderActions(): array
 	{
 		// ...
 	}
 
 
+	#[Override]
 	public function getMaxContentWidth(): \Filament\Support\Enums\Width|string|null
 	{
 		// ...
@@ -313,6 +359,7 @@ use Filament\Schemas\Schema as Schema;
 use Filament\Support\Icons\Heroicon as Heroicon;
 use Filament\Tables\Table as Table;
 use Modules\Catalog\Infrastructure\Persistence\Models\Source as Source;
+use Override as Override;
 
 class SourceResource extends Resource
 {
@@ -320,24 +367,28 @@ class SourceResource extends Resource
 	protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
 
+	#[Override]
 	public static function form(Schema $schema): Schema
 	{
 		// ...
 	}
 
 
+	#[Override]
 	public static function table(Table $table): Table
 	{
 		// ...
 	}
 
 
+	#[Override]
 	public static function getRelations(): array
 	{
 		// ...
 	}
 
 
+	#[Override]
 	public static function getPages(): array
 	{
 		// ...
@@ -380,7 +431,7 @@ use Modules\Delivery\Application\Actions\ListSourcesAction as ListSourcesAction;
 final class SourceController extends Controller
 {
 	public function __construct(
-		private ListSourcesAction $listSources,
+		private readonly ListSourcesAction $listSources,
 	) {
 		// ...
 	}
@@ -401,19 +452,18 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller as Controller;
 use App\Http\Requests\Api\NewsIndexRequest as NewsIndexRequest;
-use Carbon\CarbonImmutable as CarbonImmutable;
-use Illuminate\Database\DatabaseManager as DatabaseManager;
 use Illuminate\Http\JsonResponse as JsonResponse;
 use Modules\Delivery\Application\Actions\ListNewsAction as ListNewsAction;
+use Modules\Delivery\Application\Actions\ListPublicSourcesAction as ListPublicSourcesAction;
 use Modules\Delivery\Application\Actions\ShowNewsAction as ShowNewsAction;
 use Modules\Delivery\Domain\DTO\NewsFeedFilters as NewsFeedFilters;
 
 final class NewsController extends Controller
 {
 	public function __construct(
-		private ListNewsAction $listNews,
-		private ShowNewsAction $showNews,
-		private DatabaseManager $db,
+		private readonly ListNewsAction $listNews,
+		private readonly ShowNewsAction $showNews,
+		private readonly ListPublicSourcesAction $listPublicSources,
 	) {
 		// ...
 	}
@@ -460,7 +510,7 @@ use App\Services\HealthCheckService as HealthCheckService;
 final class HealthController extends Controller
 {
 	public function __construct(
-		private HealthCheckService $health,
+		private readonly HealthCheckService $health,
 	) {
 		// ...
 	}
@@ -517,7 +567,7 @@ class AutoLoginAdmin
 	/**
 	 * Handle an incoming request.
 	 *
-	 * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
+	 * @param  Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
 	 */
 	public function handle(Request $request, Closure $next): Response
 	{
@@ -636,6 +686,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory as HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable as Notifiable;
+use Override as Override;
 
 /**
  * @property string $role
@@ -666,6 +717,7 @@ class User extends Authenticatable implements \Filament\Models\Contracts\Filamen
 	 *
 	 * @return array<string, string>
 	 */
+	#[Override]
 	protected function casts(): array
 	{
 		// ...
@@ -692,6 +744,7 @@ class User extends Authenticatable implements \Filament\Models\Contracts\Filamen
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider as ServiceProvider;
+use Override as Override;
 use PhpAmqpLib\Connection\AMQPStreamConnection as AMQPStreamConnection;
 
 class AppServiceProvider extends ServiceProvider
@@ -699,6 +752,7 @@ class AppServiceProvider extends ServiceProvider
 	/**
 	 * Register any application services.
 	 */
+	#[Override]
 	public function register(): void
 	{
 		// ...
@@ -758,9 +812,11 @@ use Modules\Catalog\CatalogServiceProvider as CatalogServiceProvider;
 use Modules\Crawler\CrawlerServiceProvider as CrawlerServiceProvider;
 use Modules\Delivery\DeliveryServiceProvider as DeliveryServiceProvider;
 use Modules\Intelligence\IntelligenceServiceProvider as IntelligenceServiceProvider;
+use Override as Override;
 
 final class ModulesServiceProvider extends ServiceProvider
 {
+	#[Override]
 	public function register(): void
 	{
 		// ...
@@ -777,8 +833,9 @@ namespace App\Services;
 use Illuminate\Support\Facades\DB as DB;
 use Illuminate\Support\Facades\Redis as Redis;
 use PhpAmqpLib\Connection\AMQPStreamConnection as AMQPStreamConnection;
+use Throwable as Throwable;
 
-final class HealthCheckService
+final readonly class HealthCheckService
 {
 	public function __construct(
 		private AMQPStreamConnection $amqp,
@@ -807,7 +864,7 @@ use PhpAmqpLib\Channel\AMQPChannel as AMQPChannel;
 use PhpAmqpLib\Connection\AMQPStreamConnection as AMQPStreamConnection;
 use PhpAmqpLib\Wire\AMQPTable as AMQPTable;
 
-final class MessagingTopologyService
+final readonly class MessagingTopologyService
 {
 	public function __construct(
 		private AMQPStreamConnection $connection,
@@ -857,6 +914,8 @@ _SOURCE: Modules_
             ├── Application/
             │   ├── Actions/
             │   │   ├── FeedFetcherAction.php
+            │   ├── Jobs/
+            │   │   ├── FetchSourceJob.php
             │   ├── Services/
             │   │   └── RawNewsFactory.php
             ├── CrawlerServiceProvider.php
@@ -878,8 +937,6 @@ _SOURCE: Modules_
             │       ├── RawPublisher.php
             │   └── Parsers/
             │       ├── AlJazeeraRssParser.php
-            │       ├── ArsTechnicaRssParser.php
-            │       ├── BbcRssParser.php
             │       ├── DefaultRssParser.php
             │       ├── HabrRssParser.php
             │       ├── HackerNewsRssParser.php
@@ -898,6 +955,7 @@ _SOURCE: Modules_
             ├── Application/
             │   ├── Actions/
             │   │   └── ListNewsAction.php
+            │   │   └── ListPublicSourcesAction.php
             │   │   └── ListSourcesAction.php
             │   │   └── ShowNewsAction.php
             ├── DeliveryServiceProvider.php
@@ -905,12 +963,14 @@ _SOURCE: Modules_
             │   ├── Contracts/
             │   │   ├── NewsFeedReader.php
             │   │   ├── SourceAdminReader.php
+            │   │   ├── SourcePublicReader.php
             │   ├── DTO/
             │   │   └── NewsFeedFilters.php
             ├── Infrastructure/
             │   └── Persistence/
             │       └── EloquentNewsFeedReader.php
             │       └── EloquentSourceAdminReader.php
+            │       └── EloquentSourcePublicReader.php
         └── Intelligence/
             ├── Application/
             │   ├── Pipeline/
@@ -963,9 +1023,11 @@ namespace Modules\Catalog;
 use Illuminate\Support\ServiceProvider as ServiceProvider;
 use Modules\Catalog\Domain\Contracts\NewsRepository as NewsRepository;
 use Modules\Catalog\Infrastructure\Persistence\EloquentNewsRepository as EloquentNewsRepository;
+use Override as Override;
 
 final class CatalogServiceProvider extends ServiceProvider
 {
+	#[Override]
 	public function register(): void
 	{
 		// ...
@@ -987,10 +1049,10 @@ interface NewsRepository
 	public function existsByFingerprint(string $fingerprint): bool;
 
 
-	public function findIdByFingerprint(string $fingerprint): string;
+	public function findIdByFingerprint(string $fingerprint): int;
 
 
-	public function storeRaw(RawNewsData $raw): string;
+	public function storeRaw(RawNewsData $raw): int;
 
 
 	public function storeEnriched(EnrichedNewsData $enriched): void;
@@ -1003,7 +1065,6 @@ interface NewsRepository
 ```php
 namespace Modules\Catalog\Infrastructure\Persistence;
 
-use Illuminate\Support\Str as Str;
 use Modules\Catalog\Domain\Contracts\NewsRepository as NewsRepository;
 use Modules\Catalog\Infrastructure\Persistence\Models\NewsItem as NewsItem;
 use Modules\Shared\Domain\DTO\EnrichedNewsData as EnrichedNewsData;
@@ -1018,13 +1079,13 @@ final class EloquentNewsRepository implements NewsRepository
 	}
 
 
-	public function findIdByFingerprint(string $fingerprint): string
+	public function findIdByFingerprint(string $fingerprint): int
 	{
 		// ...
 	}
 
 
-	public function storeRaw(RawNewsData $raw): string
+	public function storeRaw(RawNewsData $raw): int
 	{
 		// ...
 	}
@@ -1046,12 +1107,10 @@ namespace Modules\Catalog\Infrastructure\Persistence\Models;
 use Illuminate\Database\Eloquent\Model as Model;
 
 /**
- * @property string $id
+ * @property int $id
  */
 final class NewsItem extends Model
 {
-	use \Illuminate\Database\Eloquent\Concerns\HasUuids;
-
 	protected $table = 'news_items';
 	protected $primaryKey = 'id';
 
@@ -1135,12 +1194,13 @@ final class Source extends Model
 ```php
 namespace Modules\Crawler\Application\Actions;
 
+use InvalidArgumentException as InvalidArgumentException;
 use Modules\Crawler\Application\Services\RawNewsFactory as RawNewsFactory;
 use Modules\Crawler\Domain\Contracts\RawPublisher as RawPublisher;
 use Modules\Crawler\Domain\Contracts\RssClient as RssClient;
 use Modules\Crawler\Domain\Contracts\TelegramClient as TelegramClient;
 
-final class FeedFetcherAction
+final readonly class FeedFetcherAction
 {
 	public function __construct(
 		private RssClient $rssClient,
@@ -1169,6 +1229,46 @@ final class FeedFetcherAction
 
 
 ```
+###  Path: `/src/Modules/Crawler/Application/Jobs/FetchSourceJob.php`
+
+```php
+namespace Modules\Crawler\Application\Jobs;
+
+use Illuminate\Bus\Queueable as Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue as ShouldQueue;
+use Illuminate\Foundation\Bus\Dispatchable as Dispatchable;
+use Illuminate\Queue\InteractsWithQueue as InteractsWithQueue;
+use Illuminate\Queue\SerializesModels as SerializesModels;
+use Modules\Crawler\Application\Actions\FeedFetcherAction as FeedFetcherAction;
+
+final class FetchSourceJob implements ShouldQueue
+{
+	use Dispatchable;
+	use InteractsWithQueue;
+	use Queueable;
+	use SerializesModels;
+
+	/**
+	 * @param  array{id:int,url:string,type:string,language_default:string|null}  $source
+	 */
+	public function __construct(
+		public readonly array $source,
+		public readonly ?\Carbon\Carbon $dateFrom = null,
+		public readonly ?\Carbon\Carbon $dateTo = null,
+		public readonly ?int $limit = null,
+	) {
+		// ...
+	}
+
+
+	public function handle(FeedFetcherAction $fetchFeed): void
+	{
+		// ...
+	}
+}
+
+
+```
 ###  Path: `/src/Modules/Crawler/Application/Services/RawNewsFactory.php`
 
 ```php
@@ -1178,7 +1278,7 @@ use Carbon\CarbonImmutable as CarbonImmutable;
 use Modules\Shared\Application\Services\FingerprintGenerator as FingerprintGenerator;
 use Modules\Shared\Domain\DTO\RawNewsData as RawNewsData;
 
-final class RawNewsFactory
+final readonly class RawNewsFactory
 {
 	public function __construct(
 		private FingerprintGenerator $fingerprintGenerator,
@@ -1215,9 +1315,11 @@ use Modules\Crawler\Infrastructure\Http\RssConnector as RssConnector;
 use Modules\Crawler\Infrastructure\Http\TelegramClient as TelegramClient;
 use Modules\Crawler\Infrastructure\Messaging\RawPublisher as RawPublisher;
 use Modules\Shared\Application\Services\FingerprintGenerator as FingerprintGenerator;
+use Override as Override;
 
 final class CrawlerServiceProvider extends ServiceProvider
 {
+	#[Override]
 	public function register(): void
 	{
 		// ...
@@ -1364,11 +1466,12 @@ interface TelegramParser
 namespace Modules\Crawler\Infrastructure\Http;
 
 use Illuminate\Support\Collection as Collection;
+use InvalidArgumentException as InvalidArgumentException;
 use Modules\Crawler\Domain\Contracts\RssClient as RssClientContract;
 use Modules\Crawler\Infrastructure\Services\RssParserResolver as RssParserResolver;
 use Saloon\Enums\Method as Method;
 
-final class RssClient implements RssClientContract
+final readonly class RssClient implements RssClientContract
 {
 	public function __construct(
 		private RssConnector $connector,
@@ -1429,12 +1532,13 @@ final class RssConnector extends Connector
 namespace Modules\Crawler\Infrastructure\Http;
 
 use Illuminate\Support\Collection as Collection;
+use InvalidArgumentException as InvalidArgumentException;
 use Modules\Crawler\Domain\Contracts\TelegramClient as TelegramClientContract;
 use Modules\Crawler\Infrastructure\Services\TelegramParserResolver as TelegramParserResolver;
 use Saloon\Enums\Method as Method;
 use Saloon\Http\Response as Response;
 
-final class TelegramClient implements TelegramClientContract
+final readonly class TelegramClient implements TelegramClientContract
 {
 	public function __construct(
 		private RssConnector $connector,
@@ -1497,7 +1601,7 @@ use Modules\Shared\Domain\DTO\RawNewsData as RawNewsData;
 use PhpAmqpLib\Connection\AMQPStreamConnection as AMQPStreamConnection;
 use PhpAmqpLib\Message\AMQPMessage as AMQPMessage;
 
-final class RawPublisher implements RawPublisherContract
+final readonly class RawPublisher implements RawPublisherContract
 {
 	public function __construct(
 		private AMQPStreamConnection $connection,
@@ -1521,38 +1625,11 @@ final class RawPublisher implements RawPublisherContract
 ```php
 namespace Modules\Crawler\Infrastructure\Parsers;
 
-class AlJazeeraRssParser extends DefaultRssParser
+use Override as Override;
+
+final class AlJazeeraRssParser extends DefaultRssParser
 {
-	public function supports(string $url): bool
-	{
-		// ...
-	}
-}
-
-
-```
-###  Path: `/src/Modules/Crawler/Infrastructure/Parsers/ArsTechnicaRssParser.php`
-
-```php
-namespace Modules\Crawler\Infrastructure\Parsers;
-
-class ArsTechnicaRssParser extends DefaultRssParser
-{
-	public function supports(string $url): bool
-	{
-		// ...
-	}
-}
-
-
-```
-###  Path: `/src/Modules/Crawler/Infrastructure/Parsers/BbcRssParser.php`
-
-```php
-namespace Modules\Crawler\Infrastructure\Parsers;
-
-class BbcRssParser extends DefaultRssParser
-{
+	#[Override]
 	public function supports(string $url): bool
 	{
 		// ...
@@ -1568,6 +1645,7 @@ namespace Modules\Crawler\Infrastructure\Parsers;
 
 use Illuminate\Support\Collection as Collection;
 use Modules\Crawler\Domain\Contracts\RssParser as RssParser;
+use SimpleXMLElement as SimpleXMLElement;
 
 class DefaultRssParser implements RssParser
 {
@@ -1589,7 +1667,16 @@ class DefaultRssParser implements RssParser
 	/**
 	 * @return array<string, mixed>
 	 */
-	protected function mapItem(\SimpleXMLElement $item): array
+	protected function mapItem(SimpleXMLElement $item): array
+	{
+		// ...
+	}
+
+
+	/**
+	 * @return array<string, mixed>
+	 */
+	protected function mapAtomEntry(SimpleXMLElement $entry): array
 	{
 		// ...
 	}
@@ -1602,15 +1689,20 @@ class DefaultRssParser implements RssParser
 ```php
 namespace Modules\Crawler\Infrastructure\Parsers;
 
-class HabrRssParser extends DefaultRssParser
+use Override as Override;
+use SimpleXMLElement as SimpleXMLElement;
+
+final class HabrRssParser extends DefaultRssParser
 {
+	#[Override]
 	public function supports(string $url): bool
 	{
 		// ...
 	}
 
 
-	protected function mapItem(\SimpleXMLElement $item): array
+	#[Override]
+	protected function mapItem(SimpleXMLElement $item): array
 	{
 		// ...
 	}
@@ -1623,8 +1715,11 @@ class HabrRssParser extends DefaultRssParser
 ```php
 namespace Modules\Crawler\Infrastructure\Parsers;
 
-class HackerNewsRssParser extends DefaultRssParser
+use Override as Override;
+
+final class HackerNewsRssParser extends DefaultRssParser
 {
+	#[Override]
 	public function supports(string $url): bool
 	{
 		// ...
@@ -1638,8 +1733,11 @@ class HackerNewsRssParser extends DefaultRssParser
 ```php
 namespace Modules\Crawler\Infrastructure\Parsers;
 
-class MedicalXpressRssParser extends DefaultRssParser
+use Override as Override;
+
+final class MedicalXpressRssParser extends DefaultRssParser
 {
+	#[Override]
 	public function supports(string $url): bool
 	{
 		// ...
@@ -1653,8 +1751,11 @@ class MedicalXpressRssParser extends DefaultRssParser
 ```php
 namespace Modules\Crawler\Infrastructure\Parsers;
 
-class ScienceDailyRssParser extends DefaultRssParser
+use Override as Override;
+
+final class ScienceDailyRssParser extends DefaultRssParser
 {
+	#[Override]
 	public function supports(string $url): bool
 	{
 		// ...
@@ -1668,8 +1769,11 @@ class ScienceDailyRssParser extends DefaultRssParser
 ```php
 namespace Modules\Crawler\Infrastructure\Parsers;
 
-class TechCrunchRssParser extends DefaultRssParser
+use Override as Override;
+
+final class TechCrunchRssParser extends DefaultRssParser
 {
+	#[Override]
 	public function supports(string $url): bool
 	{
 		// ...
@@ -1786,8 +1890,11 @@ class DefaultTelegramParser implements TelegramParser
 ```php
 namespace Modules\Crawler\Infrastructure\Parsers\Telegram;
 
-class ToporLiveTelegramParser extends DefaultTelegramParser
+use Override as Override;
+
+final class ToporLiveTelegramParser extends DefaultTelegramParser
 {
+	#[Override]
 	public function supports(string $channel): bool
 	{
 		// ...
@@ -1801,8 +1908,11 @@ class ToporLiveTelegramParser extends DefaultTelegramParser
 ```php
 namespace Modules\Crawler\Infrastructure\Parsers;
 
-class TheVergeRssParser extends DefaultRssParser
+use Override as Override;
+
+final class TheVergeRssParser extends DefaultRssParser
 {
+	#[Override]
 	public function supports(string $url): bool
 	{
 		// ...
@@ -1837,7 +1947,7 @@ namespace Modules\Crawler\Infrastructure\Services;
 use Modules\Crawler\Domain\Contracts\RssParser as RssParser;
 use Modules\Crawler\Infrastructure\Parsers\DefaultRssParser as DefaultRssParser;
 
-class RssParserResolver
+final readonly class RssParserResolver
 {
 	/**
 	 * @param  iterable<RssParser>  $parsers
@@ -1866,7 +1976,7 @@ namespace Modules\Crawler\Infrastructure\Services;
 use Modules\Crawler\Domain\Contracts\TelegramParser as TelegramParser;
 use Modules\Crawler\Infrastructure\Parsers\Telegram\DefaultTelegramParser as DefaultTelegramParser;
 
-class TelegramParserResolver
+final readonly class TelegramParserResolver
 {
 	/**
 	 * @param  iterable<TelegramParser>  $parsers
@@ -1896,7 +2006,7 @@ use Illuminate\Contracts\Pagination\CursorPaginator as CursorPaginator;
 use Modules\Delivery\Domain\Contracts\NewsFeedReader as NewsFeedReader;
 use Modules\Delivery\Domain\DTO\NewsFeedFilters as NewsFeedFilters;
 
-final class ListNewsAction
+final readonly class ListNewsAction
 {
 	public function __construct(
 		private NewsFeedReader $reader,
@@ -1922,6 +2032,33 @@ final class ListNewsAction
 
 
 ```
+###  Path: `/src/Modules/Delivery/Application/Actions/ListPublicSourcesAction.php`
+
+```php
+namespace Modules\Delivery\Application\Actions;
+
+use Modules\Delivery\Domain\Contracts\SourcePublicReader as SourcePublicReader;
+
+final readonly class ListPublicSourcesAction
+{
+	public function __construct(
+		private SourcePublicReader $reader,
+	) {
+		// ...
+	}
+
+
+	/**
+	 * @return array<int, array<string, mixed>>
+	 */
+	public function __invoke(): array
+	{
+		// ...
+	}
+}
+
+
+```
 ###  Path: `/src/Modules/Delivery/Application/Actions/ListSourcesAction.php`
 
 ```php
@@ -1929,7 +2066,7 @@ namespace Modules\Delivery\Application\Actions;
 
 use Modules\Delivery\Domain\Contracts\SourceAdminReader as SourceAdminReader;
 
-final class ListSourcesAction
+final readonly class ListSourcesAction
 {
 	public function __construct(
 		private SourceAdminReader $reader,
@@ -1956,7 +2093,7 @@ namespace Modules\Delivery\Application\Actions;
 
 use Modules\Delivery\Domain\Contracts\NewsFeedReader as NewsFeedReader;
 
-final class ShowNewsAction
+final readonly class ShowNewsAction
 {
 	public function __construct(
 		private NewsFeedReader $reader,
@@ -1984,11 +2121,15 @@ namespace Modules\Delivery;
 use Illuminate\Support\ServiceProvider as ServiceProvider;
 use Modules\Delivery\Domain\Contracts\NewsFeedReader as NewsFeedReader;
 use Modules\Delivery\Domain\Contracts\SourceAdminReader as SourceAdminReader;
+use Modules\Delivery\Domain\Contracts\SourcePublicReader as SourcePublicReader;
 use Modules\Delivery\Infrastructure\Persistence\EloquentNewsFeedReader as EloquentNewsFeedReader;
 use Modules\Delivery\Infrastructure\Persistence\EloquentSourceAdminReader as EloquentSourceAdminReader;
+use Modules\Delivery\Infrastructure\Persistence\EloquentSourcePublicReader as EloquentSourcePublicReader;
+use Override as Override;
 
 final class DeliveryServiceProvider extends ServiceProvider
 {
+	#[Override]
 	public function register(): void
 	{
 		// ...
@@ -2039,6 +2180,21 @@ interface SourceAdminReader
 
 
 ```
+###  Path: `/src/Modules/Delivery/Domain/Contracts/SourcePublicReader.php`
+
+```php
+namespace Modules\Delivery\Domain\Contracts;
+
+interface SourcePublicReader
+{
+	/**
+	 * @return array<int, array<string, mixed>>
+	 */
+	public function listActive(): array;
+}
+
+
+```
 ###  Path: `/src/Modules/Delivery/Domain/DTO/NewsFeedFilters.php`
 
 ```php
@@ -2046,7 +2202,7 @@ namespace Modules\Delivery\Domain\DTO;
 
 use Carbon\CarbonImmutable as CarbonImmutable;
 
-readonly class NewsFeedFilters
+final readonly class NewsFeedFilters
 {
 	public function __construct(
 		public ?string $category = null,
@@ -2058,6 +2214,12 @@ readonly class NewsFeedFilters
 		public ?string $query = null,
 		public ?int $sourceId = null,
 	) {
+		// ...
+	}
+
+
+	public static function fromRequest(\Illuminate\Http\Request $request): self
+	{
 		// ...
 	}
 }
@@ -2077,7 +2239,7 @@ use Modules\Delivery\Domain\Contracts\NewsFeedReader as NewsFeedReader;
 use Modules\Delivery\Domain\DTO\NewsFeedFilters as NewsFeedFilters;
 use Modules\Shared\Domain\Enum\NewsStatus as NewsStatus;
 
-final class EloquentNewsFeedReader implements NewsFeedReader
+final readonly class EloquentNewsFeedReader implements NewsFeedReader
 {
 	public function __construct(
 		private DatabaseManager $db,
@@ -2147,7 +2309,7 @@ namespace Modules\Delivery\Infrastructure\Persistence;
 use Illuminate\Database\DatabaseManager as DatabaseManager;
 use Modules\Delivery\Domain\Contracts\SourceAdminReader as SourceAdminReader;
 
-final class EloquentSourceAdminReader implements SourceAdminReader
+final readonly class EloquentSourceAdminReader implements SourceAdminReader
 {
 	public function __construct(
 		private DatabaseManager $db,
@@ -2176,6 +2338,34 @@ final class EloquentSourceAdminReader implements SourceAdminReader
 
 
 ```
+###  Path: `/src/Modules/Delivery/Infrastructure/Persistence/EloquentSourcePublicReader.php`
+
+```php
+namespace Modules\Delivery\Infrastructure\Persistence;
+
+use Illuminate\Database\DatabaseManager as DatabaseManager;
+use Modules\Delivery\Domain\Contracts\SourcePublicReader as SourcePublicReader;
+
+final readonly class EloquentSourcePublicReader implements SourcePublicReader
+{
+	public function __construct(
+		private DatabaseManager $db,
+	) {
+		// ...
+	}
+
+
+	/**
+	 * @return array<int, array<string, mixed>>
+	 */
+	public function listActive(): array
+	{
+		// ...
+	}
+}
+
+
+```
 ###  Path: `/src/Modules/Intelligence/Application/Pipeline/NewsProcessingPipeline.php`
 
 ```php
@@ -2187,17 +2377,13 @@ use Modules\Intelligence\Domain\Contracts\EnrichedPublisher as EnrichedPublisher
 use Modules\Shared\Domain\DTO\EnrichedNewsData as EnrichedNewsData;
 use Modules\Shared\Domain\DTO\RawNewsData as RawNewsData;
 
-final class NewsProcessingPipeline
+final readonly class NewsProcessingPipeline
 {
-	/** @var PipelineStep[] */
-	private array $steps;
-
-
 	/**
 	 * @param PipelineStep[] $steps
 	 */
 	public function __construct(
-		array $steps,
+		private array $steps,
 		private EnrichedPublisher $publisher,
 		private NewsRepository $news,
 	) {
@@ -2218,11 +2404,13 @@ final class NewsProcessingPipeline
 ```php
 namespace Modules\Intelligence\Application\Pipeline;
 
+use RuntimeException as RuntimeException;
+
 /**
  * Thrown when a pipeline step determines that the message
  * should be silently skipped (e.g. duplicate detection).
  */
-final class SkipMessageException extends \RuntimeException
+final class SkipMessageException extends RuntimeException
 {
 	public function __construct(string $reason = 'skipped')
 	{
@@ -2259,7 +2447,7 @@ use Modules\Intelligence\Domain\Contracts\Classifier as Classifier;
 use Modules\Shared\Domain\DTO\EnrichedNewsData as EnrichedNewsData;
 use Modules\Shared\Domain\DTO\RawNewsData as RawNewsData;
 
-final class ClassifyStep implements PipelineStep
+final readonly class ClassifyStep implements PipelineStep
 {
 	public function __construct(
 		private Classifier $classifier,
@@ -2286,7 +2474,7 @@ use Modules\Intelligence\Application\Pipeline\SkipMessageException as SkipMessag
 use Modules\Shared\Domain\DTO\EnrichedNewsData as EnrichedNewsData;
 use Modules\Shared\Domain\DTO\RawNewsData as RawNewsData;
 
-final class DeduplicateStep implements PipelineStep
+final readonly class DeduplicateStep implements PipelineStep
 {
 	public function __construct(
 		private NewsRepository $news,
@@ -2401,7 +2589,7 @@ use Modules\Intelligence\Domain\Contracts\SentimentAnalyzer as SentimentAnalyzer
 use Modules\Shared\Domain\DTO\EnrichedNewsData as EnrichedNewsData;
 use Modules\Shared\Domain\DTO\RawNewsData as RawNewsData;
 
-final class SentimentStep implements PipelineStep
+final readonly class SentimentStep implements PipelineStep
 {
 	public function __construct(
 		private SentimentAnalyzer $sentiment,
@@ -2426,7 +2614,7 @@ namespace Modules\Intelligence\Application\Pipeline\Steps;
 use Modules\Shared\Domain\DTO\EnrichedNewsData as EnrichedNewsData;
 use Modules\Shared\Domain\DTO\RawNewsData as RawNewsData;
 
-final class TranslateStep implements PipelineStep
+final readonly class TranslateStep implements PipelineStep
 {
 	public function __construct(
 		private \Modules\Intelligence\Domain\Contracts\Translator $translator,
@@ -2628,7 +2816,7 @@ use PhpAmqpLib\Connection\AMQPStreamConnection as AMQPStreamConnection;
 use PhpAmqpLib\Message\AMQPMessage as AMQPMessage;
 use PhpAmqpLib\Wire\AMQPTable as AMQPTable;
 
-final class EnrichedPublisher implements EnrichedPublisherContract
+final readonly class EnrichedPublisher implements EnrichedPublisherContract
 {
 	public function __construct(
 		private AMQPStreamConnection $connection,
@@ -2676,9 +2864,11 @@ use Modules\Intelligence\Infrastructure\LLM\KeywordClassifier as KeywordClassifi
 use Modules\Intelligence\Infrastructure\LLM\KeywordSentimentAnalyzer as KeywordSentimentAnalyzer;
 use Modules\Intelligence\Infrastructure\LLM\ObjectivelyTitleGenerator as ObjectivelyTitleGenerator;
 use Modules\Intelligence\Infrastructure\Messaging\EnrichedPublisher as EnrichedPublisher;
+use Override as Override;
 
 final class IntelligenceServiceProvider extends ServiceProvider
 {
+	#[Override]
 	public function register(): void
 	{
 		// ...
@@ -2736,13 +2926,13 @@ namespace Modules\Shared\Domain\DTO;
 
 use Modules\Shared\Domain\Enum\NewsStatus as NewsStatus;
 
-readonly class EnrichedNewsData
+final readonly class EnrichedNewsData
 {
 	/**
 	 * @param  array<int, string>  $tags
 	 */
 	public function __construct(
-		public string $rawId,
+		public int $rawId,
 		public ?string $titleGenerated,
 		public string $contentTranslated,
 		public int $sentiment,
@@ -2761,7 +2951,7 @@ readonly class EnrichedNewsData
 	 * Копия с подменой выбранных полей.
 	 *
 	 * @param array{
-	 *     rawId?: string,
+	 *     rawId?: int,
 	 *     titleGenerated?: ?string,
 	 *     contentTranslated?: string,
 	 *     sentiment?: int,
@@ -2791,7 +2981,7 @@ use Carbon\CarbonImmutable as CarbonImmutable;
 /**
  * Стандартизированное сырьё из источника.
  */
-readonly class RawNewsData
+final readonly class RawNewsData
 {
 	/**
 	 * @param  array<string, mixed>  $metadata
@@ -2809,7 +2999,7 @@ readonly class RawNewsData
 		/** @var array<int, array{url:string,type:?string}> */
 		public array $media,
 		public string $fingerprint,
-		public ?string $rawId = null,
+		public ?int $rawId = null,
 	) {
 		// ...
 	}
@@ -2830,7 +3020,7 @@ readonly class RawNewsData
 	 *     imageUrl?: ?string,
 	 *     media?: array<int, array{url:string,type:?string}>,
 	 *     fingerprint?: string,
-	 *     rawId?: ?string
+	 *     rawId?: ?int
 	 * } $overrides
 	 */
 	public function with(array $overrides): self
@@ -2857,6 +3047,6 @@ enum NewsStatus: string
 ```
 ---
 **File Statistics**
-- **Size**: 46.8 KB
-- **Lines**: 2107
+- **Size**: 63.35 KB
+- **Lines**: 2863
 File: `../docs/BUSINESS_LOGIC_DEPENDENCIES.md`
