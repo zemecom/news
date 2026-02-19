@@ -35,7 +35,7 @@ final class HealthCheckCommand extends Command
             DB::connection()->getPdo();
 
             // 2. Check Redis
-            Redis::connection()->ping();
+            Redis::connection()->command('ping');
 
             $this->info('System is healthy.');
 

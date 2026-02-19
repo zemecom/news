@@ -13,6 +13,7 @@ services:
       XDEBUG_CLIENT_PORT: ${XDEBUG_CLIENT_PORT:-9003}
       VITE_PORT: ${VITE_PORT:-5173}
       APP_PORT: ${APP_PORT:-8080}
+      PHP_IDE_CONFIG: "serverName=smartnews"
     ports:
       - "${VITE_PORT:-5173}:${VITE_PORT:-5173}"
     healthcheck:
@@ -34,7 +35,7 @@ services:
       context: .
       dockerfile: docker/Dockerfile
       args:
-        WITH_XDEBUG: ${WITH_XDEBUG:-1}
+        WITH_XDEBUG: ${WITH_XDEBUG_WORKER:-0}
     command: ["php", "artisan", "news:process", "--declare-topology"]
     volumes:
       - ./:/app
@@ -44,6 +45,7 @@ services:
       XDEBUG_CLIENT_PORT: ${XDEBUG_CLIENT_PORT:-9003}
       VITE_PORT: ${VITE_PORT:-5173}
       APP_PORT: ${APP_PORT:-8080}
+      PHP_IDE_CONFIG: "serverName=smartnews"
     healthcheck:
       test: ["CMD", "php", "artisan", "app:health-check"]
       interval: 10s

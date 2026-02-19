@@ -32,8 +32,6 @@ final class CrawlerServiceProvider extends ServiceProvider
             \Modules\Crawler\Infrastructure\Parsers\HackerNewsRssParser::class,
             \Modules\Crawler\Infrastructure\Parsers\TechCrunchRssParser::class,
             \Modules\Crawler\Infrastructure\Parsers\TheVergeRssParser::class,
-            \Modules\Crawler\Infrastructure\Parsers\ArsTechnicaRssParser::class,
-            \Modules\Crawler\Infrastructure\Parsers\BbcRssParser::class,
             \Modules\Crawler\Infrastructure\Parsers\AlJazeeraRssParser::class,
             \Modules\Crawler\Infrastructure\Parsers\ScienceDailyRssParser::class,
             \Modules\Crawler\Infrastructure\Parsers\MedicalXpressRssParser::class,

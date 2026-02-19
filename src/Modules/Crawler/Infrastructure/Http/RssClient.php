@@ -38,7 +38,15 @@ final readonly class RssClient implements RssClientContract
                 public function defaultHeaders(): array
                 {
                     return [
-                        'User-Agent' => 'SmartNewsBot/1.0',
+                        'User-Agent' => 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36',
+                    ];
+                }
+
+                public function defaultConfig(): array
+                {
+                    return [
+                        'timeout' => 60,
+                        'connect_timeout' => 30,
                     ];
                 }
             }
