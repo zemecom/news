@@ -1,42 +1,17 @@
 #!/bin/sh
 
-# Auto-fix code style (Pint)
+# Auto-fix code style (Pint) before committing
+echo "🎨 Formatting code..."
 docker compose exec -T app vendor/bin/pint --quiet 2>/dev/null
 git add -u
 
-# Run checks in parallel
-echo "Running Rector (dry-run) and Tests..."
+# Run the full CI Check suite to ensure the commit is fully working
+echo "🔍 Running comprehensive CI checks for commit..."
+make ci-check
 
-# Rector
-(docker compose exec -T app vendor/bin/rector --dry-run > /dev/null 2>&1) &
-PID_RECTOR=$!
-
-# Tests
-(docker compose exec -T app php artisan test --parallel > /dev/null 2>&1) &
-PID_TEST=$!
-
-# Wait for both
-wait $PID_RECTOR
-STATUS_RECTOR=$?
-
-wait $PID_TEST
-STATUS_TEST=$?
-
-# Report results
-FAILED=0
-
-if [ $STATUS_RECTOR -ne 0 ]; then
-    echo "❌ Rector check failed! Run 'make rector' to fix."
-    FAILED=1
-fi
-
-if [ $STATUS_TEST -ne 0 ]; then
-    echo "❌ Tests failed!"
-    FAILED=1
-fi
-
-if [ $FAILED -ne 0 ]; then
+if [ $? -ne 0 ]; then
+    echo "❌ CI checks failed! Commit aborted. Please fix the errors."
     exit 1
 fi
 
-echo "✅ All checks passed!"
+echo "✅ All CI checks passed! Commit successful."
