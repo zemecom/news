@@ -64,7 +64,12 @@ final class FeedFetcherActionTest extends TestCase
         $deduplicator = $this->createMock(\Modules\Crawler\Domain\Contracts\Deduplicator::class);
         $deduplicator->method('exists')->willReturn(false);
 
-        $action = new FeedFetcherAction($rssClient, $telegramClient, $publisher, $rawNewsFactory, $deduplicator);
+        $events = $this->createMock(\Illuminate\Contracts\Events\Dispatcher::class);
+        $events->expects($this->once())
+            ->method('dispatch')
+            ->with($this->isInstanceOf(\Modules\Crawler\Domain\Events\SourceFetchSucceeded::class));
+
+        $action = new FeedFetcherAction($rssClient, $telegramClient, $publisher, $rawNewsFactory, $deduplicator, $events);
         $action($source);
     }
 
@@ -91,8 +96,12 @@ final class FeedFetcherActionTest extends TestCase
         $this->expectExceptionMessage('Unsupported source type: custom');
 
         $deduplicator = $this->createMock(\Modules\Crawler\Domain\Contracts\Deduplicator::class);
+        $events = $this->createMock(\Illuminate\Contracts\Events\Dispatcher::class);
+        $events->expects($this->once())
+            ->method('dispatch')
+            ->with($this->isInstanceOf(\Modules\Crawler\Domain\Events\SourceFetchFailed::class));
 
-        $action = new FeedFetcherAction($rssClient, $telegramClient, $publisher, $rawNewsFactory, $deduplicator);
+        $action = new FeedFetcherAction($rssClient, $telegramClient, $publisher, $rawNewsFactory, $deduplicator, $events);
         $action([
             'id' => 1,
             'url' => 'https://example.com/feed.xml',

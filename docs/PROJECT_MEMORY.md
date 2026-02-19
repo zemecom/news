@@ -72,7 +72,8 @@
     - Есть `FeedFetcherAction`, `RawNewsFactory`, `RssClient`, `TelegramClient`, `RawPublisher`.
     - Источники `rss` и `telegram` реально обрабатываются.
     - Поддержан массовый Telegram fetch через pagination (`before`) с лимитом.
-    - Парсинг асинхронный: команда `news:crawl` распределяет задания (`FetchSourceJob`) в очередь `crawler_tasks`, которые параллельно разбирают воркеры.
+    - Парсинг асинхронный: команда `news:crawl` распределяет задания (`FetchSourceJob`) в очередь `crawler_tasks`.
+    - Внедрен мониторинг здоровья источников (**Source Health Tracking**): `FeedFetcherAction` генерирует доменные события, которые слушатель в `Catalog` использует для обновления `last_success_at`, `last_error_at` и `error_streak`.
     - Команда диспетчеризации: `php artisan news:crawl`.
 
 - **Intelligence**
@@ -126,6 +127,7 @@
 
 ## 3.1 Crawler / источники
 
+- [x] Отслеживание состояния здоровья источников (`last_success_at`, `last_error_at`, `error_streak`) через доменные события.
 - [ ] Полноценная политика allowlist и security hardening входящего HTML (sanitization).
 - [ ] Расширить контроль ошибок источников (`error_streak`, `last_error_at`, `last_success_at`) в runtime-логике.
 

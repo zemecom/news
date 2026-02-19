@@ -9,6 +9,7 @@ use Modules\Crawler\Application\Services\RawNewsFactory;
 use Modules\Crawler\Domain\Contracts\RawPublisher;
 use Modules\Crawler\Domain\Contracts\RssClient;
 use Modules\Crawler\Domain\Contracts\TelegramClient;
+use Throwable;
 
 final readonly class FeedFetcherAction
 {
@@ -18,6 +19,7 @@ final readonly class FeedFetcherAction
         private RawPublisher $publisher,
         private RawNewsFactory $rawNewsFactory,
         private \Modules\Crawler\Domain\Contracts\Deduplicator $deduplicator,
+        private \Illuminate\Contracts\Events\Dispatcher $events,
     ) {}
 
     /**
@@ -25,20 +27,34 @@ final readonly class FeedFetcherAction
      */
     public function __invoke(array $source, ?\Carbon\Carbon $dateFrom = null, ?\Carbon\Carbon $dateTo = null, ?int $limit = null): void
     {
-        $items = match ($source['type']) {
-            'rss' => $this->rssClient->fetch($source['url'], $dateFrom, $dateTo, $limit),
-            'telegram' => $this->telegramClient->fetch($source['url'], $dateFrom, $dateTo, $limit),
-            default => throw new InvalidArgumentException('Unsupported source type: '.$source['type']),
-        };
+        try {
+            $items = match ($source['type']) {
+                'rss' => $this->rssClient->fetch($source['url'], $dateFrom, $dateTo, $limit),
+                'telegram' => $this->telegramClient->fetch($source['url'], $dateFrom, $dateTo, $limit),
+                default => throw new InvalidArgumentException('Unsupported source type: '.$source['type']),
+            };
 
-        $items->each(function (array $item) use ($source): void {
-            $raw = $this->rawNewsFactory->fromRss($source, $item);
+            $items->each(function (array $item) use ($source): void {
+                $raw = $this->rawNewsFactory->fromRss($source, $item);
 
-            if ($this->deduplicator->exists($raw->fingerprint)) {
-                return;
-            }
+                if ($this->deduplicator->exists($raw->fingerprint)) {
+                    return;
+                }
 
-            $this->publisher->publish($raw);
-        });
+                $this->publisher->publish($raw);
+            });
+
+            $this->events->dispatch(new \Modules\Crawler\Domain\Events\SourceFetchSucceeded(
+                (int) $source['id'],
+                $items->count()
+            ));
+        } catch (Throwable $e) {
+            $this->events->dispatch(new \Modules\Crawler\Domain\Events\SourceFetchFailed(
+                (int) $source['id'],
+                $e->getMessage()
+            ));
+
+            throw $e;
+        }
     }
 }
