@@ -91,6 +91,7 @@
     - Добавлено отдельное хранилище `news_media_assets`:
         - хранит `source_url` (оригинал), `local_path` (локальная копия), MIME/size/checksum и статус загрузки;
         - API отдает `image_url`/`media` как эффективные ссылки (локальные при наличии) + `*_original`/`*_local` для fallback.
+    - Добавлена backfill-команда `news:media:backfill` для массового дозаполнения `news_media_assets` по уже существующим `news_items` (режимы `queue`/`sync`, `dry-run`, диапазон `id`, `chunk/limit`).
 
 - **Delivery**
     - API:
@@ -194,6 +195,7 @@
 - Инициализация топологии RabbitMQ: `docker compose exec -T app php artisan news:messaging:setup`
 - Сбор новостей: `docker compose exec -T app php artisan news:crawl`
 - Обработка очередей: `docker compose exec -T app php artisan queue:work --queue=crawler_tasks,intelligence_tasks,media_tasks --tries=3`
+- Backfill медиа-ассетов: `docker compose exec -T app php artisan news:media:backfill --dry-run`
 - Тесты: `./vendor/bin/pest`
 - Статика: `./vendor/bin/phpstan analyse --memory-limit=1G --debug`
 

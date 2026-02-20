@@ -9,6 +9,7 @@ _SOURCE: Application Core_
         │   └── HealthCheckCommand.php
         │   └── MessagingSetupCommand.php
         │   └── NewsCrawlCommand.php
+        │   └── NewsMediaBackfillCommand.php
     └── Filament/
         ├── Resources/
         │   └── Sources/
@@ -128,6 +129,59 @@ final class NewsCrawlCommand extends Command
 
 
 	public function handle(): int
+	{
+		// ...
+	}
+}
+
+
+```
+###  Path: `/app/Console/Commands/NewsMediaBackfillCommand.php`
+
+```php
+namespace App\Console\Commands;
+
+use Illuminate\Console\Command as Command;
+use Illuminate\Database\Eloquent\Builder as Builder;
+use Illuminate\Database\Query\Builder as QueryBuilder;
+use Illuminate\Support\Collection as Collection;
+use InvalidArgumentException as InvalidArgumentException;
+use Modules\Catalog\Application\Actions\PreloadNewsMediaAction as PreloadNewsMediaAction;
+use Modules\Catalog\Application\Jobs\PreloadNewsMediaJob as PreloadNewsMediaJob;
+use Modules\Catalog\Infrastructure\Persistence\Models\NewsItem as NewsItem;
+use Throwable as Throwable;
+
+final class NewsMediaBackfillCommand extends Command
+{
+	protected $signature = "news:media:backfill\n                            {--from-id= : Include news_items with id >= this value}\n                            {--to-id= : Include news_items with id <= this value}\n                            {--limit= : Maximum number of eligible items to process}\n                            {--chunk=200 : Number of rows to scan per chunk}\n                            {--queue=media_tasks : Queue name for async mode}\n                            {--all : Reprocess items even if media assets already exist}\n                            {--sync : Process synchronously in current process}\n                            {--dry-run : Print counters without dispatching or downloading}";
+	protected $description = 'Backfill media assets for existing news items (original + local copies).';
+
+
+	public function handle(PreloadNewsMediaAction $preloadNewsMedia): int
+	{
+		// ...
+	}
+
+
+	private function intOption(string $name, int $min, ?int $default = null): ?int
+	{
+		// ...
+	}
+
+
+	private function hasBackfillableMedia(NewsItem $item): bool
+	{
+		// ...
+	}
+
+
+	private function extractMediaUrl(mixed $mediaItem): ?string
+	{
+		// ...
+	}
+
+
+	private function normalizeString(mixed $value): ?string
 	{
 		// ...
 	}
@@ -783,6 +837,8 @@ _SOURCE: Modules_
     └── Modules/
         └── Catalog/
             ├── Application/
+            │   ├── Actions/
+            │   │   ├── PreloadNewsMediaAction.php
             │   ├── Jobs/
             │   │   ├── PreloadNewsMediaJob.php
             │   ├── Listeners/
@@ -915,6 +971,65 @@ _SOURCE: Modules_
                     └── RawNewsCreated.php
 
 ```
+###  Path: `/src/Modules/Catalog/Application/Actions/PreloadNewsMediaAction.php`
+
+```php
+namespace Modules\Catalog\Application\Actions;
+
+use Illuminate\Support\Facades\Http as Http;
+use Illuminate\Support\Facades\Log as Log;
+use Illuminate\Support\Facades\Storage as Storage;
+use Illuminate\Support\Str as Str;
+use Modules\Catalog\Domain\Contracts\NewsMediaAssetRepository as NewsMediaAssetRepository;
+use Modules\Catalog\Domain\Contracts\NewsRepository as NewsRepository;
+use RuntimeException as RuntimeException;
+use Throwable as Throwable;
+
+final readonly class PreloadNewsMediaAction
+{
+	public function __construct(
+		private NewsRepository $news,
+		private NewsMediaAssetRepository $mediaAssets,
+	) {
+		// ...
+	}
+
+
+	public function __invoke(int $newsItemId): void
+	{
+		// ...
+	}
+
+
+	/**
+	 * @param  array{id:int, source_url:string, local_disk:string}  $candidate
+	 */
+	private function downloadCandidate(array $candidate): void
+	{
+		// ...
+	}
+
+
+	private function resolveFileExtension(string $url, ?string $mimeType): string
+	{
+		// ...
+	}
+
+
+	private function normalizeMimeType(?string $contentTypeHeader): ?string
+	{
+		// ...
+	}
+
+
+	private function extensionByMimeType(?string $mimeType): ?string
+	{
+		// ...
+	}
+}
+
+
+```
 ###  Path: `/src/Modules/Catalog/Application/Jobs/PreloadNewsMediaJob.php`
 
 ```php
@@ -925,14 +1040,7 @@ use Illuminate\Contracts\Queue\ShouldQueue as ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable as Dispatchable;
 use Illuminate\Queue\InteractsWithQueue as InteractsWithQueue;
 use Illuminate\Queue\SerializesModels as SerializesModels;
-use Illuminate\Support\Facades\Http as Http;
-use Illuminate\Support\Facades\Log as Log;
-use Illuminate\Support\Facades\Storage as Storage;
-use Illuminate\Support\Str as Str;
-use Modules\Catalog\Domain\Contracts\NewsMediaAssetRepository as NewsMediaAssetRepository;
-use Modules\Catalog\Domain\Contracts\NewsRepository as NewsRepository;
-use RuntimeException as RuntimeException;
-use Throwable as Throwable;
+use Modules\Catalog\Application\Actions\PreloadNewsMediaAction as PreloadNewsMediaAction;
 
 final class PreloadNewsMediaJob implements ShouldQueue
 {
@@ -954,34 +1062,7 @@ final class PreloadNewsMediaJob implements ShouldQueue
 	}
 
 
-	public function handle(NewsRepository $news, NewsMediaAssetRepository $mediaAssets): void
-	{
-		// ...
-	}
-
-
-	/**
-	 * @param  array{id:int, source_url:string, local_disk:string}  $candidate
-	 */
-	private function downloadCandidate(array $candidate, NewsMediaAssetRepository $mediaAssets): void
-	{
-		// ...
-	}
-
-
-	private function resolveFileExtension(string $url, ?string $mimeType): string
-	{
-		// ...
-	}
-
-
-	private function normalizeMimeType(?string $contentTypeHeader): ?string
-	{
-		// ...
-	}
-
-
-	private function extensionByMimeType(?string $mimeType): ?string
+	public function handle(PreloadNewsMediaAction $preloadNewsMedia): void
 	{
 		// ...
 	}
@@ -3551,6 +3632,6 @@ final readonly class RawNewsCreated
 ```
 ---
 **File Statistics**
-- **Size**: 79.32 KB
-- **Lines**: 3561
+- **Size**: 81.75 KB
+- **Lines**: 3637
 File: `../docs/BUSINESS_LOGIC_DEPENDENCIES.md`

@@ -8,7 +8,7 @@ NPM        = $(DOCKER_APP) npm
 .PHONY: setup-local setup-ci migrate messaging-setup
 .PHONY: test test-arch test-all acceptance smoke-api ci-check
 .PHONY: analyze psalm psalm-taint lint lint-check rector rector-check validate audit
-.PHONY: crawl process-once queue serving
+.PHONY: crawl process-once queue serving media-backfill
 
 # --- Main Commands ---
 
@@ -143,6 +143,10 @@ audit:
 crawl:
 	@# Run the crawler command manually
 	$(ARTISAN) news:crawl
+
+media-backfill:
+	@# Backfill media assets for existing news items
+	$(ARTISAN) news:media:backfill
 
 process-once:
 	@# Process a single queued job from RabbitMQ
