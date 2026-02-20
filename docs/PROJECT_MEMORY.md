@@ -97,6 +97,7 @@
     - API:
         - `GET /api/news`
         - `GET /api/news/{id}`
+        - `GET /api/sources`
         - `GET /api/admin/sources` (RBAC)
     - Web-лента на `/` с фильтрами и догрузкой (cursor-based).
 
@@ -125,6 +126,9 @@
 - Docker Compose поднимает `app`, `nginx`, `postgres`, `redis`, `rabbitmq`, `worker` (Laravel Queue worker для `crawler_tasks,intelligence_tasks,media_tasks`).
 - Данные Postgres теперь персистятся на диск проекта:
     - `./.docker-data/postgres:/var/lib/postgresql/data`.
+- Данные Redis и RabbitMQ также персистятся на диск проекта:
+    - `./.docker-data/redis:/data`,
+    - `./.docker-data/rabbitmq:/var/lib/rabbitmq`.
 - Папка `.docker-data` добавлена в `.gitignore`.
 - Замечание из ревью по ext-zip/ext-xml закрыто:
     - runtime-слой Dockerfile собирает `zip` и `xml`.
@@ -190,14 +194,15 @@
 ## 5) Текущие операционные команды
 
 - Старт окружения: `docker compose up -d --build`
-- Миграции/сиды: `docker compose exec -T app php artisan migrate --force`
+- Миграции: `docker compose exec -T app php artisan migrate --force`
+- Сиды: `docker compose exec -T app php artisan db:seed --force`
 - Публичные storage-ссылки: `docker compose exec -T app php artisan storage:link`
 - Инициализация топологии RabbitMQ: `docker compose exec -T app php artisan news:messaging:setup`
 - Сбор новостей: `docker compose exec -T app php artisan news:crawl`
 - Обработка очередей: `docker compose exec -T app php artisan queue:work --queue=crawler_tasks,intelligence_tasks,media_tasks --tries=3`
 - Backfill медиа-ассетов: `docker compose exec -T app php artisan news:media:backfill --dry-run`
-- Тесты: `./vendor/bin/pest`
-- Статика: `./vendor/bin/phpstan analyse --memory-limit=1G --debug`
+- Тесты: `docker compose exec -T app composer test` (или `make test`)
+- Статика: `docker compose exec -T app composer analyze` (или `make analyze`)
 
 ---
 
