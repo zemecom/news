@@ -60,13 +60,16 @@ final readonly class RssClient implements RssClientContract
                 if (! isset($item['pubDate'])) {
                     return true;
                 }
-                $pubDate = \Carbon\Carbon::parse($item['pubDate']);
 
-                if ($dateFrom && $pubDate->lt($dateFrom)) {
+                $pubDate = \Carbon\Carbon::parse($item['pubDate'])->setTimezone('UTC');
+                $from = $dateFrom ? $dateFrom->copy()->setTimezone('UTC') : null;
+                $to = $dateTo ? $dateTo->copy()->setTimezone('UTC') : null;
+
+                if ($from && $pubDate->lt($from)) {
                     return false;
                 }
 
-                return ! ($dateTo && $pubDate->gt($dateTo));
+                return ! ($to && $pubDate->gt($to));
             });
         }
 

@@ -26,6 +26,7 @@ class CrawlerLog extends Component
     {
         $this->sourceId = $sourceId;
         $this->logFile = storage_path('logs/crawler-run.log');
+        $this->dateTo = now()->format('Y-m-d\TH:i');
     }
 
     public function startParsing(): void
@@ -43,13 +44,15 @@ class CrawlerLog extends Component
         if ($this->limit) {
             $params[] = "--limit={$this->limit}";
         }
+        $params[] = '--sync';
 
         $paramString = implode(' ', $params);
+        $artisan = base_path('artisan');
 
         // Clear previous log
-        file_put_contents($this->logFile, "Starting crawler with params: {$paramString}\n");
+        file_put_contents($this->logFile, "Starting crawler with params: {$paramString}...\n");
 
-        $cmd = "php artisan news:crawl {$paramString} > {$this->logFile} 2>&1 &";
+        $cmd = "php {$artisan} news:crawl {$paramString} --no-ansi >> {$this->logFile} 2>&1 &";
 
         // Run in background
         $handle = popen($cmd, 'r');

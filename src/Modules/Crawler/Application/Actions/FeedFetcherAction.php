@@ -24,8 +24,9 @@ final readonly class FeedFetcherAction
 
     /**
      * @param  array{id:int,url:string,type:string,language_default:string|null}  $source
+     * @return array{total: int, new: int, duplicates: int}
      */
-    public function __invoke(array $source, ?\Carbon\Carbon $dateFrom = null, ?\Carbon\Carbon $dateTo = null, ?int $limit = null): void
+    public function __invoke(array $source, ?\Carbon\Carbon $dateFrom = null, ?\Carbon\Carbon $dateTo = null, ?int $limit = null): array
     {
         try {
             $items = match ($source['type']) {
@@ -34,20 +35,31 @@ final readonly class FeedFetcherAction
                 default => throw new InvalidArgumentException('Unsupported source type: '.$source['type']),
             };
 
-            $items->each(function (array $item) use ($source): void {
+            $stats = [
+                'total' => $items->count(),
+                'new' => 0,
+                'duplicates' => 0,
+            ];
+
+            foreach ($items as $item) {
                 $raw = $this->rawNewsFactory->fromRss($source, $item);
 
                 if ($this->deduplicator->exists($raw->fingerprint)) {
-                    return;
+                    $stats['duplicates']++;
+
+                    continue;
                 }
 
+                $stats['new']++;
                 $this->publisher->publish($raw);
-            });
+            }
 
             $this->events->dispatch(new \Modules\Crawler\Domain\Events\SourceFetchSucceeded(
                 (int) $source['id'],
-                $items->count()
+                $stats['total']
             ));
+
+            return $stats;
         } catch (Throwable $e) {
             $this->events->dispatch(new \Modules\Crawler\Domain\Events\SourceFetchFailed(
                 (int) $source['id'],

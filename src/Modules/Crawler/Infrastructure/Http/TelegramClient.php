@@ -24,7 +24,7 @@ final readonly class TelegramClient implements TelegramClientContract
         $baseUrl = sprintf('https://t.me/s/%s', $channelName);
         $this->assertAllowedHost($baseUrl);
 
-        $limit ??= max(1, (int) config('crawler.telegram.max_items', 50));
+        $limit ??= 50; // Provide a minimal hardcode fallback just in case, though Command ensures it's set.
         $before = null;
         $seen = [];
         $items = [];
@@ -42,17 +42,22 @@ final readonly class TelegramClient implements TelegramClientContract
             }
 
             $lastPostId = null;
-            $newItems = 0;
+            $lastPageItemDate = null;
             /** @var array<string, mixed> $item */
             foreach ($pageItems as $item) {
                 // Date filtering
                 if (isset($item['pubDate'])) {
-                    $pubDate = \Carbon\Carbon::parse($item['pubDate']);
-                    if ($dateFrom && $pubDate->lt($dateFrom)) {
-                        // Reached messages older than dateFrom, stop fetching
-                        break 2;
+                    $pubDate = \Carbon\Carbon::parse($item['pubDate'])->setTimezone('UTC');
+                    $lastPageItemDate = $pubDate;
+
+                    $from = $dateFrom ? $dateFrom->copy()->setTimezone('UTC') : null;
+                    $to = $dateTo ? $dateTo->copy()->setTimezone('UTC') : null;
+
+                    if ($from && $pubDate->lt($from)) {
+                        // Skip this specific item if it's too old
+                        continue;
                     }
-                    if ($dateTo && $pubDate->gt($dateTo)) {
+                    if ($to && $pubDate->gt($to)) {
                         // Message newer than dateTo, skip
                         continue;
                     }
@@ -65,7 +70,6 @@ final readonly class TelegramClient implements TelegramClientContract
 
                 $seen[$externalId] = true;
                 $items[] = $item;
-                $newItems++;
 
                 $postId = $this->extractPostId($externalId);
                 if ($postId !== null) {
@@ -73,11 +77,21 @@ final readonly class TelegramClient implements TelegramClientContract
                 }
 
                 if (count($items) >= $limit) {
+                    break 2;
+                }
+            }
+
+            // Telegram 's/' page: oldest items at top, newest at bottom.
+            // If the newest item on this page is already older than dateFrom,
+            // then all items on older pages (?before=...) will definitely be older than dateFrom.
+            if ($dateFrom && $lastPageItemDate) {
+                $from = $dateFrom->copy()->setTimezone('UTC');
+                if ($lastPageItemDate->lt($from)) {
                     break;
                 }
             }
 
-            if ($newItems === 0 || $lastPostId === null || $lastPostId <= 1) {
+            if ($lastPostId === null || $lastPostId <= 1) {
                 break;
             }
 

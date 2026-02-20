@@ -45,14 +45,14 @@
                         </svg>
                         Limit (Items)
                     </label>
-                    <input type="number" wire:model="limit" placeholder="e.g. 50"
+                    <input type="number" wire:model="limit" placeholder="e.g. 50 (empty for no limit)"
                         class="block w-full rounded-lg border-0 bg-white py-1.5 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 dark:bg-white/5 dark:text-white dark:ring-white/10 dark:focus:ring-primary-500"
                         style="width: 100%; padding: 0.5rem; border-radius: 0.5rem; border: 1px solid #d1d5db;">
                 </div>
             </div>
 
             <div class="flex justify-end pt-2" style="display: flex; justify-content: flex-end; padding-top: 1rem;">
-                <button wire:click="startParsing" wire:loading.attr="disabled"
+                <button type="button" wire:click="startParsing" wire:loading.attr="disabled"
                     style="display: inline-flex; align-items: center; justify-content: center; background-color: #d97706; color: white; padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 600; gap: 0.5rem;"
                     class="fi-btn fi-btn-size-md relative grid-flow-col items-center justify-center font-semibold outline-none transition duration-75 focus-visible:ring-2 rounded-lg gap-1.5 px-3 py-2 text-sm inline-grid shadow-sm bg-primary-600 text-white hover:bg-primary-500 focus-visible:ring-primary-500/50 dark:bg-primary-500 dark:hover:bg-primary-400 dark:focus-visible:ring-primary-400/50 w-full sm:w-auto">
                     <svg style="width: 1.25rem; height: 1.25rem;" wire:loading.remove fill="none" viewBox="0 0 24 24"
@@ -88,7 +88,7 @@
             </div>
             <div wire:poll.1s="updateLog"
                 class="p-4 bg-gray-950 text-green-400 font-mono text-xs overflow-y-auto h-96 whitespace-pre-wrap"
-                style="padding: 1rem; background-color: #030712; color: #4ade80; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 0.75rem; overflow-y: auto; height: 24rem; white-space: pre-wrap;">
+                style="padding: 1rem; background-color: #030712; color: #4ade80; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 0.75rem; overflow-y: auto; height: 24rem; white-space: pre-wrap; text-align: left;">
                 {{ $output }}
             </div>
         </div>

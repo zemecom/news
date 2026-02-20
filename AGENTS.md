@@ -12,7 +12,7 @@
 - Файл `docs/BUSINESS_LOGIC_DEPENDENCIES.md` генерируемый, не поддерживается вручную.
 - После изменений в классах `app/` и `src/Modules/` нужно перегенерировать карту:
     - `make docs-deps`
-- Перед архитектурными изменениями сверяться с `docs/BUSINESS_LOGIC_DEPENDENCIES.md`.
+- Сверяться с `docs/BUSINESS_LOGIC_DEPENDENCIES.md`.
 
 ## Правила валидации
 
