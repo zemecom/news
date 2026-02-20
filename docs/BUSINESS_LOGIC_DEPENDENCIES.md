@@ -9,7 +9,6 @@ _SOURCE: Application Core_
         │   └── HealthCheckCommand.php
         │   └── MessagingSetupCommand.php
         │   └── NewsCrawlCommand.php
-        │   └── NewsProcessQueueCommand.php
     └── Filament/
         ├── Resources/
         │   └── Sources/
@@ -118,134 +117,17 @@ final class MessagingSetupCommand extends Command
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command as Command;
+use Modules\Catalog\Infrastructure\Persistence\Models\NewsItem as NewsItem;
 use Modules\Catalog\Infrastructure\Persistence\Models\Source as Source;
 use Throwable as Throwable;
 
 final class NewsCrawlCommand extends Command
 {
-	protected $signature = "news:crawl \n                            {--source-id= : Crawl only one source id}\n                            {--date-from= : Parse articles from this date (Y-m-d H:i:s)}\n                            {--date-to= : Parse articles until this date (Y-m-d H:i:s)}\n                            {--limit= : Maximum number of articles to parse per source}";
-	protected $description = 'Fetch active sources and publish raw messages to RabbitMQ.';
+	protected $signature = "news:crawl \n                            {--source-id= : Crawl only one source id}\n                            {--date-from= : Parse articles from this date (Y-m-d H:i:s)}\n                            {--date-to= : Parse articles until this date (Y-m-d H:i:s)}\n                            {--limit= : Maximum number of articles to parse per source}\n                            {--sync : Run synchronously without queue}";
+	protected $description = 'Fetch active sources and enqueue raw news jobs (RabbitMQ-backed Laravel queue).';
 
 
 	public function handle(): int
-	{
-		// ...
-	}
-}
-
-
-```
-###  Path: `/app/Console/Commands/NewsProcessQueueCommand.php`
-
-```php
-namespace App\Console\Commands;
-
-use App\Services\MessagingTopologyService as MessagingTopologyService;
-use Carbon\CarbonImmutable as CarbonImmutable;
-use Illuminate\Console\Command as Command;
-use Illuminate\Support\Facades\Log as Log;
-use Modules\Intelligence\Application\Pipeline\NewsProcessingPipeline as NewsProcessingPipeline;
-use Modules\Shared\Domain\DTO\RawNewsData as RawNewsData;
-use PhpAmqpLib\Connection\AMQPStreamConnection as AMQPStreamConnection;
-use PhpAmqpLib\Message\AMQPMessage as AMQPMessage;
-use RuntimeException as RuntimeException;
-use Throwable as Throwable;
-
-final class NewsProcessQueueCommand extends Command
-{
-	protected $signature = 'news:process {--once : Process only one message and exit} {--declare-topology : Ensure queues/exchange before consuming}';
-	protected $description = 'Consume raw.created messages from RabbitMQ and run intelligence pipeline.';
-
-
-	public function handle(
-		AMQPStreamConnection $connection,
-		MessagingTopologyService $topology,
-		NewsProcessingPipeline $pipeline,
-	): int
-	{
-		// ...
-	}
-
-
-	/**
-	 * @param  array<int, int>  $backoff
-	 */
-	private function processMessage(
-		AMQPMessage $message,
-		\PhpAmqpLib\Channel\AMQPChannel $channel,
-		string $dlq,
-		NewsProcessingPipeline $pipeline,
-		string $exchange,
-		string $retryRoutingKey,
-		int $maxAttempts,
-		array $backoff,
-	): void
-	{
-		// ...
-	}
-
-
-	/**
-	 * @param  array<string, mixed>  $payload
-	 */
-	private function mapRawNews(array $payload): RawNewsData
-	{
-		// ...
-	}
-
-
-	private function sendToDlq(
-		\PhpAmqpLib\Channel\AMQPChannel $channel,
-		string $dlq,
-		AMQPMessage $failedMessage,
-		Throwable $e,
-		int $attempt,
-	): void
-	{
-		// ...
-	}
-
-
-	/**
-	 * @param  array<string, mixed>  $payload
-	 */
-	private function readAttempt(array $payload): int
-	{
-		// ...
-	}
-
-
-	/**
-	 * @param  array<int, int>  $backoff
-	 */
-	private function retryDelaySeconds(int $nextAttempt, array $backoff): int
-	{
-		// ...
-	}
-
-
-	/**
-	 * @return array<int, int>
-	 */
-	private function normalizeBackoff(mixed $value): array
-	{
-		// ...
-	}
-
-
-	/**
-	 * @param  array<string, mixed>  $payload
-	 */
-	private function publishRetry(
-		\PhpAmqpLib\Channel\AMQPChannel $channel,
-		array $payload,
-		AMQPMessage $failedMessage,
-		string $exchange,
-		string $retryRoutingKey,
-		int $nextAttempt,
-		int $delaySeconds,
-		Throwable $error,
-	): void
 	{
 		// ...
 	}
@@ -900,15 +782,25 @@ _SOURCE: Modules_
 └── src/
     └── Modules/
         └── Catalog/
+            ├── Application/
+            │   ├── Jobs/
+            │   │   ├── PreloadNewsMediaJob.php
+            │   ├── Listeners/
+            │   │   └── UpdateSourceStatusListener.php
             ├── CatalogServiceProvider.php
             ├── Domain/
             │   ├── Contracts/
+            │   │   └── NewsMediaAssetRepository.php
             │   │   └── NewsRepository.php
+            │   │   └── SourceRepository.php
             ├── Infrastructure/
             │   └── Persistence/
+            │       └── EloquentNewsMediaAssetRepository.php
             │       └── EloquentNewsRepository.php
+            │       └── EloquentSourceRepository.php
             │       └── Models/
             │           └── NewsItem.php
+            │           └── NewsMediaAsset.php
             │           └── Source.php
         └── Crawler/
             ├── Application/
@@ -916,18 +808,22 @@ _SOURCE: Modules_
             │   │   ├── FeedFetcherAction.php
             │   ├── Jobs/
             │   │   ├── FetchSourceJob.php
+            │   │   ├── ProcessNewsJob.php
             │   ├── Services/
             │   │   └── RawNewsFactory.php
             ├── CrawlerServiceProvider.php
             ├── Domain/
             │   ├── Contracts/
-            │   │   └── ApiParser.php
-            │   │   └── Deduplicator.php
-            │   │   └── RawPublisher.php
-            │   │   └── RssClient.php
-            │   │   └── RssParser.php
-            │   │   └── TelegramClient.php
-            │   │   └── TelegramParser.php
+            │   │   ├── ApiParser.php
+            │   │   ├── Deduplicator.php
+            │   │   ├── RawPublisher.php
+            │   │   ├── RssClient.php
+            │   │   ├── RssParser.php
+            │   │   ├── TelegramClient.php
+            │   │   ├── TelegramParser.php
+            │   ├── Events/
+            │   │   └── SourceFetchFailed.php
+            │   │   └── SourceFetchSucceeded.php
             ├── Infrastructure/
             │   └── Http/
             │       ├── RssClient.php
@@ -973,6 +869,8 @@ _SOURCE: Modules_
             │       └── EloquentSourcePublicReader.php
         └── Intelligence/
             ├── Application/
+            │   ├── Listeners/
+            │   │   ├── ProcessRawNewsListener.php
             │   ├── Pipeline/
             │   │   └── NewsProcessingPipeline.php
             │   │   └── SkipMessageException.php
@@ -1012,7 +910,112 @@ _SOURCE: Modules_
                     ├── EnrichedNewsData.php
                     ├── RawNewsData.php
                 └── Enum/
-                    └── NewsStatus.php
+                    ├── NewsStatus.php
+                └── Events/
+                    └── RawNewsCreated.php
+
+```
+###  Path: `/src/Modules/Catalog/Application/Jobs/PreloadNewsMediaJob.php`
+
+```php
+namespace Modules\Catalog\Application\Jobs;
+
+use Illuminate\Bus\Queueable as Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue as ShouldQueue;
+use Illuminate\Foundation\Bus\Dispatchable as Dispatchable;
+use Illuminate\Queue\InteractsWithQueue as InteractsWithQueue;
+use Illuminate\Queue\SerializesModels as SerializesModels;
+use Illuminate\Support\Facades\Http as Http;
+use Illuminate\Support\Facades\Log as Log;
+use Illuminate\Support\Facades\Storage as Storage;
+use Illuminate\Support\Str as Str;
+use Modules\Catalog\Domain\Contracts\NewsMediaAssetRepository as NewsMediaAssetRepository;
+use Modules\Catalog\Domain\Contracts\NewsRepository as NewsRepository;
+use RuntimeException as RuntimeException;
+use Throwable as Throwable;
+
+final class PreloadNewsMediaJob implements ShouldQueue
+{
+	use Dispatchable;
+	use InteractsWithQueue;
+	use Queueable;
+	use SerializesModels;
+
+	public int $tries = 3;
+
+	/** @var array<int, int> */
+	public array $backoff = [10, 60, 300];
+
+
+	public function __construct(
+		public readonly int $newsItemId,
+	) {
+		// ...
+	}
+
+
+	public function handle(NewsRepository $news, NewsMediaAssetRepository $mediaAssets): void
+	{
+		// ...
+	}
+
+
+	/**
+	 * @param  array{id:int, source_url:string, local_disk:string}  $candidate
+	 */
+	private function downloadCandidate(array $candidate, NewsMediaAssetRepository $mediaAssets): void
+	{
+		// ...
+	}
+
+
+	private function resolveFileExtension(string $url, ?string $mimeType): string
+	{
+		// ...
+	}
+
+
+	private function normalizeMimeType(?string $contentTypeHeader): ?string
+	{
+		// ...
+	}
+
+
+	private function extensionByMimeType(?string $mimeType): ?string
+	{
+		// ...
+	}
+}
+
+
+```
+###  Path: `/src/Modules/Catalog/Application/Listeners/UpdateSourceStatusListener.php`
+
+```php
+namespace Modules\Catalog\Application\Listeners;
+
+use Modules\Catalog\Domain\Contracts\SourceRepository as SourceRepository;
+use Modules\Crawler\Domain\Events\SourceFetchFailed as SourceFetchFailed;
+use Modules\Crawler\Domain\Events\SourceFetchSucceeded as SourceFetchSucceeded;
+
+final readonly class UpdateSourceStatusListener
+{
+	public function __construct(
+		private SourceRepository $sourceRepository,
+	) {
+		// ...
+	}
+
+
+	/**
+	 * Handle the event.
+	 */
+	public function handle(object $event): void
+	{
+		// ...
+	}
+}
+
 
 ```
 ###  Path: `/src/Modules/Catalog/CatalogServiceProvider.php`
@@ -1020,9 +1023,15 @@ _SOURCE: Modules_
 ```php
 namespace Modules\Catalog;
 
+use Illuminate\Support\Facades\Event as Event;
 use Illuminate\Support\ServiceProvider as ServiceProvider;
+use Modules\Catalog\Application\Listeners\UpdateSourceStatusListener as UpdateSourceStatusListener;
+use Modules\Catalog\Domain\Contracts\NewsMediaAssetRepository as NewsMediaAssetRepository;
 use Modules\Catalog\Domain\Contracts\NewsRepository as NewsRepository;
+use Modules\Catalog\Infrastructure\Persistence\EloquentNewsMediaAssetRepository as EloquentNewsMediaAssetRepository;
 use Modules\Catalog\Infrastructure\Persistence\EloquentNewsRepository as EloquentNewsRepository;
+use Modules\Crawler\Domain\Events\SourceFetchFailed as SourceFetchFailed;
+use Modules\Crawler\Domain\Events\SourceFetchSucceeded as SourceFetchSucceeded;
 use Override as Override;
 
 final class CatalogServiceProvider extends ServiceProvider
@@ -1032,6 +1041,64 @@ final class CatalogServiceProvider extends ServiceProvider
 	{
 		// ...
 	}
+
+
+	public function boot(): void
+	{
+		// ...
+	}
+}
+
+
+```
+###  Path: `/src/Modules/Catalog/Domain/Contracts/NewsMediaAssetRepository.php`
+
+```php
+namespace Modules\Catalog\Domain\Contracts;
+
+interface NewsMediaAssetRepository
+{
+	/**
+	 * Синхронизирует оригинальные медиа-ссылки статьи в хранилище ассетов.
+	 *
+	 * @param  array<int, mixed>  $media
+	 */
+	public function syncOriginalMedia(int $newsItemId, ?string $imageUrl, array $media): void;
+
+
+	/**
+	 * Возвращает ассеты, которые нужно скачать локально.
+	 *
+	 * @return list<array{id:int, source_url:string, local_disk:string}>
+	 */
+	public function getDownloadCandidates(int $newsItemId): array;
+
+
+	public function markDownloaded(
+		int $assetId,
+		string $localDisk,
+		string $localPath,
+		?string $downloadedMimeType,
+		int $fileSizeBytes,
+		string $checksumSha256,
+	): void;
+
+
+	public function markFailed(int $assetId, string $error): void;
+
+
+	/**
+	 * @param  list<int>  $newsItemIds
+	 * @return array<int, array{
+	 *   image_url:?string,
+	 *   image_url_original:?string,
+	 *   image_url_local:?string,
+	 *   media:list<array{url:string, type:?string}>,
+	 *   media_original:list<array{url:string, type:?string}>,
+	 *   media_local:list<array{url:string, type:?string}>
+	 * }>
+	 */
+	public function resolveForNewsItems(array $newsItemIds): array;
 }
 
 
@@ -1056,6 +1123,152 @@ interface NewsRepository
 
 
 	public function storeEnriched(EnrichedNewsData $enriched): void;
+
+
+	/**
+	 * Возвращает исходные медиа-ссылки из сырой записи новости.
+	 *
+	 * @return array{image_url: ?string, media: array<int, mixed>}|null
+	 */
+	public function getMediaUrls(int $id): ?array;
+}
+
+
+```
+###  Path: `/src/Modules/Catalog/Domain/Contracts/SourceRepository.php`
+
+```php
+namespace Modules\Catalog\Domain\Contracts;
+
+interface SourceRepository
+{
+	public function updateSuccess(int $sourceId): void;
+
+
+	public function updateFailure(int $sourceId): void;
+}
+
+
+```
+###  Path: `/src/Modules/Catalog/Infrastructure/Persistence/EloquentNewsMediaAssetRepository.php`
+
+```php
+namespace Modules\Catalog\Infrastructure\Persistence;
+
+use Illuminate\Database\DatabaseManager as DatabaseManager;
+use Illuminate\Support\Collection as Collection;
+use Illuminate\Support\Facades\Storage as Storage;
+use Modules\Catalog\Domain\Contracts\NewsMediaAssetRepository as NewsMediaAssetRepository;
+use Modules\Catalog\Infrastructure\Persistence\Models\NewsMediaAsset as NewsMediaAsset;
+
+final readonly class EloquentNewsMediaAssetRepository implements NewsMediaAssetRepository
+{
+	private const SLOT_COVER = 'cover';
+	private const SLOT_GALLERY = 'gallery';
+	private const STATUS_PENDING = 'pending';
+	private const STATUS_DOWNLOADED = 'downloaded';
+	private const STATUS_FAILED = 'failed';
+
+	public function __construct(
+		private DatabaseManager $db,
+	) {
+		// ...
+	}
+
+
+	public function syncOriginalMedia(int $newsItemId, ?string $imageUrl, array $media): void
+	{
+		// ...
+	}
+
+
+	public function getDownloadCandidates(int $newsItemId): array
+	{
+		// ...
+	}
+
+
+	public function markDownloaded(
+		int $assetId,
+		string $localDisk,
+		string $localPath,
+		?string $downloadedMimeType,
+		int $fileSizeBytes,
+		string $checksumSha256,
+	): void
+	{
+		// ...
+	}
+
+
+	public function markFailed(int $assetId, string $error): void
+	{
+		// ...
+	}
+
+
+	public function resolveForNewsItems(array $newsItemIds): array
+	{
+		// ...
+	}
+
+
+	/**
+	 * @param  array<int, mixed>  $media
+	 * @return list<array{
+	 *   slot:string,
+	 *   position:int,
+	 *   source_url:string,
+	 *   source_mime_type:?string
+	 * }>
+	 */
+	private function buildDesiredAssets(?string $imageUrl, array $media): array
+	{
+		// ...
+	}
+
+
+	private function assetKey(string $slot, int $position): string
+	{
+		// ...
+	}
+
+
+	/**
+	 * @return array{url:string, type:?string}|null
+	 */
+	private function parseMediaItem(mixed $mediaItem): ?array
+	{
+		// ...
+	}
+
+
+	private function resolveLocalUrl(NewsMediaAsset $asset): ?string
+	{
+		// ...
+	}
+
+
+	/**
+	 * @return array{
+	 *   image_url:?string,
+	 *   image_url_original:?string,
+	 *   image_url_local:?string,
+	 *   media:list<array{url:string, type:?string}>,
+	 *   media_original:list<array{url:string, type:?string}>,
+	 *   media_local:list<array{url:string, type:?string}>
+	 * }
+	 */
+	private function defaultMediaState(): array
+	{
+		// ...
+	}
+
+
+	private function normalizeString(mixed $value): ?string
+	{
+		// ...
+	}
 }
 
 
@@ -1095,6 +1308,37 @@ final class EloquentNewsRepository implements NewsRepository
 	{
 		// ...
 	}
+
+
+	public function getMediaUrls(int $id): ?array
+	{
+		// ...
+	}
+}
+
+
+```
+###  Path: `/src/Modules/Catalog/Infrastructure/Persistence/EloquentSourceRepository.php`
+
+```php
+namespace Modules\Catalog\Infrastructure\Persistence;
+
+use Illuminate\Support\Facades\DB as DB;
+use Modules\Catalog\Domain\Contracts\SourceRepository as SourceRepository;
+use Modules\Catalog\Infrastructure\Persistence\Models\Source as Source;
+
+final class EloquentSourceRepository implements SourceRepository
+{
+	public function updateSuccess(int $sourceId): void
+	{
+		// ...
+	}
+
+
+	public function updateFailure(int $sourceId): void
+	{
+		// ...
+	}
 }
 
 
@@ -1108,6 +1352,8 @@ use Illuminate\Database\Eloquent\Model as Model;
 
 /**
  * @property int $id
+ * @property string|null $image_url
+ * @property array<int|string, mixed>|null $media
  */
 final class NewsItem extends Model
 {
@@ -1141,6 +1387,73 @@ final class NewsItem extends Model
 		'published_at' => 'datetime',
 		'media' => 'array',
 	];
+
+
+	/**
+	 * @return \Illuminate\Database\Eloquent\Relations\HasMany<NewsMediaAsset, $this>
+	 */
+	public function mediaAssets(): \Illuminate\Database\Eloquent\Relations\HasMany
+	{
+		// ...
+	}
+}
+
+
+```
+###  Path: `/src/Modules/Catalog/Infrastructure/Persistence/Models/NewsMediaAsset.php`
+
+```php
+namespace Modules\Catalog\Infrastructure\Persistence\Models;
+
+use Illuminate\Database\Eloquent\Model as Model;
+
+/**
+ * @property int $id
+ * @property int $news_item_id
+ * @property string $slot
+ * @property int $position
+ * @property string|null $source_url
+ * @property string|null $source_mime_type
+ * @property string $local_disk
+ * @property string|null $local_path
+ * @property string|null $downloaded_mime_type
+ * @property int|null $file_size_bytes
+ * @property string|null $checksum_sha256
+ * @property string $download_status
+ * @property string|null $last_error
+ * @property \Illuminate\Support\Carbon|null $downloaded_at
+ */
+final class NewsMediaAsset extends Model
+{
+	protected $table = 'news_media_assets';
+
+	protected $fillable = [
+		'news_item_id',
+		'slot',
+		'position',
+		'source_url',
+		'source_mime_type',
+		'local_disk',
+		'local_path',
+		'downloaded_mime_type',
+		'file_size_bytes',
+		'checksum_sha256',
+		'download_status',
+		'last_error',
+		'downloaded_at',
+	];
+
+	/** @var array<string, string> */
+	protected $casts = ['position' => 'int', 'file_size_bytes' => 'int', 'downloaded_at' => 'datetime'];
+
+
+	/**
+	 * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<NewsItem, $this>
+	 */
+	public function newsItem(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+	{
+		// ...
+	}
 }
 
 
@@ -1194,11 +1507,13 @@ final class Source extends Model
 ```php
 namespace Modules\Crawler\Application\Actions;
 
+use Illuminate\Support\Facades\Log as Log;
 use InvalidArgumentException as InvalidArgumentException;
 use Modules\Crawler\Application\Services\RawNewsFactory as RawNewsFactory;
 use Modules\Crawler\Domain\Contracts\RawPublisher as RawPublisher;
 use Modules\Crawler\Domain\Contracts\RssClient as RssClient;
 use Modules\Crawler\Domain\Contracts\TelegramClient as TelegramClient;
+use Throwable as Throwable;
 
 final readonly class FeedFetcherAction
 {
@@ -1208,6 +1523,7 @@ final readonly class FeedFetcherAction
 		private RawPublisher $publisher,
 		private RawNewsFactory $rawNewsFactory,
 		private \Modules\Crawler\Domain\Contracts\Deduplicator $deduplicator,
+		private \Illuminate\Contracts\Events\Dispatcher $events,
 	) {
 		// ...
 	}
@@ -1215,13 +1531,14 @@ final readonly class FeedFetcherAction
 
 	/**
 	 * @param  array{id:int,url:string,type:string,language_default:string|null}  $source
+	 * @return array{total: int, new: int, duplicates: int}
 	 */
 	public function __invoke(
 		array $source,
 		?\Carbon\Carbon $dateFrom = null,
 		?\Carbon\Carbon $dateTo = null,
 		?int $limit = null,
-	): void
+	): array
 	{
 		// ...
 	}
@@ -1262,6 +1579,48 @@ final class FetchSourceJob implements ShouldQueue
 
 
 	public function handle(FeedFetcherAction $fetchFeed): void
+	{
+		// ...
+	}
+}
+
+
+```
+###  Path: `/src/Modules/Crawler/Application/Jobs/ProcessNewsJob.php`
+
+```php
+namespace Modules\Crawler\Application\Jobs;
+
+use Illuminate\Bus\Queueable as Queueable;
+use Illuminate\Contracts\Events\Dispatcher as Dispatcher;
+use Illuminate\Contracts\Queue\ShouldQueue as ShouldQueue;
+use Illuminate\Foundation\Bus\Dispatchable as Dispatchable;
+use Illuminate\Queue\InteractsWithQueue as InteractsWithQueue;
+use Illuminate\Queue\SerializesModels as SerializesModels;
+use Modules\Shared\Domain\DTO\RawNewsData as RawNewsData;
+use Modules\Shared\Domain\Events\RawNewsCreated as RawNewsCreated;
+
+final class ProcessNewsJob implements ShouldQueue
+{
+	use Dispatchable;
+	use InteractsWithQueue;
+	use Queueable;
+	use SerializesModels;
+
+	public int $tries = 5;
+
+	/** @var array<int, int> */
+	public array $backoff = [5, 15, 60, 120, 300];
+
+
+	public function __construct(
+		public readonly RawNewsData $raw,
+	) {
+		// ...
+	}
+
+
+	public function handle(Dispatcher $events): void
 	{
 		// ...
 	}
@@ -1460,6 +1819,48 @@ interface TelegramParser
 
 
 ```
+###  Path: `/src/Modules/Crawler/Domain/Events/SourceFetchFailed.php`
+
+```php
+namespace Modules\Crawler\Domain\Events;
+
+use Illuminate\Foundation\Events\Dispatchable as Dispatchable;
+
+final readonly class SourceFetchFailed
+{
+	use Dispatchable;
+
+	public function __construct(
+		public int $sourceId,
+		public string $errorMessage,
+	) {
+		// ...
+	}
+}
+
+
+```
+###  Path: `/src/Modules/Crawler/Domain/Events/SourceFetchSucceeded.php`
+
+```php
+namespace Modules\Crawler\Domain\Events;
+
+use Illuminate\Foundation\Events\Dispatchable as Dispatchable;
+
+final readonly class SourceFetchSucceeded
+{
+	use Dispatchable;
+
+	public function __construct(
+		public int $sourceId,
+		public int $itemCount,
+	) {
+		// ...
+	}
+}
+
+
+```
 ###  Path: `/src/Modules/Crawler/Infrastructure/Http/RssClient.php`
 
 ```php
@@ -1532,6 +1933,7 @@ final class RssConnector extends Connector
 namespace Modules\Crawler\Infrastructure\Http;
 
 use Illuminate\Support\Collection as Collection;
+use Illuminate\Support\Facades\Log as Log;
 use InvalidArgumentException as InvalidArgumentException;
 use Modules\Crawler\Domain\Contracts\TelegramClient as TelegramClientContract;
 use Modules\Crawler\Infrastructure\Services\TelegramParserResolver as TelegramParserResolver;
@@ -1559,7 +1961,7 @@ final readonly class TelegramClient implements TelegramClientContract
 	}
 
 
-	private function request(string $url): Response
+	private function request(string $url, bool $isAjax = false): Response
 	{
 		// ...
 	}
@@ -1596,18 +1998,14 @@ final readonly class TelegramClient implements TelegramClientContract
 ```php
 namespace Modules\Crawler\Infrastructure\Messaging;
 
+use Modules\Crawler\Application\Jobs\ProcessNewsJob as ProcessNewsJob;
 use Modules\Crawler\Domain\Contracts\RawPublisher as RawPublisherContract;
 use Modules\Shared\Domain\DTO\RawNewsData as RawNewsData;
-use PhpAmqpLib\Connection\AMQPStreamConnection as AMQPStreamConnection;
-use PhpAmqpLib\Message\AMQPMessage as AMQPMessage;
 
 final readonly class RawPublisher implements RawPublisherContract
 {
-	public function __construct(
-		private AMQPStreamConnection $connection,
-		private string $exchange = 'news_flow',
-		private string $routingKey = 'raw.created',
-	) {
+	public function __construct()
+	{
 		// ...
 	}
 
@@ -1824,6 +2222,15 @@ class DefaultTelegramParser implements TelegramParser
 	 * @return array<int, array{url:string,type:string|null}>
 	 */
 	protected function extractMedia(DOMXPath $xpath, DOMNode $node): array
+	{
+		// ...
+	}
+
+
+	/**
+	 * @return array<int, string>
+	 */
+	protected function extractLinks(DOMXPath $xpath, DOMNode $node): array
 	{
 		// ...
 	}
@@ -2235,6 +2642,7 @@ use Illuminate\Contracts\Pagination\CursorPaginator as CursorPaginator;
 use Illuminate\Database\DatabaseManager as DatabaseManager;
 use Illuminate\Database\Query\Builder as Builder;
 use Illuminate\Pagination\Cursor as Cursor;
+use Modules\Catalog\Domain\Contracts\NewsMediaAssetRepository as NewsMediaAssetRepository;
 use Modules\Delivery\Domain\Contracts\NewsFeedReader as NewsFeedReader;
 use Modules\Delivery\Domain\DTO\NewsFeedFilters as NewsFeedFilters;
 use Modules\Shared\Domain\Enum\NewsStatus as NewsStatus;
@@ -2243,6 +2651,7 @@ final readonly class EloquentNewsFeedReader implements NewsFeedReader
 {
 	public function __construct(
 		private DatabaseManager $db,
+		private NewsMediaAssetRepository $mediaAssets,
 	) {
 		// ...
 	}
@@ -2282,9 +2691,17 @@ final readonly class EloquentNewsFeedReader implements NewsFeedReader
 
 
 	/**
+	 * @param array{
+	 *   image_url:?string,
+	 *   image_url_original:?string,
+	 *   image_url_local:?string,
+	 *   media:list<array{url:string, type:?string}>,
+	 *   media_original:list<array{url:string, type:?string}>,
+	 *   media_local:list<array{url:string, type:?string}>
+	 * }|null $resolvedMedia
 	 * @return array<string, mixed>
 	 */
-	private function mapRow(object $row): array
+	private function mapRow(object $row, ?array $resolvedMedia): array
 	{
 		// ...
 	}
@@ -2294,6 +2711,26 @@ final readonly class EloquentNewsFeedReader implements NewsFeedReader
 	 * @return array<int|string, mixed>
 	 */
 	private function decodeJsonArray(mixed $value): array
+	{
+		// ...
+	}
+
+
+	/**
+	 * @param  array<int|string, mixed>  $media
+	 * @return list<array{url:string, type:?string}>
+	 */
+	private function normalizeMediaItems(array $media): array
+	{
+		// ...
+	}
+
+
+	/**
+	 * @param  array<int, object>  $rows
+	 * @return list<int>
+	 */
+	private function extractNewsItemIds(array $rows): array
 	{
 		// ...
 	}
@@ -2359,6 +2796,49 @@ final readonly class EloquentSourcePublicReader implements SourcePublicReader
 	 * @return array<int, array<string, mixed>>
 	 */
 	public function listActive(): array
+	{
+		// ...
+	}
+}
+
+
+```
+###  Path: `/src/Modules/Intelligence/Application/Listeners/ProcessRawNewsListener.php`
+
+```php
+namespace Modules\Intelligence\Application\Listeners;
+
+use Illuminate\Contracts\Queue\ShouldQueue as ShouldQueue;
+use Modules\Intelligence\Application\Pipeline\NewsProcessingPipeline as NewsProcessingPipeline;
+use Modules\Shared\Domain\Events\RawNewsCreated as RawNewsCreated;
+
+final class ProcessRawNewsListener implements ShouldQueue
+{
+	/** Попытки выполнения */
+	public int $tries = 5;
+
+	/**
+	 * Бекофф (ожидание между попытками)
+	 *
+	 * @var array<int, int>
+	 */
+	public array $backoff = [5, 15, 60, 120, 300];
+
+
+	public function __construct(
+		private readonly NewsProcessingPipeline $pipeline,
+	) {
+		// ...
+	}
+
+
+	public function viaQueue(): string
+	{
+		// ...
+	}
+
+
+	public function handle(RawNewsCreated $event): void
 	{
 		// ...
 	}
@@ -2873,6 +3353,12 @@ final class IntelligenceServiceProvider extends ServiceProvider
 	{
 		// ...
 	}
+
+
+	public function boot(): void
+	{
+		// ...
+	}
 }
 
 
@@ -3045,8 +3531,26 @@ enum NewsStatus: string
 
 
 ```
+###  Path: `/src/Modules/Shared/Domain/Events/RawNewsCreated.php`
+
+```php
+namespace Modules\Shared\Domain\Events;
+
+use Modules\Shared\Domain\DTO\RawNewsData as RawNewsData;
+
+final readonly class RawNewsCreated
+{
+	public function __construct(
+		public RawNewsData $raw,
+	) {
+		// ...
+	}
+}
+
+
+```
 ---
 **File Statistics**
-- **Size**: 63.35 KB
-- **Lines**: 2863
+- **Size**: 79.32 KB
+- **Lines**: 3561
 File: `../docs/BUSINESS_LOGIC_DEPENDENCIES.md`

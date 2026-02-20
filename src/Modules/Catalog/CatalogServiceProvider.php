@@ -7,7 +7,9 @@ namespace Modules\Catalog;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 use Modules\Catalog\Application\Listeners\UpdateSourceStatusListener;
+use Modules\Catalog\Domain\Contracts\NewsMediaAssetRepository;
 use Modules\Catalog\Domain\Contracts\NewsRepository;
+use Modules\Catalog\Infrastructure\Persistence\EloquentNewsMediaAssetRepository;
 use Modules\Catalog\Infrastructure\Persistence\EloquentNewsRepository;
 use Modules\Crawler\Domain\Events\SourceFetchFailed;
 use Modules\Crawler\Domain\Events\SourceFetchSucceeded;
@@ -19,6 +21,7 @@ final class CatalogServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(NewsRepository::class, EloquentNewsRepository::class);
+        $this->app->singleton(NewsMediaAssetRepository::class, EloquentNewsMediaAssetRepository::class);
         $this->app->singleton(
             \Modules\Catalog\Domain\Contracts\SourceRepository::class,
             \Modules\Catalog\Infrastructure\Persistence\EloquentSourceRepository::class

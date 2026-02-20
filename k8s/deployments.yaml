@@ -84,7 +84,7 @@ spec:
       containers:
         - name: worker
           image: ghcr.io/smartnews/app:latest
-          command: ["php", "artisan", "news:process"]
+          command: ["php", "artisan", "queue:work", "--queue=crawler_tasks,intelligence_tasks,media_tasks", "--tries=3", "--sleep=1", "--timeout=120"]
           resources:
             requests:
               cpu: "300m"
@@ -99,7 +99,7 @@ spec:
                 name: smartnews-secrets
           livenessProbe:
             exec:
-              command: ["sh", "-c", "ps aux | grep -v grep | grep -q 'news:process'"]
+              command: ["sh", "-c", "ps aux | grep -v grep | grep -q 'queue:work'"]
             initialDelaySeconds: 20
             periodSeconds: 20
 ---

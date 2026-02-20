@@ -676,19 +676,31 @@
             const article = document.createElement('article');
             article.className = 'card';
 
-            // Preview Media — only show if there's an actual image
-            if (item.image_url) {
+            // Preview Media — prefer local cached file, fallback to original URL
+            const previewUrl = item.image_url || item.image_url_original || null;
+            if (previewUrl) {
                 const preview = document.createElement('div');
                 preview.className = 'card-preview';
 
                 const link = document.createElement('a');
-                link.href = item.image_url;
+                link.href = previewUrl;
                 link.setAttribute('data-fslightbox', 'gallery');
 
                 const img = document.createElement('img');
-                img.src = item.image_url;
+                img.src = previewUrl;
                 img.loading = 'lazy';
                 img.alt = '';
+
+                const fallbackUrl = item.image_url_original && item.image_url_original !== previewUrl
+                    ? item.image_url_original
+                    : null;
+
+                if (fallbackUrl) {
+                    img.addEventListener('error', () => {
+                        img.src = fallbackUrl;
+                        link.href = fallbackUrl;
+                    }, { once: true });
+                }
 
                 link.append(img);
                 preview.append(link);

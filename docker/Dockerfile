@@ -14,7 +14,8 @@ RUN composer install --no-dev --prefer-dist --optimize-autoloader --no-scripts
 
 COPY . .
 RUN mkdir -p bootstrap/cache storage/framework/{cache,sessions,views} storage/logs \
-    && php artisan package:discover --ansi
+    && php artisan package:discover --ansi \
+    && php artisan storage:link || true
 # RUN npm ci && npm run build # для фронта, если понадобится
 
 # Stage 2: production

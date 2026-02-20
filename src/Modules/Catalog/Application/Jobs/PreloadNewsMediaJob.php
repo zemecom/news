@@ -13,7 +13,9 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Modules\Catalog\Domain\Contracts\NewsMediaAssetRepository;
 use Modules\Catalog\Domain\Contracts\NewsRepository;
+use RuntimeException;
 use Throwable;
 
 final class PreloadNewsMediaJob implements ShouldQueue
@@ -29,93 +31,119 @@ final class PreloadNewsMediaJob implements ShouldQueue
     public array $backoff = [10, 60, 300];
 
     public function __construct(
-        public readonly string $newsItemId,
+        public readonly int $newsItemId,
     ) {
         $this->onQueue('media_tasks');
     }
 
-    public function handle(NewsRepository $repository): void
+    public function handle(NewsRepository $news, NewsMediaAssetRepository $mediaAssets): void
     {
-        $urls = $repository->getMediaUrls((int) $this->newsItemId);
+        $urls = $news->getMediaUrls($this->newsItemId);
 
-        if (! $urls) {
+        if ($urls === null) {
             return;
         }
 
-        $disk = Storage::disk('public');
-        $changed = false;
-
         $imageUrl = $urls['image_url'];
-        /** @var array<int|string, mixed> $mediaArray */
-        $mediaArray = $urls['media'] ?? [];
+        $media = $urls['media'];
 
-        // Обработка главного изображения
-        if ($imageUrl && str_starts_with($imageUrl, 'http')) {
-            $localPath = $this->downloadMedia($imageUrl, $disk);
-            if ($localPath) {
-                $imageUrl = Storage::url($localPath);
-                $changed = true;
+        $mediaAssets->syncOriginalMedia($this->newsItemId, $imageUrl, $media);
+        $candidates = $mediaAssets->getDownloadCandidates($this->newsItemId);
+
+        foreach ($candidates as $candidate) {
+            try {
+                $this->downloadCandidate($candidate, $mediaAssets);
+            } catch (Throwable $e) {
+                $mediaAssets->markFailed((int) $candidate['id'], $e->getMessage());
+
+                Log::warning('Failed to preload media asset', [
+                    'news_item_id' => $this->newsItemId,
+                    'asset_id' => (int) $candidate['id'],
+                    'url' => (string) $candidate['source_url'],
+                    'error' => $e->getMessage(),
+                ]);
             }
-        }
-
-        // Обработка массива media
-        foreach ($mediaArray as $index => $mediaItem) {
-            if (is_array($mediaItem) && isset($mediaItem['url']) && is_string($mediaItem['url'])) {
-                if (str_starts_with($mediaItem['url'], 'http')) {
-                    $localPath = $this->downloadMedia($mediaItem['url'], $disk);
-                    if ($localPath) {
-                        $mediaArray[$index]['url'] = Storage::url($localPath);
-                        $changed = true;
-                    }
-                }
-            } elseif (is_string($mediaItem)) {
-                if (str_starts_with($mediaItem, 'http')) {
-                    $localPath = $this->downloadMedia($mediaItem, $disk);
-                    if ($localPath) {
-                        $mediaArray[$index] = Storage::url($localPath);
-                        $changed = true;
-                    }
-                }
-            }
-        }
-
-        if ($changed) {
-            $repository->updateMedia((int) $this->newsItemId, $imageUrl, $mediaArray);
         }
     }
 
-    private function downloadMedia(string $url, \Illuminate\Contracts\Filesystem\Filesystem $disk): ?string
+    /**
+     * @param  array{id:int, source_url:string, local_disk:string}  $candidate
+     */
+    private function downloadCandidate(array $candidate, NewsMediaAssetRepository $mediaAssets): void
     {
-        try {
-            $response = Http::timeout(10)->get($url);
-
-            if ($response->successful()) {
-                $extension = $this->getExtensionFromUrl($url) ?? 'jpg';
-                $filename = 'media/'.date('Y/m/d').'/'.Str::uuid()->toString().'.'.$extension;
-
-                $disk->put($filename, $response->body());
-
-                return $filename;
-            }
-        } catch (Throwable $e) {
-            Log::warning('Failed to download media', [
-                'url' => $url,
-                'error' => $e->getMessage(),
-            ]);
+        $response = Http::timeout(15)->retry(2, 200)->get($candidate['source_url']);
+        if (! $response->successful()) {
+            throw new RuntimeException(sprintf('Download failed with HTTP status %d', $response->status()));
         }
 
-        return null;
+        $body = $response->body();
+        if ($body === '') {
+            throw new RuntimeException('Downloaded body is empty.');
+        }
+
+        $diskName = trim($candidate['local_disk']) !== '' ? $candidate['local_disk'] : 'public';
+        $disk = Storage::disk($diskName);
+        $mimeType = $this->normalizeMimeType($response->header('Content-Type'));
+        $extension = $this->resolveFileExtension($candidate['source_url'], $mimeType);
+        $relativePath = 'media/'.date('Y/m/d').'/'.Str::uuid()->toString().'.'.$extension;
+
+        if ($disk->put($relativePath, $body) === false) {
+            throw new RuntimeException('Unable to write media file to storage.');
+        }
+
+        $mediaAssets->markDownloaded(
+            assetId: (int) $candidate['id'],
+            localDisk: $diskName,
+            localPath: $relativePath,
+            downloadedMimeType: $mimeType,
+            fileSizeBytes: strlen($body),
+            checksumSha256: hash('sha256', $body),
+        );
     }
 
-    private function getExtensionFromUrl(string $url): ?string
+    private function resolveFileExtension(string $url, ?string $mimeType): string
     {
+        $mimeExtension = $this->extensionByMimeType($mimeType);
+        if ($mimeExtension !== null) {
+            return $mimeExtension;
+        }
+
         $path = parse_url($url, PHP_URL_PATH);
-        if (! $path) {
+        if (is_string($path) && $path !== '') {
+            $ext = pathinfo($path, PATHINFO_EXTENSION);
+            if (preg_match('/^[a-z0-9]{1,10}$/i', $ext) === 1) {
+                return mb_strtolower($ext);
+            }
+        }
+
+        return 'bin';
+    }
+
+    private function normalizeMimeType(?string $contentTypeHeader): ?string
+    {
+        if ($contentTypeHeader === null || trim($contentTypeHeader) === '') {
             return null;
         }
 
-        $ext = pathinfo($path, PATHINFO_EXTENSION);
+        $rawType = trim(explode(';', $contentTypeHeader)[0]);
+        if ($rawType === '') {
+            return null;
+        }
 
-        return $ext ? mb_strtolower($ext) : null;
+        return mb_strtolower($rawType);
+    }
+
+    private function extensionByMimeType(?string $mimeType): ?string
+    {
+        return match ($mimeType) {
+            'image/jpeg' => 'jpg',
+            'image/png' => 'png',
+            'image/webp' => 'webp',
+            'image/gif' => 'gif',
+            'image/svg+xml' => 'svg',
+            'video/mp4' => 'mp4',
+            'application/pdf' => 'pdf',
+            default => null,
+        };
     }
 }

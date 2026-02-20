@@ -20,7 +20,9 @@
     - Контейнер модулей подключается через `app/Providers/ModulesServiceProvider.php`.
 - **Интеграции**
     - Saloon используется для HTTP-клиентов (RSS/Telegram web endpoint).
-    - RabbitMQ через `php-amqplib`.
+    - RabbitMQ:
+        - как драйвер Laravel Queue (`vladimir-yuldashev/laravel-queue-rabbitmq`) для внутренних job-очередей,
+        - как AMQP transport (`php-amqplib`) для exchange `news_flow` и событий доставки.
 - **Data**
     - PostgreSQL + JSONB-поля в `sources/news_items`.
     - Redis подключен для инфраструктурного контура.
@@ -80,12 +82,15 @@
 - **Intelligence**
     - Pipeline реализован: dedup -> lang detect -> translate -> classify -> sentiment -> anti-clickbait -> importance -> moderation -> finalize.
     - Сейчас AI-обогащение эвристическое (без реальных LLM провайдеров).
-    - Команда обработки очереди: `php artisan news:process`.
+    - Обработка запускается через Laravel Queue (RabbitMQ driver): `php artisan queue:work --queue=crawler_tasks,intelligence_tasks,media_tasks`.
 
 - **Catalog**
     - Репозиторий и модели для хранения сырого и обогащенного контента.
     - Дедуп на уровне БД через `raw_fingerprint` (unique).
     - Поддержка media (`image_url`, `media`) и `source_metadata`.
+    - Добавлено отдельное хранилище `news_media_assets`:
+        - хранит `source_url` (оригинал), `local_path` (локальная копия), MIME/size/checksum и статус загрузки;
+        - API отдает `image_url`/`media` как эффективные ссылки (локальные при наличии) + `*_original`/`*_local` для fallback.
 
 - **Delivery**
     - API:
@@ -96,13 +101,14 @@
 
 ## 2.3 Очереди/события
 
-- Exchange: `news_flow` (topic).
-- Routing keys: `raw.created`, `raw.retry`, `enriched.ready`, `enriched.ready.important`, `enriched.rejected`.
-- Очереди: `queue.raw_ingest`, `queue.news_processing`, `queue.delivery_feed`, `queue.delivery_push`, `queue.news_processing.dlq`.
-- Реализованы:
-    - setup topology (`news:messaging:setup`),
-    - retries/backoff в обработчике,
-    - отправка в DLQ при исчерпании попыток.
+- Laravel Queue (driver `rabbitmq`) используется для внутренних job-очередей:
+    - `crawler_tasks`,
+    - `intelligence_tasks`,
+    - `media_tasks`.
+- Exchange: `news_flow` (topic) используется для доменных AMQP-событий после enrichment.
+- Routing keys: `enriched.ready`, `enriched.ready.important`, `enriched.rejected`.
+- Очереди exchange-контура: `queue.delivery_feed`, `queue.delivery_push`.
+- `news:messaging:setup` настраивает exchange + delivery queues/bindings.
 
 ## 2.4 Дедупликация (актуальное решение)
 
@@ -115,12 +121,13 @@
 
 ## 2.5 Инфраструктура и локальное хранение данных
 
-- Docker Compose поднимает `app`, `nginx`, `postgres`, `redis`, `rabbitmq`, `worker` (Intelligence pipeline), `crawler-worker` (Async Jobs crawler_tasks).
+- Docker Compose поднимает `app`, `nginx`, `postgres`, `redis`, `rabbitmq`, `worker` (Laravel Queue worker для `crawler_tasks,intelligence_tasks,media_tasks`).
 - Данные Postgres теперь персистятся на диск проекта:
     - `./.docker-data/postgres:/var/lib/postgresql/data`.
 - Папка `.docker-data` добавлена в `.gitignore`.
 - Замечание из ревью по ext-zip/ext-xml закрыто:
     - runtime-слой Dockerfile собирает `zip` и `xml`.
+- Для локальных медиа добавлен обязательный `storage:link` в setup-процессы.
 
 ---
 
@@ -183,9 +190,10 @@
 
 - Старт окружения: `docker compose up -d --build`
 - Миграции/сиды: `docker compose exec -T app php artisan migrate --force`
+- Публичные storage-ссылки: `docker compose exec -T app php artisan storage:link`
 - Инициализация топологии RabbitMQ: `docker compose exec -T app php artisan news:messaging:setup`
 - Сбор новостей: `docker compose exec -T app php artisan news:crawl`
-- Обработка очереди: `docker compose exec app php artisan news:process`
+- Обработка очередей: `docker compose exec -T app php artisan queue:work --queue=crawler_tasks,intelligence_tasks,media_tasks --tries=3`
 - Тесты: `./vendor/bin/pest`
 - Статика: `./vendor/bin/phpstan analyse --memory-limit=1G --debug`
 

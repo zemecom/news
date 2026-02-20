@@ -29,7 +29,7 @@ final readonly class NewsProcessingPipeline
 
         if ($context instanceof EnrichedNewsData) {
             $this->news->storeEnriched($context);
-            dispatch(new \Modules\Catalog\Application\Jobs\PreloadNewsMediaJob((string) $context->rawId));
+            dispatch(new \Modules\Catalog\Application\Jobs\PreloadNewsMediaJob($context->rawId));
             $this->publisher->publish($context);
         }
     }

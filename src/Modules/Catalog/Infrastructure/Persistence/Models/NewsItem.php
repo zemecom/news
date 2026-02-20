@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * @property int $id
  * @property string|null $image_url
- * @property array<int|string, string>|null $media
+ * @property array<int|string, mixed>|null $media
  */
 final class NewsItem extends Model
 {
@@ -46,4 +46,12 @@ final class NewsItem extends Model
         'published_at' => 'datetime',
         'media' => 'array',
     ];
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<NewsMediaAsset, $this>
+     */
+    public function mediaAssets(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(NewsMediaAsset::class, 'news_item_id');
+    }
 }

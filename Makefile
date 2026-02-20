@@ -48,6 +48,7 @@ setup-local:
 	cp .env.example .env || true
 	$(ARTISAN) key:generate
 	$(ARTISAN) migrate
+	$(ARTISAN) storage:link || true
 	@echo "Setup complete! Run 'make dev' to start."
 
 setup-ci:
@@ -57,6 +58,7 @@ setup-ci:
 	cp .env.example .env || true
 	$(ARTISAN) key:generate
 	$(ARTISAN) migrate:fresh --seed --force
+	$(ARTISAN) storage:link || true
 
 migrate:
 	@# Run database migrations for the application
@@ -143,8 +145,8 @@ crawl:
 	$(ARTISAN) news:crawl
 
 process-once:
-	@# Process a single news item from the queue
-	$(ARTISAN) news:process --once
+	@# Process a single queued job from RabbitMQ
+	$(ARTISAN) queue:work --stop-when-empty --max-jobs=1 --queue=crawler_tasks,intelligence_tasks,media_tasks --tries=3
 
 queue:
 	@# Listen to the queue inside Docker

@@ -18,7 +18,7 @@ final class NewsCrawlCommand extends Command
                             {--limit= : Maximum number of articles to parse per source}
                             {--sync : Run synchronously without queue}';
 
-    protected $description = 'Fetch active sources and publish raw messages to RabbitMQ.';
+    protected $description = 'Fetch active sources and enqueue raw news jobs (RabbitMQ-backed Laravel queue).';
 
     public function handle(): int
     {

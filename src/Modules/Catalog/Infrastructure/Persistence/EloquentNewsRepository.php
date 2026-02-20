@@ -73,20 +73,12 @@ final class EloquentNewsRepository implements NewsRepository
             return null;
         }
 
-        /** @var array<int|string, mixed>|null $mediaRaw */
+        /** @var array<int, mixed>|null $mediaRaw */
         $mediaRaw = $item->media;
 
         return [
             'image_url' => $item->image_url,
-            'media' => is_array($mediaRaw) ? $mediaRaw : [],
+            'media' => is_array($mediaRaw) ? array_values($mediaRaw) : [],
         ];
-    }
-
-    public function updateMedia(int $id, ?string $imageUrl, ?array $media): void
-    {
-        NewsItem::query()->whereKey($id)->update([
-            'image_url' => $imageUrl,
-            'media' => $media,
-        ]);
     }
 }

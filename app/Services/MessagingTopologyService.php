@@ -37,21 +37,12 @@ final readonly class MessagingTopologyService
             auto_delete: false,
         );
 
-        $rawIngest = (string) ($queueNames['raw_ingest'] ?? 'queue.raw_ingest');
-        $processing = (string) ($queueNames['news_processing'] ?? 'queue.news_processing');
         $feed = (string) ($queueNames['delivery_feed'] ?? 'queue.delivery_feed');
         $push = (string) ($queueNames['delivery_push'] ?? 'queue.delivery_push');
-        $processingDlq = (string) ($queueNames['news_processing_dlq'] ?? 'queue.news_processing.dlq');
 
-        $this->declareQueue($channel, $rawIngest, quorum: false);
-        $this->declareQueue($channel, $processing, quorum: true);
         $this->declareQueue($channel, $feed, quorum: false);
         $this->declareQueue($channel, $push, quorum: true);
-        $this->declareQueue($channel, $processingDlq, quorum: true);
 
-        $channel->queue_bind($rawIngest, $exchangeName, 'raw.*');
-        $channel->queue_bind($processing, $exchangeName, (string) ($routingKeys['raw_created'] ?? 'raw.created'));
-        $channel->queue_bind($processing, $exchangeName, (string) ($routingKeys['raw_retry'] ?? 'raw.retry'));
         $channel->queue_bind($feed, $exchangeName, (string) ($routingKeys['enriched_ready'] ?? 'enriched.ready'));
         $channel->queue_bind($push, $exchangeName, (string) ($routingKeys['enriched_ready_important'] ?? 'enriched.ready.important'));
     }
