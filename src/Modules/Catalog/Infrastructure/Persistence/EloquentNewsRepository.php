@@ -63,4 +63,30 @@ final class EloquentNewsRepository implements NewsRepository
                 'moderation_reason' => $enriched->moderationReason,
             ]);
     }
+
+    public function getMediaUrls(int $id): ?array
+    {
+        /** @var NewsItem|null $item */
+        $item = NewsItem::query()->find($id);
+
+        if (! $item) {
+            return null;
+        }
+
+        /** @var array<int|string, mixed>|null $mediaRaw */
+        $mediaRaw = $item->media;
+
+        return [
+            'image_url' => $item->image_url,
+            'media' => is_array($mediaRaw) ? $mediaRaw : [],
+        ];
+    }
+
+    public function updateMedia(int $id, ?string $imageUrl, ?array $media): void
+    {
+        NewsItem::query()->whereKey($id)->update([
+            'image_url' => $imageUrl,
+            'media' => $media,
+        ]);
+    }
 }

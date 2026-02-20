@@ -75,4 +75,12 @@ final class IntelligenceServiceProvider extends ServiceProvider
             $app->make(FinalizeStep::class),
         ]);
     }
+
+    public function boot(): void
+    {
+        \Illuminate\Support\Facades\Event::listen(
+            \Modules\Shared\Domain\Events\RawNewsCreated::class,
+            \Modules\Intelligence\Application\Listeners\ProcessRawNewsListener::class
+        );
+    }
 }

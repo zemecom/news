@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * @property int $id
+ * @property string|null $image_url
+ * @property array<int|string, string>|null $media
  */
 final class NewsItem extends Model
 {
