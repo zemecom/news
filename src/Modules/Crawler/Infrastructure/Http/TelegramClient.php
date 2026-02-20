@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Modules\Crawler\Infrastructure\Http;
 
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
 use Modules\Crawler\Domain\Contracts\TelegramClient as TelegramClientContract;
 use Modules\Crawler\Infrastructure\Services\TelegramParserResolver;
@@ -30,14 +31,36 @@ final readonly class TelegramClient implements TelegramClientContract
         $items = [];
 
         $parser = $this->resolver->resolve($channelName);
+        $logger = Log::channel('stderr');
+        $logger->info(sprintf('[Telegram] Starting fetch for channel \'@%s\' (Target limit: %d items)', $channelName, $limit));
 
         while (count($items) < $limit) {
+            $isAjax = $before !== null;
             $url = $before === null ? $baseUrl : sprintf('%s?before=%d', $baseUrl, $before);
-            $response = $this->request($url);
 
-            $pageItems = $parser->parse($response->body(), ['channel' => '@'.$channelName]);
+            if ($isAjax) {
+                // Sleep randomly between requests to prevent IP bans
+                $sleepTime = random_int(1, 4);
+                $logger->info(sprintf('[Telegram] Sleeping %d seconds before next request...', $sleepTime));
+                sleep($sleepTime);
+            }
+
+            $logger->info(sprintf('[Telegram] Requesting %s ...', $url));
+            $response = $this->request($url, $isAjax);
+            $htmlBody = $response->body();
+
+            if ($isAjax) {
+                $decoded = json_decode($htmlBody, true);
+                if (is_string($decoded)) {
+                    $htmlBody = $decoded;
+                }
+            }
+
+            $pageItems = $parser->parse($htmlBody, ['channel' => '@'.$channelName]);
+            $logger->info(sprintf('[Telegram] Parsed %d items from page %s. Extracted total so far: %d', $pageItems->count(), $url, count($items)));
 
             if ($pageItems->isEmpty()) {
+                $logger->info('[Telegram] No more items found on page. Ending pagination.');
                 break;
             }
 
@@ -97,23 +120,26 @@ final readonly class TelegramClient implements TelegramClientContract
 
             $nextBefore = $lastPostId - 1;
             if ($before !== null && $nextBefore >= $before) {
+                $logger->info('[Telegram] Pagination loop detected (nextBefore >= before). Ending.');
                 break;
             }
 
             $before = $nextBefore;
         }
 
+        $logger->info(sprintf('[Telegram] Fetch finished. Total fully extracted items: %d', count($items)));
+
         return collect($items);
     }
 
-    private function request(string $url): Response
+    private function request(string $url, bool $isAjax = false): Response
     {
         return $this->connector->send(
-            new class($url) extends \Saloon\Http\Request
+            new class($url, $isAjax) extends \Saloon\Http\Request
             {
                 protected Method $method = Method::GET;
 
-                public function __construct(private readonly string $url) {}
+                public function __construct(private readonly string $url, private readonly bool $isAjax) {}
 
                 public function resolveEndpoint(): string
                 {
@@ -122,9 +148,17 @@ final readonly class TelegramClient implements TelegramClientContract
 
                 public function defaultHeaders(): array
                 {
-                    return [
-                        'User-Agent' => 'SmartNewsBot/1.0',
+                    $headers = [
+                        'User-Agent' => 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                        'Accept' => '*/*',
+                        'Accept-Language' => 'en-US,en;q=0.9,ru;q=0.8',
                     ];
+
+                    if ($this->isAjax) {
+                        $headers['X-Requested-With'] = 'XMLHttpRequest';
+                    }
+
+                    return $headers;
                 }
             }
         );

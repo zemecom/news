@@ -30,6 +30,7 @@ final readonly class RawNewsFactory
                 'author' => $item['author'] ?? null,
                 'categories' => $item['categories'] ?? [],
                 'source_url' => $source['url'],
+                'links' => $item['links'] ?? [],
             ],
             imageUrl: $item['image_url'] ?? null,
             media: $item['media'] ?? [],

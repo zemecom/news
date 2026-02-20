@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Modules\Crawler\Application\Actions;
 
+use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
 use Modules\Crawler\Application\Services\RawNewsFactory;
 use Modules\Crawler\Domain\Contracts\RawPublisher;
@@ -28,12 +29,17 @@ final readonly class FeedFetcherAction
      */
     public function __invoke(array $source, ?\Carbon\Carbon $dateFrom = null, ?\Carbon\Carbon $dateTo = null, ?int $limit = null): array
     {
+        $logger = Log::channel('stderr');
+        $logger->info(sprintf('[Fetcher] Starting action for source #%d (%s)', $source['id'], $source['url']));
+
         try {
             $items = match ($source['type']) {
                 'rss' => $this->rssClient->fetch($source['url'], $dateFrom, $dateTo, $limit),
                 'telegram' => $this->telegramClient->fetch($source['url'], $dateFrom, $dateTo, $limit),
                 default => throw new InvalidArgumentException('Unsupported source type: '.$source['type']),
             };
+
+            $logger->info(sprintf('[Fetcher] Source #%d returned %d raw items. Processing...', $source['id'], $items->count()));
 
             $stats = [
                 'total' => $items->count(),
@@ -52,7 +58,10 @@ final readonly class FeedFetcherAction
 
                 $stats['new']++;
                 $this->publisher->publish($raw);
+                $logger->info(sprintf('[Fetcher] Published new item: %s', $raw->title));
             }
+
+            $logger->info(sprintf('[Fetcher] Source #%d finished. Total: %d, New: %d, Duplicates: %d', $source['id'], $stats['total'], $stats['new'], $stats['duplicates']));
 
             $this->events->dispatch(new \Modules\Crawler\Domain\Events\SourceFetchSucceeded(
                 (int) $source['id'],
@@ -61,6 +70,8 @@ final readonly class FeedFetcherAction
 
             return $stats;
         } catch (Throwable $e) {
+            $logger->error(sprintf('[Fetcher] Source #%d failed: %s', $source['id'], $e->getMessage()));
+
             $this->events->dispatch(new \Modules\Crawler\Domain\Events\SourceFetchFailed(
                 (int) $source['id'],
                 $e->getMessage()

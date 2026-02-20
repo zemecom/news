@@ -71,7 +71,8 @@
 - **Crawler**
     - Есть `FeedFetcherAction`, `RawNewsFactory`, `RssClient`, `TelegramClient`, `RawPublisher`.
     - Источники `rss` и `telegram` реально обрабатываются.
-    - Поддержан массовый Telegram fetch через pagination (`before`) с лимитом.
+    - Поддержан массовый Telegram fetch через AJAX-pagination (`before`) с встроенным rate-limiting и остановкой по диапазону дат.
+    - Парсер Telegram (`DefaultTelegramParser`) корректно извлекает все медиафайлы из альбомов и прикрепленные ссылки.
     - Парсинг асинхронный: команда `news:crawl` распределяет задания (`FetchSourceJob`) в очередь `crawler_tasks`.
     - Внедрен мониторинг здоровья источников (**Source Health Tracking**): `FeedFetcherAction` генерирует доменные события, которые слушатель в `Catalog` использует для обновления `last_success_at`, `last_error_at` и `error_streak`.
     - Команда диспетчеризации: `php artisan news:crawl`.
@@ -127,6 +128,7 @@
 
 ## 3.1 Crawler / источники
 
+- [x] Улучшение парсинга Telegram (AJAX-пагинация, остановка по датам, извлечение альбомов и ссылок без бана IP).
 - [x] Отслеживание состояния здоровья источников (`last_success_at`, `last_error_at`, `error_streak`) через доменные события.
 - [ ] Полноценная политика allowlist и security hardening входящего HTML (sanitization).
 - [ ] Расширить контроль ошибок источников (`error_streak`, `last_error_at`, `last_success_at`) в runtime-логике.
@@ -171,7 +173,7 @@
 - **Init**: выполнен.
 - **Core (Crawler+Catalog без AI)**: выполнен.
 - **AI Integration**: частично (pipeline есть, реальные LLM пока нет).
-- **UI/UX**: частично (web feed готова, Livewire/Filament не завершены).
+- **UI/UX**: частично (web feed готова и имеет infinite scrolling, Livewire/Filament не завершены).
 - **Bot**: не выполнен.
 - **DevOps**: частично (docker и базовые k8s есть, production hardening не завершен).
 

@@ -67,7 +67,7 @@ class SourcesTable
                     ->modalContent(fn ($record) => view('filament.components.crawler-modal', ['sourceId' => $record->id]))
                     ->modalSubmitAction(false)
                     ->modalCancelAction(false)
-                    ->modalWidth('xl'),
+                    ->modalWidth('7xl'),
             ])
             ->bulkActions([
                 BulkActionGroup::make([

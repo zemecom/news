@@ -546,6 +546,8 @@
         const totalEl = document.getElementById('total-articles');
         const loadMoreEl = document.getElementById('load-more');
 
+        let isLoading = false;
+
         let nextCursor = null;
         let currentFilters = readFiltersFromQuery();
 
@@ -588,7 +590,21 @@
             } catch (e) { console.error(e); }
         }
 
+        const observer = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting && nextCursor && !isLoading) {
+                loadNews(false);
+            }
+        }, {
+            rootMargin: '100px',
+            threshold: 0.1
+        });
+
+        observer.observe(loadMoreEl);
+
         async function loadNews(reset) {
+            if (isLoading) return;
+            isLoading = true;
+
             if (reset) {
                 nextCursor = null;
                 gridEl.innerHTML = '';
@@ -640,11 +656,19 @@
                 }
 
                 nextCursor = payload?.meta?.next_cursor ?? null;
-                loadMoreEl.hidden = !nextCursor;
+
+                if (nextCursor) {
+                    loadMoreEl.hidden = false;
+                    loadMoreEl.textContent = 'Загрузка...';
+                } else {
+                    loadMoreEl.hidden = true;
+                }
             } catch (error) {
                 console.error(error);
                 statusEl.textContent = 'Ошибка загрузки ленты.';
                 statusEl.hidden = false;
+            } finally {
+                isLoading = false;
             }
         }
 

@@ -22,7 +22,8 @@ class DefaultTelegramParser implements TelegramParser
 
         $dom = new DOMDocument('1.0', 'UTF-8');
         $previousSetting = libxml_use_internal_errors(true);
-        $loaded = $dom->loadHTML($htmlBody, LIBXML_NOERROR | LIBXML_NOWARNING);
+        $htmlBodyEntity = mb_convert_encoding($htmlBody, 'HTML-ENTITIES', 'UTF-8');
+        $loaded = $dom->loadHTML($htmlBodyEntity, LIBXML_NOERROR | LIBXML_NOWARNING);
         libxml_clear_errors();
         libxml_use_internal_errors($previousSetting);
 
@@ -90,6 +91,8 @@ class DefaultTelegramParser implements TelegramParser
             }
         }
 
+        $links = $this->extractLinks($xpath, $node);
+
         return [
             'title' => $this->extractTitleFromNode($xpath, $node, $content, $externalId),
             'link' => $link !== '' ? $link : $this->buildLinkFromExternalId($externalId),
@@ -102,6 +105,7 @@ class DefaultTelegramParser implements TelegramParser
             'author' => $channel,
             'image_url' => $imageUrl,
             'media' => $media,
+            'links' => $links,
         ];
     }
 
@@ -112,38 +116,72 @@ class DefaultTelegramParser implements TelegramParser
     {
         $media = [];
 
-        $photoStyle = $this->evalString(
-            $xpath,
-            $node,
-            "string(.//*[contains(concat(' ', normalize-space(@class), ' '), ' tgme_widget_message_photo_wrap ')]/@style)"
-        );
-        $photo = $this->extractUrlFromStyle($photoStyle);
-        if ($photo !== '') {
-            $media[] = ['url' => $photo, 'type' => 'image/jpeg'];
+        $photoWraps = $xpath->query(".//*[contains(concat(' ', normalize-space(@class), ' '), ' tgme_widget_message_photo_wrap ')]", $node);
+        if ($photoWraps !== false) {
+            foreach ($photoWraps as $photoWrap) {
+                if ($photoWrap instanceof DOMNode) {
+                    $style = $this->evalString($xpath, $photoWrap, 'string(@style)');
+                    $photo = $this->extractUrlFromStyle($style);
+                    if ($photo !== '') {
+                        $media[] = ['url' => $photo, 'type' => 'image/jpeg'];
+                    }
+                }
+            }
         }
 
-        $videoThumbStyle = $this->evalString(
-            $xpath,
-            $node,
-            "string(.//*[contains(concat(' ', normalize-space(@class), ' '), ' tgme_widget_message_video_thumb ')]/@style)"
-        );
-        $videoThumb = $this->extractUrlFromStyle($videoThumbStyle);
-        if ($videoThumb !== '') {
-            $media[] = ['url' => $videoThumb, 'type' => 'image/jpeg'];
+        $videoThumbs = $xpath->query(".//*[contains(concat(' ', normalize-space(@class), ' '), ' tgme_widget_message_video_thumb ')]", $node);
+        if ($videoThumbs !== false) {
+            foreach ($videoThumbs as $videoThumb) {
+                if ($videoThumb instanceof DOMNode) {
+                    $style = $this->evalString($xpath, $videoThumb, 'string(@style)');
+                    $video = $this->extractUrlFromStyle($style);
+                    if ($video !== '') {
+                        $media[] = ['url' => $video, 'type' => 'image/jpeg'];
+                    }
+                }
+            }
         }
 
-        $documentLink = $this->normalizeLink(
-            $this->evalString(
-                $xpath,
-                $node,
-                "string(.//*[contains(concat(' ', normalize-space(@class), ' '), ' tgme_widget_message_document_wrap ')]//a/@href)"
-            )
-        );
-        if ($documentLink !== '') {
-            $media[] = ['url' => $documentLink, 'type' => null];
+        $documentLinks = $xpath->query(".//*[contains(concat(' ', normalize-space(@class), ' '), ' tgme_widget_message_document_wrap ')]//a", $node);
+        if ($documentLinks !== false) {
+            foreach ($documentLinks as $docLink) {
+                if ($docLink instanceof DOMNode) {
+                    $href = $this->evalString($xpath, $docLink, 'string(@href)');
+                    $documentLink = $this->normalizeLink($href);
+                    if ($documentLink !== '') {
+                        $media[] = ['url' => $documentLink, 'type' => null];
+                    }
+                }
+            }
         }
 
         return $media;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    protected function extractLinks(DOMXPath $xpath, DOMNode $node): array
+    {
+        $links = [];
+        $linkNodes = $xpath->query(
+            ".//*[contains(concat(' ', normalize-space(@class), ' '), ' tgme_widget_message_text ')]//a",
+            $node
+        );
+
+        if ($linkNodes !== false) {
+            foreach ($linkNodes as $linkNode) {
+                if ($linkNode instanceof DOMNode) {
+                    $href = $this->evalString($xpath, $linkNode, 'string(@href)');
+                    $normalized = $this->normalizeLink($href);
+                    if ($normalized !== '' && ! in_array($normalized, $links, true)) {
+                        $links[] = $normalized;
+                    }
+                }
+            }
+        }
+
+        return $links;
     }
 
     protected function extractPostId(string $externalId): ?int

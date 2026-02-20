@@ -24,7 +24,7 @@ class ListSources extends ListRecords
                 ->modalContent(view('filament.components.crawler-modal', ['sourceId' => null]))
                 ->modalSubmitAction(false)
                 ->modalCancelAction(false)
-                ->modalWidth('xl'),
+                ->modalWidth('7xl'),
             CreateAction::make(),
         ];
     }

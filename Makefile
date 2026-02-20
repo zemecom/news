@@ -22,7 +22,7 @@ down:
 
 build:
 	@# Build or rebuild services
-	docker compose build app
+	docker compose build
 
 dev:
 	@# Run development servers concurrently (server, queue, logs, vite) inside Docker
@@ -44,6 +44,7 @@ setup-local:
 	@# Install dependencies and setup environment for local development via Docker
 	docker compose up -d --build
 	$(COMPOSER) install
+	$(NPM) install
 	cp .env.example .env || true
 	$(ARTISAN) key:generate
 	$(ARTISAN) migrate
@@ -52,13 +53,18 @@ setup-local:
 setup-ci:
 	@# Setup environment for CI (headless, no server start) inside Docker
 	$(COMPOSER) install --no-interaction --prefer-dist
+	$(NPM) install
 	cp .env.example .env || true
 	$(ARTISAN) key:generate
-	$(ARTISAN) migrate --force
+	$(ARTISAN) migrate:fresh --seed --force
 
 migrate:
 	@# Run database migrations for the application
 	$(ARTISAN) migrate --force
+
+db-reset:
+	@# Drop all tables, run migrations, and seed the database
+	$(ARTISAN) migrate:fresh --seed --force
 
 messaging-setup:
 	@# Setup RabbitMQ topology (exchanges, queues, bindings)

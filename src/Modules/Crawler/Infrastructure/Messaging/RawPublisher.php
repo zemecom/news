@@ -8,6 +8,7 @@ use Modules\Crawler\Domain\Contracts\RawPublisher as RawPublisherContract;
 use Modules\Shared\Domain\DTO\RawNewsData;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
 use PhpAmqpLib\Message\AMQPMessage;
+use Throwable;
 
 final readonly class RawPublisher implements RawPublisherContract
 {
@@ -19,7 +20,16 @@ final readonly class RawPublisher implements RawPublisherContract
 
     public function publish(RawNewsData $raw): void
     {
-        $channel = $this->connection->channel();
+        if (! $this->connection->isConnected()) {
+            $this->connection->reconnect();
+        }
+
+        try {
+            $channel = $this->connection->channel();
+        } catch (Throwable $e) {
+            $this->connection->reconnect();
+            $channel = $this->connection->channel();
+        }
 
         $payload = json_encode([
             'sourceId' => $raw->sourceId,

@@ -52,13 +52,8 @@ class CrawlerLog extends Component
         // Clear previous log
         file_put_contents($this->logFile, "Starting crawler with params: {$paramString}...\n");
 
-        $cmd = "php {$artisan} news:crawl {$paramString} --no-ansi >> {$this->logFile} 2>&1 &";
-
-        // Run in background
-        $handle = popen($cmd, 'r');
-        if (is_resource($handle)) {
-            pclose($handle);
-        }
+        $cmd = "nohup php {$artisan} news:crawl {$paramString} --no-ansi >> {$this->logFile} 2>&1 < /dev/null &";
+        exec($cmd);
 
         $this->isStarted = true;
     }

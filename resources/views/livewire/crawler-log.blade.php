@@ -87,8 +87,8 @@
                     style="margin-left: 0.5rem; font-size: 0.75rem; color: #9ca3af; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;">news-crawler.log</span>
             </div>
             <div wire:poll.1s="updateLog"
-                class="p-4 bg-gray-950 text-green-400 font-mono text-xs overflow-y-auto h-96 whitespace-pre-wrap"
-                style="padding: 1rem; background-color: #030712; color: #4ade80; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 0.75rem; overflow-y: auto; height: 24rem; white-space: pre-wrap; text-align: left;">
+                class="p-4 bg-gray-950 text-green-400 font-mono text-xs overflow-y-auto h-[60vh] whitespace-pre-wrap"
+                style="padding: 1rem; background-color: #030712; color: #4ade80; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 0.75rem; overflow-y: auto; height: 60vh; white-space: pre-wrap; text-align: left;">
                 {{ $output }}
             </div>
         </div>
