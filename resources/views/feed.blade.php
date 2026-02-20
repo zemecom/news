@@ -271,18 +271,28 @@
         }
 
         .card-preview {
-            aspect-ratio: 16/9;
+            width: 100%;
             background: #1a1a1a;
             position: relative;
             overflow: hidden;
         }
 
+        .card-preview a {
+            display: block;
+            width: 100%;
+        }
+
         .card-preview img,
         .card-preview video {
             width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: opacity 0.3s ease;
+            height: auto;
+            display: block;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            cursor: zoom-in;
+        }
+
+        .card-preview:hover img {
+            transform: scale(1.05);
         }
 
         .card-body {
@@ -527,6 +537,7 @@
         </div>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fslightbox/3.4.1/index.min.js"></script>
     <script>
         const form = document.getElementById('filters-form');
         const resetBtn = document.getElementById('reset-btn');
@@ -623,6 +634,9 @@
                     for (const item of items) {
                         gridEl.append(createCard(item));
                     }
+                    if (typeof refreshFsLightbox !== 'undefined') {
+                        refreshFsLightbox();
+                    }
                 }
 
                 nextCursor = payload?.meta?.next_cursor ?? null;
@@ -642,11 +656,18 @@
             if (item.image_url) {
                 const preview = document.createElement('div');
                 preview.className = 'card-preview';
+
+                const link = document.createElement('a');
+                link.href = item.image_url;
+                link.setAttribute('data-fslightbox', 'gallery');
+
                 const img = document.createElement('img');
                 img.src = item.image_url;
                 img.loading = 'lazy';
                 img.alt = '';
-                preview.append(img);
+
+                link.append(img);
+                preview.append(link);
                 article.append(preview);
             }
 
