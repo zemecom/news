@@ -26,7 +26,7 @@
     - Redis подключен для инфраструктурного контура.
 - **Code quality**
     - Pest + Arch tests, PHPStan, Psalm (в т.ч. taint), Pint, Rector.
-    - Обязательный запуск `make ci-check` перед коммитом изменений в `app/` или `src/Modules/`.
+    - Автоматический запуск `make ci-check` через `pre-commit` hook перед коммитом изменений.
 
 ## 2.2 Архитектура модулей
 
