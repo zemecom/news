@@ -2,20 +2,20 @@
 <psalm
     errorLevel="5"
     resolveFromConfigFile="true"
-    phpVersion="8.4"
+    phpVersion="8.5"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="vendor/vimeo/psalm/config.xsd"
 >
     <projectFiles>
-        <directory name="app" />
-        <directory name="src" />
-        <directory name="database" />
-        <directory name="routes" />
-        <directory name="tests" />
+        <directory name="app"/>
+        <directory name="src"/>
+        <directory name="database"/>
+        <directory name="routes"/>
+        <directory name="tests"/>
         <ignoreFiles>
-            <directory name="vendor" />
-            <directory name="storage" />
-            <directory name="bootstrap/cache" />
+            <directory name="vendor"/>
+            <directory name="storage"/>
+            <directory name="bootstrap/cache"/>
         </ignoreFiles>
     </projectFiles>
-</psalm>
+<plugins><pluginClass xmlns="https://getpsalm.org/schema/config" class="Psalm\LaravelPlugin\Plugin"/></plugins></psalm>

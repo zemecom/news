@@ -1,52 +1,131 @@
-FROM php:8.5-fpm-alpine
+# ==========================================
+# BASE STAGE (Foundation for both Dev & Prod)
+# ==========================================
+FROM alpine:3.23 AS base
 
 WORKDIR /app
 
-ARG WITH_XDEBUG=0
+# Ensure www-data user exists
+RUN set -x ; \
+    addgroup -g 82 -S www-data ; \
+    adduser -u 82 -D -S -G www-data www-data
 
-# Install system dependencies, PHP extensions and build dependencies
-# Note: opcache, mbstring, and xml are built-in in php:8.5-alpine
-RUN apk add --no-cache --virtual .build-deps $PHPIZE_DEPS linux-headers \
-    git unzip postgresql-dev libzip-dev oniguruma-dev icu-dev \
-    && apk add --no-cache libzip icu-libs libpq oniguruma libxml2 nodejs npm libstdc++ \
-    && pecl install redis \
-    && docker-php-ext-enable redis \
-    && if [ "$WITH_XDEBUG" = "1" ]; then pecl install xdebug && docker-php-ext-enable xdebug; fi \
-    && docker-php-ext-install pdo pdo_pgsql zip intl sockets \
-    && apk del .build-deps
+# Install PHP 8.5 and required system dependencies
+RUN --mount=type=cache,target=/var/cache/apk \
+    apk update && apk add \
+    php85 \
+    php85-fpm \
+    php85-ctype \
+    php85-curl \
+    php85-dom \
+    php85-fileinfo \
+    php85-mbstring \
+    php85-openssl \
+    php85-pdo \
+    php85-pdo_pgsql \
+    php85-pdo_sqlite \
+    php85-phar \
+    php85-session \
+    php85-tokenizer \
+    php85-xml \
+    php85-simplexml \
+    php85-xmlreader \
+    php85-xmlwriter \
+    php85-pcntl \
+    php85-posix \
+    php85-iconv \
+    php85-intl \
+    php85-zip \
+    php85-sockets \
+    php85-pecl-redis \
+    icu-data-full \
+    nodejs \
+    npm \
+    git \
+    unzip \
+    && ln -s /usr/bin/php85 /usr/bin/php
 
-# Configure Opcache
-ENV PHP_OPCACHE_ENABLE=1
-ENV PHP_OPCACHE_VALIDATE_TIMESTAMPS=0
-ENV PHP_OPCACHE_MAX_ACCELERATED_FILES=10000
-ENV PHP_OPCACHE_MEMORY_CONSUMPTION=192
-ENV PHP_OPCACHE_MAX_WASTED_PERCENTAGE=10
+# Configure Opcache (common settings)
+ENV PHP_OPCACHE_ENABLE="1" \
+    PHP_OPCACHE_MAX_ACCELERATED_FILES="10000" \
+    PHP_OPCACHE_MEMORY_CONSUMPTION="192" \
+    PHP_OPCACHE_MAX_WASTED_PERCENTAGE="10"
+
+# Configure PHP-FPM Pool
+RUN rm -rf /etc/php85/php-fpm.d/www.conf && echo "[www]" > /etc/php85/php-fpm.d/www.conf \
+    && echo "user = www-data" >> /etc/php85/php-fpm.d/www.conf \
+    && echo "group = www-data" >> /etc/php85/php-fpm.d/www.conf \
+    && echo "listen = 0.0.0.0:9000" >> /etc/php85/php-fpm.d/www.conf \
+    && echo "pm = dynamic" >> /etc/php85/php-fpm.d/www.conf \
+    && echo "pm.max_children = 5" >> /etc/php85/php-fpm.d/www.conf \
+    && echo "pm.start_servers = 2" >> /etc/php85/php-fpm.d/www.conf \
+    && echo "pm.min_spare_servers = 1" >> /etc/php85/php-fpm.d/www.conf \
+    && echo "pm.max_spare_servers = 3" >> /etc/php85/php-fpm.d/www.conf \
+    && echo "clear_env = no" >> /etc/php85/php-fpm.d/www.conf \
+    && echo "catch_workers_output = yes" >> /etc/php85/php-fpm.d/www.conf
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/local/bin/composer
 
-# Install PHP dependencies
-COPY composer.json composer.lock ./
-RUN composer install --no-dev --prefer-dist --optimize-autoloader --no-scripts
+# Healthcheck
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD php -m || exit 1
 
-# Copy application code
-COPY . .
+EXPOSE 9000
+CMD ["php-fpm85", "-F"]
 
-# Prepare directories and run framework setup
+# ==========================================
+# DEV STAGE (Local Development)
+# ==========================================
+FROM base AS local
+
+# Opcache: Reload code automatically
+ENV PHP_OPCACHE_VALIDATE_TIMESTAMPS="1"
+
+# Setup Xdebug if needed
+ARG WITH_XDEBUG=0
+RUN --mount=type=cache,target=/var/cache/apk \
+    if [ "$WITH_XDEBUG" = "1" ]; then \
+    apk update && apk add php85-pecl-xdebug \
+    && if [ -f docker/php/conf.d/xdebug.ini ]; then cp docker/php/conf.d/xdebug.ini /etc/php85/conf.d/xdebug.ini; fi; \
+    fi
+
+COPY --chown=www-data:www-data composer.json composer.lock ./
+RUN --mount=type=cache,target=/tmp/cache/composer \
+    COMPOSER_CACHE_DIR=/tmp/cache/composer \
+    composer install --prefer-dist --no-scripts --no-autoloader
+
+COPY --chown=www-data:www-data . .
+RUN composer dump-autoload
+
+RUN mkdir -p bootstrap/cache storage/framework/{cache,sessions,views} storage/logs \
+    && php artisan storage:link || true
+
+RUN chown -R www-data:www-data vendor storage bootstrap/cache /var/log/php85
+
+USER www-data
+
+
+# ==========================================
+# PROD STAGE (Production / CI/CD)
+# ==========================================
+FROM base AS production
+
+# Opcache: Never reload code
+ENV PHP_OPCACHE_VALIDATE_TIMESTAMPS="0"
+
+COPY --chown=www-data:www-data composer.json composer.lock ./
+RUN --mount=type=cache,target=/tmp/cache/composer \
+    COMPOSER_CACHE_DIR=/tmp/cache/composer \
+    composer install --no-dev --prefer-dist --no-scripts --no-autoloader
+
+COPY --chown=www-data:www-data . .
+RUN composer dump-autoload --optimize
+
 RUN mkdir -p bootstrap/cache storage/framework/{cache,sessions,views} storage/logs \
     && php artisan package:discover --ansi \
     && php artisan storage:link || true
 
-# Setup Xdebug config if needed
-RUN if [ "$WITH_XDEBUG" = "1" ]; then cp docker/php/conf.d/xdebug.ini /usr/local/etc/php/conf.d/xdebug.ini; fi
+RUN chown -R www-data:www-data vendor storage bootstrap/cache /var/log/php85
 
-# Fix permissions for www-data user
-RUN chown -R www-data:www-data /app
-
-# Switch to non-root user
 USER www-data
-
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-    CMD php-fpm -t || exit 1
-
-CMD ["php-fpm", "-F"]

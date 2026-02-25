@@ -3,6 +3,7 @@ services:
     build:
       context: .
       dockerfile: docker/Dockerfile
+      target: ${APP_ENV:-local}
       args: &app_build_args
         WITH_XDEBUG: ${WITH_XDEBUG:-1}
     volumes:
@@ -35,6 +36,7 @@ services:
     build:
       context: .
       dockerfile: docker/Dockerfile
+      target: ${APP_ENV:-local}
       args:
         <<: *app_build_args
         WITH_XDEBUG: ${WITH_XDEBUG_WORKER:-0}
