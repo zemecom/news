@@ -27,8 +27,9 @@
 - **Data**
     - PostgreSQL + JSONB-поля в `sources/news_items`.
     - Redis подключен для инфраструктурного контура.
-- **Code quality**
+- **Code quality & Debugging**
     - Pest + Arch tests, PHPStan, Psalm (в т.ч. taint), Pint, Rector.
+    - **Laravel Telescope**: установлен для отладки в локальной среде (запросы, очереди, события).
     - Автоматический запуск `make ci-check` через `pre-commit` hook перед коммитом изменений.
 
 ## 2.2 Архитектура модулей
@@ -172,7 +173,8 @@
 
 ## 3.5 Observability / Reliability
 
-- [ ] Метрики Prometheus (ingest rate, queue depth, latency p95, step success/error).
+- [x] Метрики Prometheus (ingest rate, queue depth, latency p95, step success/error).
+- [x] Laravel Telescope (локальная отладка).
 - [ ] OTel трассировка по стадиям pipeline.
 - [ ] Структурный JSON-лог с консистентным контекстом (`module`, `sourceId`, `fingerprint`).
 - [ ] Health readiness c учетом threshold глубины очередей.
@@ -208,6 +210,7 @@
 - Backfill медиа-ассетов: `docker compose exec -T app php artisan news:media:backfill --dry-run`
 - Тесты: `docker compose exec -T app composer test` (или `make test`)
 - Статика: `docker compose exec -T app composer analyze` (или `make analyze`)
+- **Telescope**: доступен по адресу `http://localhost:8080/telescope` (только в `local` окружении)
 
 ---
 

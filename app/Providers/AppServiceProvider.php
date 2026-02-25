@@ -26,6 +26,10 @@ class AppServiceProvider extends ServiceProvider
             read_write_timeout: 3.0,
             heartbeat: 30,
         ));
+
+        if ($this->app->environment('local')) {
+            $this->app->register(\App\Providers\TelescopeServiceProvider::class);
+        }
     }
 
     /**

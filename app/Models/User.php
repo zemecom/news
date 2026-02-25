@@ -12,6 +12,7 @@ use Override;
 
 /**
  * @property string $role
+ * @property string $email
  */
 class User extends Authenticatable implements \Filament\Models\Contracts\FilamentUser
 {
