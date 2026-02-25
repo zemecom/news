@@ -6,6 +6,7 @@
     - `AGENTS.md`
     - `README.md`
     - `docs/PROJECT_MEMORY.md`
+    - `docs/PROJECT_STRUCTURE.md`
     - `Makefile`
 
 ## Правила памяти проекта
@@ -13,15 +14,15 @@
 - Каноническая память проекта хранится в `docs/PROJECT_MEMORY.md`.
 - После каждого значимого изменения (архитектура, контракты, инфра, процессы, backlog) обновлять `docs/PROJECT_MEMORY.md`.
 
-## Правила BUSINESS_LOGIC_DEPENDENCIES
+## Правила документации (Interface & Structure)
 
-- Карта зависимостей бизнес-логики хранится в `docs/BUSINESS_LOGIC_DEPENDENCIES.md`.
-- Файл `docs/BUSINESS_LOGIC_DEPENDENCIES.md` генерируемый, не поддерживается вручную.
-- Читать `docs/BUSINESS_LOGIC_DEPENDENCIES.md` нужно только для задач, затрагивающих бизнес-логику/архитектуру/рефакторинг в `app/` и `src/Modules/`.
-- Для чисто инфраструктурных задач (CI/CD, Docker, Makefile и т.п.) чтение `docs/BUSINESS_LOGIC_DEPENDENCIES.md` не обязательно.
-- После изменений в классах `app/` и `src/Modules/` нужно перегенерировать карту:
+- **Общая структура**: Карта папок и файлов хранится в `docs/PROJECT_STRUCTURE.md`. Обязательна к ознакомлению для понимания физического расположения модулей.
+- **Интерфейсы**: Карта интерфейсов проекта хранится в `docs/PROJECT_INTERFACE.md`.
+- Файлы `docs/PROJECT_STRUCTURE.md` и `docs/PROJECT_INTERFACE.md` генерируемые, не поддерживаются вручную.
+- Читать `docs/PROJECT_INTERFACE.md` нужно только для задач, затрагивающих бизнес-логику/архитектуру/рефакторинг в `app/` и `src/Modules/`.
+- Для чисто инфраструктурных задач (CI/CD, Docker, Makefile и т.п.) чтение `docs/PROJECT_INTERFACE.md` не обязательно.
+- После изменений в файлах или классах нужно перегенерировать документацию:
     - `make docs-deps`
-- Сверяться с `docs/BUSINESS_LOGIC_DEPENDENCIES.md`.
 
 ## Правила валидации
 

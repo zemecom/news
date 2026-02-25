@@ -165,7 +165,7 @@ logs:
 	docker compose logs -f --tail=200
 
 docs-deps:
-	@# Generate business logic dependency documentation (docs/BUSINESS_LOGIC_DEPENDENCIES.md) using Context Hub Generator
+	@# Generate documentation maps (docs/PROJECT_STRUCTURE.md + docs/PROJECT_INTERFACE.md) using Context Hub Generator
 	ctx generate --no-interaction
 
 # --- Help ---

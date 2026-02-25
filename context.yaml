@@ -1,8 +1,20 @@
 $schema: 'https://raw.githubusercontent.com/context-hub/generator/refs/heads/main/json-schema.json'
 documents:
   -
-    description: 'Business Logic Dependencies'
-    outputPath: ../docs/BUSINESS_LOGIC_DEPENDENCIES.md
+    description: 'Project Structure'
+    outputPath: ../docs/PROJECT_STRUCTURE.md
+    overwrite: true
+    sources:
+      -
+        type: tree
+        description: 'Directory Structure'
+        sourcePaths:
+          - app
+          - src/Modules
+        showTreeView: true
+  -
+    description: 'Project Interface'
+    outputPath: ../docs/PROJECT_INTERFACE.md
     overwrite: true
     sources:
       -
@@ -11,6 +23,7 @@ documents:
         sourcePaths:
           - app
         filePattern: '*.php'
+        showTreeView: false
         modifiers:
           -
             name: php-content-filter
@@ -18,7 +31,7 @@ documents:
               include_methods_pattern: '/.*/'
               include_properties_pattern: '/.*/'
               keep_method_bodies: false
-              method_body_placeholder: '// ...'
+              method_body_placeholder: ''
               keep_doc_comments: true
               keep_attributes: true
       -
@@ -27,6 +40,7 @@ documents:
         sourcePaths:
           - src/Modules
         filePattern: '*.php'
+        showTreeView: false
         modifiers:
           -
             name: php-content-filter
@@ -34,6 +48,6 @@ documents:
               include_methods_pattern: '/.*/'
               include_properties_pattern: '/.*/'
               keep_method_bodies: false
-              method_body_placeholder: '// ...'
+              method_body_placeholder: ''
               keep_doc_comments: true
               keep_attributes: true

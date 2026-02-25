@@ -6,7 +6,8 @@
 - Цель: сбор, обработка и доставка новостей с AI-обогащением, с готовностью к запуску в Docker/Kubernetes.
 - Текущее состояние: рабочий backend-контур + web-лента + Telegram crawler + очереди RabbitMQ.
 - Основной URL в локальной среде: `http://localhost:8080`.
-- Карта зависимостей классов: `docs/BUSINESS_LOGIC_DEPENDENCIES.md`.
+- Карта интерфейсов классов: `docs/PROJECT_INTERFACE.md`.
+- Карта структуры проекта: `docs/PROJECT_STRUCTURE.md`.
 
 ---
 

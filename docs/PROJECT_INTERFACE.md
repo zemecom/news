@@ -1,57 +1,6 @@
-# Business Logic Dependencies
+# Project Interface
 _SOURCE: Application Core_
 # Application Core
-```
-// Structure of documents
-└── app/
-    └── Console/
-        ├── Commands/
-        │   └── HealthCheckCommand.php
-        │   └── MessagingSetupCommand.php
-        │   └── NewsCrawlCommand.php
-        │   └── NewsMediaBackfillCommand.php
-    └── Filament/
-        ├── Resources/
-        │   └── Sources/
-        │       └── Pages/
-        │           ├── CreateSource.php
-        │           ├── EditSource.php
-        │           ├── ListSources.php
-        │       └── Schemas/
-        │           ├── SourceForm.php
-        │       └── SourceResource.php
-        │       └── Tables/
-        │           └── SourcesTable.php
-    └── Http/
-        ├── Controllers/
-        │   ├── Api/
-        │   │   ├── Admin/
-        │   │   │   ├── SourceController.php
-        │   │   ├── NewsController.php
-        │   ├── Controller.php
-        │   ├── HealthController.php
-        │   ├── Web/
-        │   │   └── FeedPageController.php
-        ├── Middleware/
-        │   ├── AutoLoginAdmin.php
-        │   ├── EnsureUserIsAdmin.php
-        ├── Requests/
-        │   └── Api/
-        │       └── NewsIndexRequest.php
-    └── Livewire/
-        ├── CrawlerLog.php
-    └── Models/
-        ├── User.php
-    └── Providers/
-        ├── AppServiceProvider.php
-        ├── Filament/
-        │   ├── AdminPanelProvider.php
-        ├── ModulesServiceProvider.php
-    └── Services/
-        └── HealthCheckService.php
-        └── MessagingTopologyService.php
-
-```
 ###  Path: `/app/Console/Commands/HealthCheckCommand.php`
 
 ```php
@@ -84,7 +33,6 @@ final class HealthCheckCommand extends Command
 	 */
 	public function handle(): int
 	{
-		// ...
 	}
 }
 
@@ -106,7 +54,6 @@ final class MessagingSetupCommand extends Command
 
 	public function handle(MessagingTopologyService $topology): int
 	{
-		// ...
 	}
 }
 
@@ -130,7 +77,6 @@ final class NewsCrawlCommand extends Command
 
 	public function handle(): int
 	{
-		// ...
 	}
 }
 
@@ -159,31 +105,26 @@ final class NewsMediaBackfillCommand extends Command
 
 	public function handle(PreloadNewsMediaAction $preloadNewsMedia): int
 	{
-		// ...
 	}
 
 
 	private function intOption(string $name, int $min, ?int $default = null): ?int
 	{
-		// ...
 	}
 
 
 	private function hasBackfillableMedia(NewsItem $item): bool
 	{
-		// ...
 	}
 
 
 	private function extractMediaUrl(mixed $mediaItem): ?string
 	{
-		// ...
 	}
 
 
 	private function normalizeString(mixed $value): ?string
 	{
-		// ...
 	}
 }
 
@@ -222,7 +163,6 @@ class EditSource extends EditRecord
 	#[Override]
 	protected function getHeaderActions(): array
 	{
-		// ...
 	}
 }
 
@@ -246,14 +186,12 @@ class ListSources extends ListRecords
 	#[Override]
 	protected function getHeaderActions(): array
 	{
-		// ...
 	}
 
 
 	#[Override]
 	public function getMaxContentWidth(): \Filament\Support\Enums\Width|string|null
 	{
-		// ...
 	}
 }
 
@@ -273,7 +211,6 @@ class SourceForm
 {
 	public static function configure(Schema $schema): Schema
 	{
-		// ...
 	}
 }
 
@@ -306,28 +243,24 @@ class SourceResource extends Resource
 	#[Override]
 	public static function form(Schema $schema): Schema
 	{
-		// ...
 	}
 
 
 	#[Override]
 	public static function table(Table $table): Table
 	{
-		// ...
 	}
 
 
 	#[Override]
 	public static function getRelations(): array
 	{
-		// ...
 	}
 
 
 	#[Override]
 	public static function getPages(): array
 	{
-		// ...
 	}
 }
 
@@ -349,7 +282,6 @@ class SourcesTable
 {
 	public static function configure(Table $table): Table
 	{
-		// ...
 	}
 }
 
@@ -369,13 +301,11 @@ final class SourceController extends Controller
 	public function __construct(
 		private readonly ListSourcesAction $listSources,
 	) {
-		// ...
 	}
 
 
 	public function index(): JsonResponse
 	{
-		// ...
 	}
 }
 
@@ -401,25 +331,21 @@ final class NewsController extends Controller
 		private readonly ShowNewsAction $showNews,
 		private readonly ListPublicSourcesAction $listPublicSources,
 	) {
-		// ...
 	}
 
 
 	public function index(NewsIndexRequest $request): JsonResponse
 	{
-		// ...
 	}
 
 
 	public function show(string $id): JsonResponse
 	{
-		// ...
 	}
 
 
 	public function sources(): JsonResponse
 	{
-		// ...
 	}
 }
 
@@ -448,7 +374,6 @@ final class HealthController extends Controller
 	public function __construct(
 		private readonly HealthCheckService $health,
 	) {
-		// ...
 	}
 
 
@@ -457,13 +382,11 @@ final class HealthController extends Controller
 	 */
 	public function live(): array
 	{
-		// ...
 	}
 
 
 	public function ready(): \Illuminate\Http\JsonResponse
 	{
-		// ...
 	}
 }
 
@@ -481,7 +404,6 @@ final class FeedPageController extends Controller
 {
 	public function __invoke(): View
 	{
-		// ...
 	}
 }
 
@@ -507,7 +429,6 @@ class AutoLoginAdmin
 	 */
 	public function handle(Request $request, Closure $next): Response
 	{
-		// ...
 	}
 }
 
@@ -531,7 +452,6 @@ final class EnsureUserIsAdmin
 	 */
 	public function handle(Request $request, Closure $next): Response
 	{
-		// ...
 	}
 }
 
@@ -549,7 +469,6 @@ final class NewsIndexRequest extends FormRequest
 {
 	public function authorize(): bool
 	{
-		// ...
 	}
 
 
@@ -558,13 +477,11 @@ final class NewsIndexRequest extends FormRequest
 	 */
 	public function rules(): array
 	{
-		// ...
 	}
 
 
 	public function withValidator(Validator $validator): void
 	{
-		// ...
 	}
 }
 
@@ -590,25 +507,21 @@ class CrawlerLog extends Component
 
 	public function mount(?int $sourceId = null): void
 	{
-		// ...
 	}
 
 
 	public function startParsing(): void
 	{
-		// ...
 	}
 
 
 	public function updateLog(): void
 	{
-		// ...
 	}
 
 
 	public function render(): \Illuminate\Contracts\View\View
 	{
-		// ...
 	}
 }
 
@@ -626,6 +539,7 @@ use Override as Override;
 
 /**
  * @property string $role
+ * @property string $email
  */
 class User extends Authenticatable implements \Filament\Models\Contracts\FilamentUser
 {
@@ -656,19 +570,16 @@ class User extends Authenticatable implements \Filament\Models\Contracts\Filamen
 	#[Override]
 	protected function casts(): array
 	{
-		// ...
 	}
 
 
 	public function isAdmin(): bool
 	{
-		// ...
 	}
 
 
 	public function canAccessPanel(\Filament\Panel $panel): bool
 	{
-		// ...
 	}
 }
 
@@ -691,7 +602,6 @@ class AppServiceProvider extends ServiceProvider
 	#[Override]
 	public function register(): void
 	{
-		// ...
 	}
 
 
@@ -700,7 +610,6 @@ class AppServiceProvider extends ServiceProvider
 	 */
 	public function boot(): void
 	{
-		// ...
 	}
 }
 
@@ -732,7 +641,6 @@ class AdminPanelProvider extends PanelProvider
 {
 	public function panel(Panel $panel): Panel
 	{
-		// ...
 	}
 }
 
@@ -755,7 +663,47 @@ final class ModulesServiceProvider extends ServiceProvider
 	#[Override]
 	public function register(): void
 	{
-		// ...
+	}
+}
+
+
+```
+###  Path: `/app/Providers/TelescopeServiceProvider.php`
+
+```php
+namespace App\Providers;
+
+use App\Models\User as User;
+use Illuminate\Support\Facades\Gate as Gate;
+use Laravel\Telescope\IncomingEntry as IncomingEntry;
+use Laravel\Telescope\Telescope as Telescope;
+use Laravel\Telescope\TelescopeApplicationServiceProvider as TelescopeApplicationServiceProvider;
+
+class TelescopeServiceProvider extends TelescopeApplicationServiceProvider
+{
+	/**
+	 * Register any application services.
+	 */
+	public function register(): void
+	{
+	}
+
+
+	/**
+	 * Prevent sensitive request details from being logged by Telescope.
+	 */
+	protected function hideSensitiveRequestDetails(): void
+	{
+	}
+
+
+	/**
+	 * Register the Telescope gate.
+	 *
+	 * This gate determines who can access Telescope in non-local environments.
+	 */
+	protected function gate(): void
+	{
 	}
 }
 
@@ -776,7 +724,6 @@ final readonly class HealthCheckService
 	public function __construct(
 		private AMQPStreamConnection $amqp,
 	) {
-		// ...
 	}
 
 
@@ -785,7 +732,6 @@ final readonly class HealthCheckService
 	 */
 	public function check(): array
 	{
-		// ...
 	}
 }
 
@@ -805,25 +751,21 @@ final readonly class MessagingTopologyService
 	public function __construct(
 		private AMQPStreamConnection $connection,
 	) {
-		// ...
 	}
 
 
 	public function declareTopology(): void
 	{
-		// ...
 	}
 
 
 	public function declareTopologyOn(AMQPChannel $channel): void
 	{
-		// ...
 	}
 
 
 	private function declareQueue(AMQPChannel $channel, string $name, bool $quorum): void
 	{
-		// ...
 	}
 }
 
@@ -831,146 +773,6 @@ final readonly class MessagingTopologyService
 ```
 _SOURCE: Modules_
 # Modules
-```
-// Structure of documents
-└── src/
-    └── Modules/
-        └── Catalog/
-            ├── Application/
-            │   ├── Actions/
-            │   │   ├── PreloadNewsMediaAction.php
-            │   ├── Jobs/
-            │   │   ├── PreloadNewsMediaJob.php
-            │   ├── Listeners/
-            │   │   └── UpdateSourceStatusListener.php
-            ├── CatalogServiceProvider.php
-            ├── Domain/
-            │   ├── Contracts/
-            │   │   └── NewsMediaAssetRepository.php
-            │   │   └── NewsRepository.php
-            │   │   └── SourceRepository.php
-            ├── Infrastructure/
-            │   └── Persistence/
-            │       └── EloquentNewsMediaAssetRepository.php
-            │       └── EloquentNewsRepository.php
-            │       └── EloquentSourceRepository.php
-            │       └── Models/
-            │           └── NewsItem.php
-            │           └── NewsMediaAsset.php
-            │           └── Source.php
-        └── Crawler/
-            ├── Application/
-            │   ├── Actions/
-            │   │   ├── FeedFetcherAction.php
-            │   ├── Jobs/
-            │   │   ├── FetchSourceJob.php
-            │   │   ├── ProcessNewsJob.php
-            │   ├── Services/
-            │   │   └── RawNewsFactory.php
-            ├── CrawlerServiceProvider.php
-            ├── Domain/
-            │   ├── Contracts/
-            │   │   ├── ApiParser.php
-            │   │   ├── Deduplicator.php
-            │   │   ├── RawPublisher.php
-            │   │   ├── RssClient.php
-            │   │   ├── RssParser.php
-            │   │   ├── TelegramClient.php
-            │   │   ├── TelegramParser.php
-            │   ├── Events/
-            │   │   └── SourceFetchFailed.php
-            │   │   └── SourceFetchSucceeded.php
-            ├── Infrastructure/
-            │   └── Http/
-            │       ├── RssClient.php
-            │       ├── RssConnector.php
-            │       ├── TelegramClient.php
-            │   └── Messaging/
-            │       ├── RawPublisher.php
-            │   └── Parsers/
-            │       ├── AlJazeeraRssParser.php
-            │       ├── DefaultRssParser.php
-            │       ├── HabrRssParser.php
-            │       ├── HackerNewsRssParser.php
-            │       ├── MedicalXpressRssParser.php
-            │       ├── ScienceDailyRssParser.php
-            │       ├── TechCrunchRssParser.php
-            │       ├── Telegram/
-            │       │   ├── DefaultTelegramParser.php
-            │       │   ├── ToporLiveTelegramParser.php
-            │       ├── TheVergeRssParser.php
-            │   └── Services/
-            │       └── DbDeduplicator.php
-            │       └── RssParserResolver.php
-            │       └── TelegramParserResolver.php
-        └── Delivery/
-            ├── Application/
-            │   ├── Actions/
-            │   │   └── ListNewsAction.php
-            │   │   └── ListPublicSourcesAction.php
-            │   │   └── ListSourcesAction.php
-            │   │   └── ShowNewsAction.php
-            ├── DeliveryServiceProvider.php
-            ├── Domain/
-            │   ├── Contracts/
-            │   │   ├── NewsFeedReader.php
-            │   │   ├── SourceAdminReader.php
-            │   │   ├── SourcePublicReader.php
-            │   ├── DTO/
-            │   │   └── NewsFeedFilters.php
-            ├── Infrastructure/
-            │   └── Persistence/
-            │       └── EloquentNewsFeedReader.php
-            │       └── EloquentSourceAdminReader.php
-            │       └── EloquentSourcePublicReader.php
-        └── Intelligence/
-            ├── Application/
-            │   ├── Listeners/
-            │   │   ├── ProcessRawNewsListener.php
-            │   ├── Pipeline/
-            │   │   └── NewsProcessingPipeline.php
-            │   │   └── SkipMessageException.php
-            │   │   └── Steps/
-            │   │       └── AntiClickbaitStep.php
-            │   │       └── ClassifyStep.php
-            │   │       └── DeduplicateStep.php
-            │   │       └── FinalizeStep.php
-            │   │       └── ImportanceStep.php
-            │   │       └── LanguageDetectStep.php
-            │   │       └── ModerationStep.php
-            │   │       └── PipelineStep.php
-            │   │       └── SentimentStep.php
-            │   │       └── TranslateStep.php
-            ├── Domain/
-            │   ├── Contracts/
-            │   │   └── Classifier.php
-            │   │   └── EnrichedPublisher.php
-            │   │   └── SentimentAnalyzer.php
-            │   │   └── TitleGenerator.php
-            │   │   └── Translator.php
-            ├── Infrastructure/
-            │   ├── LLM/
-            │   │   ├── HeuristicTranslator.php
-            │   │   ├── KeywordClassifier.php
-            │   │   ├── KeywordSentimentAnalyzer.php
-            │   │   ├── ObjectivelyTitleGenerator.php
-            │   ├── Messaging/
-            │   │   └── EnrichedPublisher.php
-            ├── IntelligenceServiceProvider.php
-        └── Shared/
-            └── Application/
-                ├── Services/
-                │   └── FingerprintGenerator.php
-            └── Domain/
-                └── DTO/
-                    ├── EnrichedNewsData.php
-                    ├── RawNewsData.php
-                └── Enum/
-                    ├── NewsStatus.php
-                └── Events/
-                    └── RawNewsCreated.php
-
-```
 ###  Path: `/src/Modules/Catalog/Application/Actions/PreloadNewsMediaAction.php`
 
 ```php
@@ -991,13 +793,11 @@ final readonly class PreloadNewsMediaAction
 		private NewsRepository $news,
 		private NewsMediaAssetRepository $mediaAssets,
 	) {
-		// ...
 	}
 
 
 	public function __invoke(int $newsItemId): void
 	{
-		// ...
 	}
 
 
@@ -1006,25 +806,21 @@ final readonly class PreloadNewsMediaAction
 	 */
 	private function downloadCandidate(array $candidate): void
 	{
-		// ...
 	}
 
 
 	private function resolveFileExtension(string $url, ?string $mimeType): string
 	{
-		// ...
 	}
 
 
 	private function normalizeMimeType(?string $contentTypeHeader): ?string
 	{
-		// ...
 	}
 
 
 	private function extensionByMimeType(?string $mimeType): ?string
 	{
-		// ...
 	}
 }
 
@@ -1058,13 +854,11 @@ final class PreloadNewsMediaJob implements ShouldQueue
 	public function __construct(
 		public readonly int $newsItemId,
 	) {
-		// ...
 	}
 
 
 	public function handle(PreloadNewsMediaAction $preloadNewsMedia): void
 	{
-		// ...
 	}
 }
 
@@ -1084,7 +878,6 @@ final readonly class UpdateSourceStatusListener
 	public function __construct(
 		private SourceRepository $sourceRepository,
 	) {
-		// ...
 	}
 
 
@@ -1093,7 +886,6 @@ final readonly class UpdateSourceStatusListener
 	 */
 	public function handle(object $event): void
 	{
-		// ...
 	}
 }
 
@@ -1120,13 +912,11 @@ final class CatalogServiceProvider extends ServiceProvider
 	#[Override]
 	public function register(): void
 	{
-		// ...
 	}
 
 
 	public function boot(): void
 	{
-		// ...
 	}
 }
 
@@ -1253,19 +1043,16 @@ final readonly class EloquentNewsMediaAssetRepository implements NewsMediaAssetR
 	public function __construct(
 		private DatabaseManager $db,
 	) {
-		// ...
 	}
 
 
 	public function syncOriginalMedia(int $newsItemId, ?string $imageUrl, array $media): void
 	{
-		// ...
 	}
 
 
 	public function getDownloadCandidates(int $newsItemId): array
 	{
-		// ...
 	}
 
 
@@ -1278,19 +1065,16 @@ final readonly class EloquentNewsMediaAssetRepository implements NewsMediaAssetR
 		string $checksumSha256,
 	): void
 	{
-		// ...
 	}
 
 
 	public function markFailed(int $assetId, string $error): void
 	{
-		// ...
 	}
 
 
 	public function resolveForNewsItems(array $newsItemIds): array
 	{
-		// ...
 	}
 
 
@@ -1305,13 +1089,11 @@ final readonly class EloquentNewsMediaAssetRepository implements NewsMediaAssetR
 	 */
 	private function buildDesiredAssets(?string $imageUrl, array $media): array
 	{
-		// ...
 	}
 
 
 	private function assetKey(string $slot, int $position): string
 	{
-		// ...
 	}
 
 
@@ -1320,13 +1102,11 @@ final readonly class EloquentNewsMediaAssetRepository implements NewsMediaAssetR
 	 */
 	private function parseMediaItem(mixed $mediaItem): ?array
 	{
-		// ...
 	}
 
 
 	private function resolveLocalUrl(NewsMediaAsset $asset): ?string
 	{
-		// ...
 	}
 
 
@@ -1342,13 +1122,11 @@ final readonly class EloquentNewsMediaAssetRepository implements NewsMediaAssetR
 	 */
 	private function defaultMediaState(): array
 	{
-		// ...
 	}
 
 
 	private function normalizeString(mixed $value): ?string
 	{
-		// ...
 	}
 }
 
@@ -1369,31 +1147,26 @@ final class EloquentNewsRepository implements NewsRepository
 {
 	public function existsByFingerprint(string $fingerprint): bool
 	{
-		// ...
 	}
 
 
 	public function findIdByFingerprint(string $fingerprint): int
 	{
-		// ...
 	}
 
 
 	public function storeRaw(RawNewsData $raw): int
 	{
-		// ...
 	}
 
 
 	public function storeEnriched(EnrichedNewsData $enriched): void
 	{
-		// ...
 	}
 
 
 	public function getMediaUrls(int $id): ?array
 	{
-		// ...
 	}
 }
 
@@ -1412,13 +1185,11 @@ final class EloquentSourceRepository implements SourceRepository
 {
 	public function updateSuccess(int $sourceId): void
 	{
-		// ...
 	}
 
 
 	public function updateFailure(int $sourceId): void
 	{
-		// ...
 	}
 }
 
@@ -1475,7 +1246,6 @@ final class NewsItem extends Model
 	 */
 	public function mediaAssets(): \Illuminate\Database\Eloquent\Relations\HasMany
 	{
-		// ...
 	}
 }
 
@@ -1533,7 +1303,6 @@ final class NewsMediaAsset extends Model
 	 */
 	public function newsItem(): \Illuminate\Database\Eloquent\Relations\BelongsTo
 	{
-		// ...
 	}
 }
 
@@ -1577,7 +1346,6 @@ final class Source extends Model
 	 */
 	public function newsItems(): \Illuminate\Database\Eloquent\Relations\HasMany
 	{
-		// ...
 	}
 }
 
@@ -1606,7 +1374,6 @@ final readonly class FeedFetcherAction
 		private \Modules\Crawler\Domain\Contracts\Deduplicator $deduplicator,
 		private \Illuminate\Contracts\Events\Dispatcher $events,
 	) {
-		// ...
 	}
 
 
@@ -1621,7 +1388,6 @@ final readonly class FeedFetcherAction
 		?int $limit = null,
 	): array
 	{
-		// ...
 	}
 }
 
@@ -1655,13 +1421,11 @@ final class FetchSourceJob implements ShouldQueue
 		public readonly ?\Carbon\Carbon $dateTo = null,
 		public readonly ?int $limit = null,
 	) {
-		// ...
 	}
 
 
 	public function handle(FeedFetcherAction $fetchFeed): void
 	{
-		// ...
 	}
 }
 
@@ -1697,13 +1461,11 @@ final class ProcessNewsJob implements ShouldQueue
 	public function __construct(
 		public readonly RawNewsData $raw,
 	) {
-		// ...
 	}
 
 
 	public function handle(Dispatcher $events): void
 	{
-		// ...
 	}
 }
 
@@ -1723,7 +1485,6 @@ final readonly class RawNewsFactory
 	public function __construct(
 		private FingerprintGenerator $fingerprintGenerator,
 	) {
-		// ...
 	}
 
 
@@ -1733,7 +1494,6 @@ final readonly class RawNewsFactory
 	 */
 	public function fromRss(array $source, array $item): RawNewsData
 	{
-		// ...
 	}
 }
 
@@ -1762,7 +1522,6 @@ final class CrawlerServiceProvider extends ServiceProvider
 	#[Override]
 	public function register(): void
 	{
-		// ...
 	}
 }
 
@@ -1915,7 +1674,6 @@ final readonly class SourceFetchFailed
 		public int $sourceId,
 		public string $errorMessage,
 	) {
-		// ...
 	}
 }
 
@@ -1936,7 +1694,6 @@ final readonly class SourceFetchSucceeded
 		public int $sourceId,
 		public int $itemCount,
 	) {
-		// ...
 	}
 }
 
@@ -1959,7 +1716,6 @@ final readonly class RssClient implements RssClientContract
 		private RssConnector $connector,
 		private RssParserResolver $resolver,
 	) {
-		// ...
 	}
 
 
@@ -1973,13 +1729,11 @@ final readonly class RssClient implements RssClientContract
 		?int $limit = null,
 	): Collection
 	{
-		// ...
 	}
 
 
 	private function assertAllowedHost(string $url): void
 	{
-		// ...
 	}
 }
 
@@ -1996,13 +1750,11 @@ final class RssConnector extends Connector
 {
 	public function resolveBaseUrl(): string
 	{
-		// ...
 	}
 
 
 	public function defaultConfig(): array
 	{
-		// ...
 	}
 }
 
@@ -2027,7 +1779,6 @@ final readonly class TelegramClient implements TelegramClientContract
 		private RssConnector $connector,
 		private TelegramParserResolver $resolver,
 	) {
-		// ...
 	}
 
 
@@ -2038,37 +1789,31 @@ final readonly class TelegramClient implements TelegramClientContract
 		?int $limit = null,
 	): Collection
 	{
-		// ...
 	}
 
 
 	private function request(string $url, bool $isAjax = false): Response
 	{
-		// ...
 	}
 
 
 	private function resolveChannelName(string $channel): string
 	{
-		// ...
 	}
 
 
 	private function normalizeChannelName(string $name): string
 	{
-		// ...
 	}
 
 
 	private function assertAllowedHost(string $url): void
 	{
-		// ...
 	}
 
 
 	private function extractPostId(string $externalId): ?int
 	{
-		// ...
 	}
 }
 
@@ -2087,13 +1832,11 @@ final readonly class RawPublisher implements RawPublisherContract
 {
 	public function __construct()
 	{
-		// ...
 	}
 
 
 	public function publish(RawNewsData $raw): void
 	{
-		// ...
 	}
 }
 
@@ -2111,7 +1854,6 @@ final class AlJazeeraRssParser extends DefaultRssParser
 	#[Override]
 	public function supports(string $url): bool
 	{
-		// ...
 	}
 }
 
@@ -2133,13 +1875,11 @@ class DefaultRssParser implements RssParser
 	 */
 	public function parse(string $xmlBody): Collection
 	{
-		// ...
 	}
 
 
 	public function supports(string $url): bool
 	{
-		// ...
 	}
 
 
@@ -2148,7 +1888,6 @@ class DefaultRssParser implements RssParser
 	 */
 	protected function mapItem(SimpleXMLElement $item): array
 	{
-		// ...
 	}
 
 
@@ -2157,7 +1896,6 @@ class DefaultRssParser implements RssParser
 	 */
 	protected function mapAtomEntry(SimpleXMLElement $entry): array
 	{
-		// ...
 	}
 }
 
@@ -2176,14 +1914,12 @@ final class HabrRssParser extends DefaultRssParser
 	#[Override]
 	public function supports(string $url): bool
 	{
-		// ...
 	}
 
 
 	#[Override]
 	protected function mapItem(SimpleXMLElement $item): array
 	{
-		// ...
 	}
 }
 
@@ -2201,7 +1937,6 @@ final class HackerNewsRssParser extends DefaultRssParser
 	#[Override]
 	public function supports(string $url): bool
 	{
-		// ...
 	}
 }
 
@@ -2219,7 +1954,6 @@ final class MedicalXpressRssParser extends DefaultRssParser
 	#[Override]
 	public function supports(string $url): bool
 	{
-		// ...
 	}
 }
 
@@ -2237,7 +1971,6 @@ final class ScienceDailyRssParser extends DefaultRssParser
 	#[Override]
 	public function supports(string $url): bool
 	{
-		// ...
 	}
 }
 
@@ -2255,7 +1988,6 @@ final class TechCrunchRssParser extends DefaultRssParser
 	#[Override]
 	public function supports(string $url): bool
 	{
-		// ...
 	}
 }
 
@@ -2280,13 +2012,11 @@ class DefaultTelegramParser implements TelegramParser
 	 */
 	public function parse(string $htmlBody, array $context): Collection
 	{
-		// ...
 	}
 
 
 	public function supports(string $channel): bool
 	{
-		// ...
 	}
 
 
@@ -2295,7 +2025,6 @@ class DefaultTelegramParser implements TelegramParser
 	 */
 	protected function mapItem(DOMXPath $xpath, DOMNode $node, string $channel): array
 	{
-		// ...
 	}
 
 
@@ -2304,7 +2033,6 @@ class DefaultTelegramParser implements TelegramParser
 	 */
 	protected function extractMedia(DOMXPath $xpath, DOMNode $node): array
 	{
-		// ...
 	}
 
 
@@ -2313,61 +2041,51 @@ class DefaultTelegramParser implements TelegramParser
 	 */
 	protected function extractLinks(DOMXPath $xpath, DOMNode $node): array
 	{
-		// ...
 	}
 
 
 	protected function extractPostId(string $externalId): ?int
 	{
-		// ...
 	}
 
 
 	protected function extractTitleFromNode(DOMXPath $xpath, DOMNode $node, string $content, string $externalId): string
 	{
-		// ...
 	}
 
 
 	protected function extractMainMessageText(DOMXPath $xpath, DOMNode $node): string
 	{
-		// ...
 	}
 
 
 	protected function extractTitle(string $content, string $externalId): string
 	{
-		// ...
 	}
 
 
 	protected function normalizeWhitespace(string $value): string
 	{
-		// ...
 	}
 
 
 	protected function normalizeLink(string $link): string
 	{
-		// ...
 	}
 
 
 	protected function buildLinkFromExternalId(string $externalId): string
 	{
-		// ...
 	}
 
 
 	protected function extractUrlFromStyle(string $style): string
 	{
-		// ...
 	}
 
 
 	protected function evalString(DOMXPath $xpath, DOMNode $node, string $expression): string
 	{
-		// ...
 	}
 }
 
@@ -2385,7 +2103,6 @@ final class ToporLiveTelegramParser extends DefaultTelegramParser
 	#[Override]
 	public function supports(string $channel): bool
 	{
-		// ...
 	}
 }
 
@@ -2403,7 +2120,6 @@ final class TheVergeRssParser extends DefaultRssParser
 	#[Override]
 	public function supports(string $url): bool
 	{
-		// ...
 	}
 }
 
@@ -2421,7 +2137,6 @@ final class DbDeduplicator implements Deduplicator
 {
 	public function exists(string $fingerprint): bool
 	{
-		// ...
 	}
 }
 
@@ -2444,13 +2159,11 @@ final readonly class RssParserResolver
 		private iterable $parsers,
 		private DefaultRssParser $defaultParser,
 	) {
-		// ...
 	}
 
 
 	public function resolve(string $url): RssParser
 	{
-		// ...
 	}
 }
 
@@ -2473,13 +2186,11 @@ final readonly class TelegramParserResolver
 		private iterable $parsers,
 		private DefaultTelegramParser $defaultParser,
 	) {
-		// ...
 	}
 
 
 	public function resolve(string $channel): TelegramParser
 	{
-		// ...
 	}
 }
 
@@ -2499,7 +2210,6 @@ final readonly class ListNewsAction
 	public function __construct(
 		private NewsFeedReader $reader,
 	) {
-		// ...
 	}
 
 
@@ -2508,13 +2218,11 @@ final readonly class ListNewsAction
 	 */
 	public function __invoke(NewsFeedFilters $filters, int $perPage = 20, ?string $cursor = null): CursorPaginator
 	{
-		// ...
 	}
 
 
 	public function count(NewsFeedFilters $filters): int
 	{
-		// ...
 	}
 }
 
@@ -2532,7 +2240,6 @@ final readonly class ListPublicSourcesAction
 	public function __construct(
 		private SourcePublicReader $reader,
 	) {
-		// ...
 	}
 
 
@@ -2541,7 +2248,6 @@ final readonly class ListPublicSourcesAction
 	 */
 	public function __invoke(): array
 	{
-		// ...
 	}
 }
 
@@ -2559,7 +2265,6 @@ final readonly class ListSourcesAction
 	public function __construct(
 		private SourceAdminReader $reader,
 	) {
-		// ...
 	}
 
 
@@ -2568,7 +2273,6 @@ final readonly class ListSourcesAction
 	 */
 	public function __invoke(): array
 	{
-		// ...
 	}
 }
 
@@ -2586,7 +2290,6 @@ final readonly class ShowNewsAction
 	public function __construct(
 		private NewsFeedReader $reader,
 	) {
-		// ...
 	}
 
 
@@ -2595,7 +2298,6 @@ final readonly class ShowNewsAction
 	 */
 	public function __invoke(string $id): ?array
 	{
-		// ...
 	}
 }
 
@@ -2620,7 +2322,6 @@ final class DeliveryServiceProvider extends ServiceProvider
 	#[Override]
 	public function register(): void
 	{
-		// ...
 	}
 }
 
@@ -2702,13 +2403,11 @@ final readonly class NewsFeedFilters
 		public ?string $query = null,
 		public ?int $sourceId = null,
 	) {
-		// ...
 	}
 
 
 	public static function fromRequest(\Illuminate\Http\Request $request): self
 	{
-		// ...
 	}
 }
 
@@ -2734,7 +2433,6 @@ final readonly class EloquentNewsFeedReader implements NewsFeedReader
 		private DatabaseManager $db,
 		private NewsMediaAssetRepository $mediaAssets,
 	) {
-		// ...
 	}
 
 
@@ -2743,31 +2441,26 @@ final readonly class EloquentNewsFeedReader implements NewsFeedReader
 	 */
 	public function paginatePublished(NewsFeedFilters $filters, int $perPage, ?string $cursor): CursorPaginator
 	{
-		// ...
 	}
 
 
 	public function findPublishedById(string $id): ?array
 	{
-		// ...
 	}
 
 
 	public function count(NewsFeedFilters $filters): int
 	{
-		// ...
 	}
 
 
 	private function baseQuery(NewsFeedFilters $filters): Builder
 	{
-		// ...
 	}
 
 
 	private function decodeCursor(?string $cursor): ?Cursor
 	{
-		// ...
 	}
 
 
@@ -2784,7 +2477,6 @@ final readonly class EloquentNewsFeedReader implements NewsFeedReader
 	 */
 	private function mapRow(object $row, ?array $resolvedMedia): array
 	{
-		// ...
 	}
 
 
@@ -2793,7 +2485,6 @@ final readonly class EloquentNewsFeedReader implements NewsFeedReader
 	 */
 	private function decodeJsonArray(mixed $value): array
 	{
-		// ...
 	}
 
 
@@ -2803,7 +2494,6 @@ final readonly class EloquentNewsFeedReader implements NewsFeedReader
 	 */
 	private function normalizeMediaItems(array $media): array
 	{
-		// ...
 	}
 
 
@@ -2813,7 +2503,6 @@ final readonly class EloquentNewsFeedReader implements NewsFeedReader
 	 */
 	private function extractNewsItemIds(array $rows): array
 	{
-		// ...
 	}
 }
 
@@ -2832,7 +2521,6 @@ final readonly class EloquentSourceAdminReader implements SourceAdminReader
 	public function __construct(
 		private DatabaseManager $db,
 	) {
-		// ...
 	}
 
 
@@ -2841,7 +2529,6 @@ final readonly class EloquentSourceAdminReader implements SourceAdminReader
 	 */
 	public function list(): array
 	{
-		// ...
 	}
 
 
@@ -2850,7 +2537,6 @@ final readonly class EloquentSourceAdminReader implements SourceAdminReader
 	 */
 	private function mapSourceRow(object $source): array
 	{
-		// ...
 	}
 }
 
@@ -2869,7 +2555,6 @@ final readonly class EloquentSourcePublicReader implements SourcePublicReader
 	public function __construct(
 		private DatabaseManager $db,
 	) {
-		// ...
 	}
 
 
@@ -2878,7 +2563,6 @@ final readonly class EloquentSourcePublicReader implements SourcePublicReader
 	 */
 	public function listActive(): array
 	{
-		// ...
 	}
 }
 
@@ -2909,19 +2593,16 @@ final class ProcessRawNewsListener implements ShouldQueue
 	public function __construct(
 		private readonly NewsProcessingPipeline $pipeline,
 	) {
-		// ...
 	}
 
 
 	public function viaQueue(): string
 	{
-		// ...
 	}
 
 
 	public function handle(RawNewsCreated $event): void
 	{
-		// ...
 	}
 }
 
@@ -2948,13 +2629,11 @@ final readonly class NewsProcessingPipeline
 		private EnrichedPublisher $publisher,
 		private NewsRepository $news,
 	) {
-		// ...
 	}
 
 
 	public function handle(RawNewsData $raw): void
 	{
-		// ...
 	}
 }
 
@@ -2975,7 +2654,6 @@ final class SkipMessageException extends RuntimeException
 {
 	public function __construct(string $reason = 'skipped')
 	{
-		// ...
 	}
 }
 
@@ -2993,7 +2671,6 @@ final class AntiClickbaitStep implements PipelineStep
 {
 	public function process(RawNewsData|EnrichedNewsData $input): RawNewsData|EnrichedNewsData
 	{
-		// ...
 	}
 }
 
@@ -3013,13 +2690,11 @@ final readonly class ClassifyStep implements PipelineStep
 	public function __construct(
 		private Classifier $classifier,
 	) {
-		// ...
 	}
 
 
 	public function process(RawNewsData|EnrichedNewsData $input): RawNewsData|EnrichedNewsData
 	{
-		// ...
 	}
 }
 
@@ -3040,13 +2715,11 @@ final readonly class DeduplicateStep implements PipelineStep
 	public function __construct(
 		private NewsRepository $news,
 	) {
-		// ...
 	}
 
 
 	public function process(RawNewsData|EnrichedNewsData $input): RawNewsData|EnrichedNewsData
 	{
-		// ...
 	}
 }
 
@@ -3065,7 +2738,6 @@ final class FinalizeStep implements PipelineStep
 {
 	public function process(RawNewsData|EnrichedNewsData $input): EnrichedNewsData
 	{
-		// ...
 	}
 }
 
@@ -3083,7 +2755,6 @@ final class ImportanceStep implements PipelineStep
 {
 	public function process(RawNewsData|EnrichedNewsData $input): RawNewsData|EnrichedNewsData
 	{
-		// ...
 	}
 }
 
@@ -3101,7 +2772,6 @@ final class LanguageDetectStep implements PipelineStep
 {
 	public function process(RawNewsData|EnrichedNewsData $input): RawNewsData|EnrichedNewsData
 	{
-		// ...
 	}
 }
 
@@ -3120,7 +2790,6 @@ final class ModerationStep implements PipelineStep
 {
 	public function process(RawNewsData|EnrichedNewsData $input): RawNewsData|EnrichedNewsData
 	{
-		// ...
 	}
 }
 
@@ -3155,13 +2824,11 @@ final readonly class SentimentStep implements PipelineStep
 	public function __construct(
 		private SentimentAnalyzer $sentiment,
 	) {
-		// ...
 	}
 
 
 	public function process(RawNewsData|EnrichedNewsData $input): RawNewsData|EnrichedNewsData
 	{
-		// ...
 	}
 }
 
@@ -3180,13 +2847,11 @@ final readonly class TranslateStep implements PipelineStep
 	public function __construct(
 		private \Modules\Intelligence\Domain\Contracts\Translator $translator,
 	) {
-		// ...
 	}
 
 
 	public function process(RawNewsData|EnrichedNewsData $input): RawNewsData|EnrichedNewsData
 	{
-		// ...
 	}
 }
 
@@ -3268,7 +2933,6 @@ final class HeuristicTranslator implements Translator
 {
 	public function translate(string $text, string $targetLanguage, string $sourceLanguage): string
 	{
-		// ...
 	}
 }
 
@@ -3299,7 +2963,6 @@ final class KeywordClassifier implements Classifier
 
 	public function classify(string $content): array
 	{
-		// ...
 	}
 }
 
@@ -3332,7 +2995,6 @@ final class KeywordSentimentAnalyzer implements SentimentAnalyzer
 
 	public function score(string $content): int
 	{
-		// ...
 	}
 }
 
@@ -3353,13 +3015,11 @@ final class ObjectivelyTitleGenerator implements TitleGenerator
 
 	public function generate(string $content, string $originalTitle): string
 	{
-		// ...
 	}
 
 
 	private function truncate(string $value, int $limit = 140): string
 	{
-		// ...
 	}
 }
 
@@ -3386,13 +3046,11 @@ final readonly class EnrichedPublisher implements EnrichedPublisherContract
 		private string $importantRoutingKey = 'enriched.ready.important',
 		private string $rejectedRoutingKey = 'enriched.rejected',
 	) {
-		// ...
 	}
 
 
 	public function publish(EnrichedNewsData $enriched): void
 	{
-		// ...
 	}
 }
 
@@ -3432,13 +3090,11 @@ final class IntelligenceServiceProvider extends ServiceProvider
 	#[Override]
 	public function register(): void
 	{
-		// ...
 	}
 
 
 	public function boot(): void
 	{
-		// ...
 	}
 }
 
@@ -3462,25 +3118,21 @@ final class FingerprintGenerator
 		?string $externalId = null,
 	): string
 	{
-		// ...
 	}
 
 
 	public function attachFingerprint(RawNewsData $raw): RawNewsData
 	{
-		// ...
 	}
 
 
 	private function normalizeTitle(string $title): string
 	{
-		// ...
 	}
 
 
 	private function normalizeLink(string $link): string
 	{
-		// ...
 	}
 }
 
@@ -3510,7 +3162,6 @@ final readonly class EnrichedNewsData
 		public ?string $moderationReason,
 		public string $fingerprint,
 	) {
-		// ...
 	}
 
 
@@ -3532,7 +3183,6 @@ final readonly class EnrichedNewsData
 	 */
 	public function with(array $overrides): self
 	{
-		// ...
 	}
 }
 
@@ -3568,7 +3218,6 @@ final readonly class RawNewsData
 		public string $fingerprint,
 		public ?int $rawId = null,
 	) {
-		// ...
 	}
 
 
@@ -3592,7 +3241,6 @@ final readonly class RawNewsData
 	 */
 	public function with(array $overrides): self
 	{
-		// ...
 	}
 }
 
@@ -3624,7 +3272,6 @@ final readonly class RawNewsCreated
 	public function __construct(
 		public RawNewsData $raw,
 	) {
-		// ...
 	}
 }
 
@@ -3632,6 +3279,6 @@ final readonly class RawNewsCreated
 ```
 ---
 **File Statistics**
-- **Size**: 81.75 KB
-- **Lines**: 3637
-File: `../docs/BUSINESS_LOGIC_DEPENDENCIES.md`
+- **Size**: 72.65 KB
+- **Lines**: 3279
+File: `../docs/PROJECT_INTERFACE.md`
