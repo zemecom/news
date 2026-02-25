@@ -1,7 +1,0 @@
-services:
-  app:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile
-      args:
-        WITH_XDEBUG: 0

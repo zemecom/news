@@ -27,7 +27,7 @@ build:
 dev:
 	@# Run development servers concurrently (server, queue, logs, vite) inside Docker
 	$(DOCKER_APP) npx concurrently -c "#93c5fd,#c4b5fd,#fb7185,#fdba74" \
-		"php artisan serve --host=0.0.0.0 --port=80" \
+		"php artisan octane:start --server=roadrunner --host=0.0.0.0 --rpc-port=6001 --port=8000" \
 		"php artisan queue:listen --tries=1 --timeout=0" \
 		"php artisan pail --timeout=0" \
 		"npm run dev" \
@@ -158,7 +158,7 @@ queue:
 
 serve:
 	@# Serve the application inside Docker
-	$(ARTISAN) serve --host=0.0.0.0 --port=80
+	$(ARTISAN) octane:start --server=roadrunner --host=0.0.0.0 --rpc-port=6001 --port=8000
 
 logs:
 	@# View output from containers

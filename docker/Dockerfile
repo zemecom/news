@@ -51,18 +51,6 @@ ENV PHP_OPCACHE_ENABLE="1" \
     PHP_OPCACHE_MEMORY_CONSUMPTION="192" \
     PHP_OPCACHE_MAX_WASTED_PERCENTAGE="10"
 
-# Configure PHP-FPM Pool
-RUN rm -rf /etc/php85/php-fpm.d/www.conf && echo "[www]" > /etc/php85/php-fpm.d/www.conf \
-    && echo "user = www-data" >> /etc/php85/php-fpm.d/www.conf \
-    && echo "group = www-data" >> /etc/php85/php-fpm.d/www.conf \
-    && echo "listen = 0.0.0.0:9000" >> /etc/php85/php-fpm.d/www.conf \
-    && echo "pm = dynamic" >> /etc/php85/php-fpm.d/www.conf \
-    && echo "pm.max_children = 5" >> /etc/php85/php-fpm.d/www.conf \
-    && echo "pm.start_servers = 2" >> /etc/php85/php-fpm.d/www.conf \
-    && echo "pm.min_spare_servers = 1" >> /etc/php85/php-fpm.d/www.conf \
-    && echo "pm.max_spare_servers = 3" >> /etc/php85/php-fpm.d/www.conf \
-    && echo "clear_env = no" >> /etc/php85/php-fpm.d/www.conf \
-    && echo "catch_workers_output = yes" >> /etc/php85/php-fpm.d/www.conf
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/local/bin/composer
@@ -71,8 +59,8 @@ COPY --from=composer:latest /usr/bin/composer /usr/local/bin/composer
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
     CMD php -m || exit 1
 
-EXPOSE 9000
-CMD ["php-fpm85", "-F"]
+EXPOSE 8000
+CMD ["php", "artisan", "octane:start", "--server=roadrunner", "--host=0.0.0.0", "--rpc-port=6001", "--port=8000"]
 
 # ==========================================
 # DEV STAGE (Local Development)

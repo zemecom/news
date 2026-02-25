@@ -20,9 +20,13 @@
         "filament/filament": "^4.0",
         "guzzlehttp/guzzle": "^7.9",
         "laravel/framework": "^12.0",
+        "laravel/octane": "^2.14",
         "laravel/tinker": "^2.10.1",
         "php-amqplib/php-amqplib": "^3.6",
         "saloonphp/saloon": "^3.0",
+        "spiral/roadrunner": "^2025.1",
+        "spiral/roadrunner-cli": "^2.6.0",
+        "spiral/roadrunner-http": "^3.3.0",
         "vladimir-yuldashev/laravel-queue-rabbitmq": "^14.0"
     },
     "require-dev": {

@@ -18,6 +18,7 @@
     - Laravel 12 + strict types.
     - Modular Monolith структура: `src/Modules/{Crawler,Intelligence,Catalog,Delivery,Shared}`.
     - Контейнер модулей подключается через `app/Providers/ModulesServiceProvider.php`.
+    - **Высокопроизводительный сервер**: Laravel Octane + RoadRunner (заменяет классическую связку Nginx + PHP-FPM).
 - **Интеграции**
     - Saloon используется для HTTP-клиентов (RSS/Telegram web endpoint).
     - RabbitMQ:
@@ -123,7 +124,7 @@
 
 ## 2.5 Инфраструктура и локальное хранение данных
 
-- Docker Compose поднимает `app`, `nginx`, `postgres`, `redis`, `rabbitmq`, `worker` (Laravel Queue worker для `crawler_tasks,intelligence_tasks,media_tasks`).
+- Docker Compose поднимает `app` (RoadRunner), `postgres`, `redis`, `rabbitmq`, `worker` (Laravel Queue worker для `crawler_tasks,intelligence_tasks,media_tasks`). Nginx удален за ненадобностью.
 - Данные Postgres теперь персистятся на диск проекта:
     - `./.docker-data/postgres:/var/lib/postgresql/data`.
 - Данные Redis и RabbitMQ также персистятся на диск проекта:
@@ -197,7 +198,7 @@
 
 ## 5) Текущие операционные команды
 
-- Старт окружения: `docker compose up -d --build`
+- Старт окружения: `docker compose up -d --build` (сервер автоматически запустится через `php artisan octane:start`)
 - Миграции: `docker compose exec -T app php artisan migrate --force`
 - Сиды: `docker compose exec -T app php artisan db:seed --force`
 - Публичные storage-ссылки: `docker compose exec -T app php artisan storage:link`
