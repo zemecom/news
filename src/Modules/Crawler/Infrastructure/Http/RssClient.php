@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Modules\Crawler\Infrastructure\Http;
 
 use Illuminate\Support\Collection;
-use InvalidArgumentException;
 use Modules\Crawler\Domain\Contracts\RssClient as RssClientContract;
+use Modules\Crawler\Infrastructure\Security\SourceUrlPolicy;
 use Modules\Crawler\Infrastructure\Services\RssParserResolver;
 use Saloon\Enums\Method;
 
@@ -14,7 +14,8 @@ final readonly class RssClient implements RssClientContract
 {
     public function __construct(
         private RssConnector $connector,
-        private RssParserResolver $resolver
+        private RssParserResolver $resolver,
+        private SourceUrlPolicy $sourceUrlPolicy,
     ) {}
 
     /**
@@ -22,7 +23,7 @@ final readonly class RssClient implements RssClientContract
      */
     public function fetch(string $url, ?\Carbon\Carbon $dateFrom = null, ?\Carbon\Carbon $dateTo = null, ?int $limit = null): Collection
     {
-        $this->assertAllowedHost($url);
+        $this->sourceUrlPolicy->assertAllowedForRss($url);
         $response = $this->connector->send(
             new class($url) extends \Saloon\Http\Request
             {
@@ -78,19 +79,5 @@ final readonly class RssClient implements RssClientContract
         }
 
         return $items;
-    }
-
-    private function assertAllowedHost(string $url): void
-    {
-        $host = parse_url($url, PHP_URL_HOST);
-        $allowlist = config('crawler.allowlist', []);
-
-        if ($host === null || $host === '') {
-            throw new InvalidArgumentException('Invalid RSS URL host.');
-        }
-
-        if ($allowlist !== [] && ! in_array($host, $allowlist, true)) {
-            throw new InvalidArgumentException('RSS host is not in allowlist.');
-        }
     }
 }

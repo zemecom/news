@@ -8,6 +8,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
 use Modules\Crawler\Domain\Contracts\TelegramClient as TelegramClientContract;
+use Modules\Crawler\Infrastructure\Security\SourceUrlPolicy;
 use Modules\Crawler\Infrastructure\Services\TelegramParserResolver;
 use Saloon\Enums\Method;
 use Saloon\Http\Response;
@@ -16,14 +17,15 @@ final readonly class TelegramClient implements TelegramClientContract
 {
     public function __construct(
         private RssConnector $connector,
-        private TelegramParserResolver $resolver
+        private TelegramParserResolver $resolver,
+        private SourceUrlPolicy $sourceUrlPolicy,
     ) {}
 
     public function fetch(string $channel, ?\Carbon\Carbon $dateFrom = null, ?\Carbon\Carbon $dateTo = null, ?int $limit = null): Collection
     {
         $channelName = $this->resolveChannelName($channel);
         $baseUrl = sprintf('https://t.me/s/%s', $channelName);
-        $this->assertAllowedHost($baseUrl);
+        $this->sourceUrlPolicy->assertAllowedForTelegram($baseUrl);
 
         $limit ??= 50; // Provide a minimal hardcode fallback just in case, though Command ensures it's set.
         $before = null;
@@ -200,20 +202,6 @@ final readonly class TelegramClient implements TelegramClientContract
         }
 
         return $normalized;
-    }
-
-    private function assertAllowedHost(string $url): void
-    {
-        $host = parse_url($url, PHP_URL_HOST);
-        $allowlist = config('crawler.allowlist', []);
-
-        if ($host === null || $host === '') {
-            throw new InvalidArgumentException('Invalid Telegram URL host.');
-        }
-
-        if ($allowlist !== [] && ! in_array($host, $allowlist, true)) {
-            throw new InvalidArgumentException('Telegram host is not in allowlist.');
-        }
     }
 
     private function extractPostId(string $externalId): ?int

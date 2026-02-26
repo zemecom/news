@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Artisan;
 use Livewire\Component;
 use Modules\Catalog\Infrastructure\Persistence\Models\Source;
 use Modules\Crawler\Application\Jobs\FetchSourceJob;
+use Modules\Shared\Application\Services\SourceRuntimeHealthPolicy;
 use Throwable;
 
 class CrawlerLog extends Component
@@ -52,10 +53,37 @@ class CrawlerLog extends Component
             if ($this->sourceId !== null) {
                 $source = Source::query()
                     ->whereKey($this->sourceId)
-                    ->first(['id', 'url', 'type', 'language_default']);
+                    ->first([
+                        'id',
+                        'url',
+                        'type',
+                        'language_default',
+                        'last_error_at',
+                        'error_streak',
+                        'retry_backoff_state',
+                    ]);
 
                 if ($source === null) {
                     $this->appendLog(sprintf('Source #%d not found.', $this->sourceId));
+
+                    return;
+                }
+
+                /** @var SourceRuntimeHealthPolicy $runtimeHealthPolicy */
+                $runtimeHealthPolicy = app(SourceRuntimeHealthPolicy::class);
+                $nextRetryAt = $runtimeHealthPolicy->resolveNextRetryAt(
+                    retryBackoffState: is_array($source->getAttribute('retry_backoff_state')) ? $source->getAttribute('retry_backoff_state') : null,
+                    errorStreak: (int) $source->getAttribute('error_streak'),
+                    lastErrorAt: $source->getAttribute('last_error_at'),
+                );
+
+                if ($runtimeHealthPolicy->isInBackoffWindow($nextRetryAt)) {
+                    $this->appendLog(sprintf(
+                        'Source #%d is in temporary backoff until %s (error_streak=%d).',
+                        (int) $source->getAttribute('id'),
+                        $nextRetryAt?->setTimezone((string) config('app.timezone', 'UTC'))->toDateTimeString() ?? 'n/a',
+                        (int) $source->getAttribute('error_streak'),
+                    ));
 
                     return;
                 }

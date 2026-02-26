@@ -64,18 +64,28 @@ final class MessagingSetupCommand extends Command
 ```php
 namespace App\Console\Commands;
 
+use Carbon\CarbonImmutable as CarbonImmutable;
 use Illuminate\Console\Command as Command;
 use Modules\Catalog\Infrastructure\Persistence\Models\NewsItem as NewsItem;
 use Modules\Catalog\Infrastructure\Persistence\Models\Source as Source;
+use Modules\Shared\Application\Services\SourceRuntimeHealthPolicy as SourceRuntimeHealthPolicy;
 use Throwable as Throwable;
 
 final class NewsCrawlCommand extends Command
 {
-	protected $signature = "news:crawl \n                            {--source-id= : Crawl only one source id}\n                            {--date-from= : Parse articles from this date (Y-m-d H:i:s)}\n                            {--date-to= : Parse articles until this date (Y-m-d H:i:s)}\n                            {--limit= : Maximum number of articles to parse per source}\n                            {--sync : Run synchronously without queue}";
+	protected $signature = "news:crawl \n                            {--source-id= : Crawl only one source id}\n                            {--date-from= : Parse articles from this date (Y-m-d H:i:s)}\n                            {--date-to= : Parse articles until this date (Y-m-d H:i:s)}\n                            {--limit= : Maximum number of articles to parse per source}\n                            {--ignore-backoff : Ignore runtime source backoff and force fetch}\n                            {--sync : Run synchronously without queue}";
 	protected $description = 'Fetch active sources and enqueue raw news jobs (RabbitMQ-backed Laravel queue).';
 
 
-	public function handle(): int
+	public function handle(SourceRuntimeHealthPolicy $runtimeHealthPolicy): int
+	{
+	}
+
+
+	/**
+	 * @return array<string, mixed>|null
+	 */
+	private function normalizeRetryBackoffState(mixed $state): ?array
 	{
 	}
 }
@@ -498,6 +508,7 @@ use Illuminate\Support\Facades\Artisan as Artisan;
 use Livewire\Component as Component;
 use Modules\Catalog\Infrastructure\Persistence\Models\Source as Source;
 use Modules\Crawler\Application\Jobs\FetchSourceJob as FetchSourceJob;
+use Modules\Shared\Application\Services\SourceRuntimeHealthPolicy as SourceRuntimeHealthPolicy;
 use Throwable as Throwable;
 
 class CrawlerLog extends Component
@@ -1213,9 +1224,16 @@ namespace Modules\Catalog\Infrastructure\Persistence;
 use Illuminate\Support\Facades\DB as DB;
 use Modules\Catalog\Domain\Contracts\SourceRepository as SourceRepository;
 use Modules\Catalog\Infrastructure\Persistence\Models\Source as Source;
+use Modules\Shared\Application\Services\SourceRuntimeHealthPolicy as SourceRuntimeHealthPolicy;
 
 final class EloquentSourceRepository implements SourceRepository
 {
+	public function __construct(
+		private readonly SourceRuntimeHealthPolicy $runtimeHealthPolicy,
+	) {
+	}
+
+
 	public function updateSuccess(int $sourceId): void
 	{
 	}
@@ -1506,6 +1524,69 @@ final class ProcessNewsJob implements ShouldQueue
 
 
 ```
+###  Path: `/src/Modules/Crawler/Application/Services/IncomingContentSanitizer.php`
+
+```php
+namespace Modules\Crawler\Application\Services;
+
+final class IncomingContentSanitizer
+{
+	public function sanitizeText(string $value): string
+	{
+	}
+
+
+	public function sanitizeUrl(?string $value): ?string
+	{
+	}
+
+
+	/**
+	 * @return array<int, string>
+	 */
+	public function sanitizeLinks(mixed $value): array
+	{
+	}
+
+
+	/**
+	 * @return array<int, string>
+	 */
+	public function sanitizeCategories(mixed $value): array
+	{
+	}
+
+
+	/**
+	 * @return array<int, array{url:string,type:?string}>
+	 */
+	public function sanitizeMedia(mixed $value): array
+	{
+	}
+
+
+	private function stripDangerousHtml(string $value): string
+	{
+	}
+
+
+	private function replaceBlockTagsWithBreaks(string $value): string
+	{
+	}
+
+
+	private function normalizeString(mixed $value): ?string
+	{
+	}
+
+
+	private function normalizeMediaType(mixed $value): ?string
+	{
+	}
+}
+
+
+```
 ###  Path: `/src/Modules/Crawler/Application/Services/RawNewsFactory.php`
 
 ```php
@@ -1514,11 +1595,13 @@ namespace Modules\Crawler\Application\Services;
 use Carbon\CarbonImmutable as CarbonImmutable;
 use Modules\Shared\Application\Services\FingerprintGenerator as FingerprintGenerator;
 use Modules\Shared\Domain\DTO\RawNewsData as RawNewsData;
+use Throwable as Throwable;
 
 final readonly class RawNewsFactory
 {
 	public function __construct(
 		private FingerprintGenerator $fingerprintGenerator,
+		private IncomingContentSanitizer $sanitizer,
 	) {
 	}
 
@@ -1528,6 +1611,21 @@ final readonly class RawNewsFactory
 	 * @param  array<string, mixed>  $item
 	 */
 	public function fromRss(array $source, array $item): RawNewsData
+	{
+	}
+
+
+	private function parsePublishedAt(mixed $value): CarbonImmutable
+	{
+	}
+
+
+	private function normalizeString(mixed $value): ?string
+	{
+	}
+
+
+	private function normalizeAuthor(mixed $author): ?string
 	{
 	}
 }
@@ -1700,8 +1798,8 @@ interface TelegramParser
 namespace Modules\Crawler\Infrastructure\Http;
 
 use Illuminate\Support\Collection as Collection;
-use InvalidArgumentException as InvalidArgumentException;
 use Modules\Crawler\Domain\Contracts\RssClient as RssClientContract;
+use Modules\Crawler\Infrastructure\Security\SourceUrlPolicy as SourceUrlPolicy;
 use Modules\Crawler\Infrastructure\Services\RssParserResolver as RssParserResolver;
 use Saloon\Enums\Method as Method;
 
@@ -1710,6 +1808,7 @@ final readonly class RssClient implements RssClientContract
 	public function __construct(
 		private RssConnector $connector,
 		private RssParserResolver $resolver,
+		private SourceUrlPolicy $sourceUrlPolicy,
 	) {
 	}
 
@@ -1723,11 +1822,6 @@ final readonly class RssClient implements RssClientContract
 		?\Carbon\Carbon $dateTo = null,
 		?int $limit = null,
 	): Collection
-	{
-	}
-
-
-	private function assertAllowedHost(string $url): void
 	{
 	}
 }
@@ -1764,6 +1858,7 @@ use Illuminate\Support\Collection as Collection;
 use Illuminate\Support\Facades\Log as Log;
 use InvalidArgumentException as InvalidArgumentException;
 use Modules\Crawler\Domain\Contracts\TelegramClient as TelegramClientContract;
+use Modules\Crawler\Infrastructure\Security\SourceUrlPolicy as SourceUrlPolicy;
 use Modules\Crawler\Infrastructure\Services\TelegramParserResolver as TelegramParserResolver;
 use Saloon\Enums\Method as Method;
 use Saloon\Http\Response as Response;
@@ -1773,6 +1868,7 @@ final readonly class TelegramClient implements TelegramClientContract
 	public function __construct(
 		private RssConnector $connector,
 		private TelegramParserResolver $resolver,
+		private SourceUrlPolicy $sourceUrlPolicy,
 	) {
 	}
 
@@ -1798,11 +1894,6 @@ final readonly class TelegramClient implements TelegramClientContract
 
 
 	private function normalizeChannelName(string $name): string
-	{
-	}
-
-
-	private function assertAllowedHost(string $url): void
 	{
 	}
 
@@ -2114,6 +2205,70 @@ final class TheVergeRssParser extends DefaultRssParser
 {
 	#[Override]
 	public function supports(string $url): bool
+	{
+	}
+}
+
+
+```
+###  Path: `/src/Modules/Crawler/Infrastructure/Security/SourceUrlPolicy.php`
+
+```php
+namespace Modules\Crawler\Infrastructure\Security;
+
+use InvalidArgumentException as InvalidArgumentException;
+
+final class SourceUrlPolicy
+{
+	public function assertAllowedForRss(string $url): void
+	{
+	}
+
+
+	public function assertAllowedForTelegram(string $url): void
+	{
+	}
+
+
+	private function assertAllowed(string $url, string $sourceType): void
+	{
+	}
+
+
+	private function extractHost(string $url): string
+	{
+	}
+
+
+	private function extractScheme(string $url): string
+	{
+	}
+
+
+	private function assertAllowedScheme(string $scheme, string $sourceType): void
+	{
+	}
+
+
+	private function assertAllowedHost(string $host, string $sourceType): void
+	{
+	}
+
+
+	private function assertHostIsPublic(string $host, string $sourceType): void
+	{
+	}
+
+
+	/**
+	 * @return array<int, string>
+	 */
+	private function resolveAllowlist(string $sourceType): array
+	{
+	}
+
+
+	private function matchesPattern(string $host, string $pattern): bool
 	{
 	}
 }
@@ -3205,6 +3360,55 @@ final class FingerprintGenerator
 
 
 ```
+###  Path: `/src/Modules/Shared/Application/Services/SourceRuntimeHealthPolicy.php`
+
+```php
+namespace Modules\Shared\Application\Services;
+
+use Carbon\CarbonImmutable as CarbonImmutable;
+use Carbon\CarbonInterface as CarbonInterface;
+use Throwable as Throwable;
+
+final class SourceRuntimeHealthPolicy
+{
+	/**
+	 * @param  array<string, mixed>|null  $retryBackoffState
+	 */
+	public function resolveNextRetryAt(?array $retryBackoffState, int $errorStreak, mixed $lastErrorAt): ?CarbonImmutable
+	{
+	}
+
+
+	public function calculateBackoffMinutes(int $errorStreak): int
+	{
+	}
+
+
+	public function calculateNextRetryAt(int $errorStreak, CarbonInterface $failedAt): ?CarbonImmutable
+	{
+	}
+
+
+	/**
+	 * @return array<string, mixed>|null
+	 */
+	public function buildFailureBackoffState(int $errorStreak, CarbonInterface $failedAt): ?array
+	{
+	}
+
+
+	public function isInBackoffWindow(?CarbonImmutable $nextRetryAt, ?CarbonInterface $now = null): bool
+	{
+	}
+
+
+	private function parseDateTime(mixed $value): ?CarbonImmutable
+	{
+	}
+}
+
+
+```
 ###  Path: `/src/Modules/Shared/Domain/Contracts/NewsStore.php`
 
 ```php
@@ -3426,6 +3630,6 @@ final readonly class SourceFetchSucceeded
 ```
 ---
 **File Statistics**
-- **Size**: 76.35 KB
-- **Lines**: 3432
+- **Size**: 80.21 KB
+- **Lines**: 3635
 File: `../docs/PROJECT_INTERFACE.md`

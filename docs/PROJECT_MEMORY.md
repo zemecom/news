@@ -78,8 +78,22 @@
     - Источники `rss` и `telegram` реально обрабатываются.
     - Поддержан массовый Telegram fetch через AJAX-pagination (`before`) с встроенным rate-limiting и остановкой по диапазону дат.
     - Парсер Telegram (`DefaultTelegramParser`) корректно извлекает все медиафайлы из альбомов и прикрепленные ссылки.
+    - Введена централизованная URL-политика `SourceUrlPolicy`:
+        - типо-специфичный allowlist (`rss`/`telegram`) + `global` allowlist;
+        - поддержка wildcard-host (`*.example.com`);
+        - проверка разрешенных схем источников (`crawler.security.allowed_source_schemes`);
+        - SSRF hardening: блокировка локальных/private hosts (`localhost`, `.local`, private/reserved IP) при `crawler.security.deny_private_hosts=true`.
+    - Введен sanitizer входящего контента `IncomingContentSanitizer`, который:
+        - удаляет опасный HTML (`script/style/iframe/...`) и нормализует текст;
+        - фильтрует URL по разрешенным схемам (`crawler.security.allowed_url_schemes`);
+        - очищает `content/title/author/categories/links/media` до безопасного формата перед сохранением.
     - Парсинг асинхронный: команда `news:crawl` распределяет задания (`FetchSourceJob`) в очередь `crawler_tasks`.
     - Внедрен мониторинг здоровья источников (**Source Health Tracking**): `FeedFetcherAction` публикует события в `Shared\Domain\Events`, которые слушатель в `Catalog` использует для обновления `last_success_at`, `last_error_at` и `error_streak`.
+    - Runtime-контроль ошибок источников расширен:
+        - добавлена policy `SourceRuntimeHealthPolicy` (экспоненциальный backoff по `error_streak`);
+        - `EloquentSourceRepository` теперь пишет `retry_backoff_state.next_retry_at` при ошибке и сбрасывает backoff при успехе;
+        - `news:crawl` и Livewire-runner пропускают источники, находящиеся в backoff-окне;
+        - в `news:crawl` добавлена опция `--ignore-backoff` для принудительного запуска.
     - Команда диспетчеризации: `php artisan news:crawl`.
 
 - **Intelligence**
@@ -161,8 +175,8 @@
 
 - [x] Улучшение парсинга Telegram (AJAX-пагинация, остановка по датам, извлечение альбомов и ссылок без бана IP).
 - [x] Отслеживание состояния здоровья источников (`last_success_at`, `last_error_at`, `error_streak`) через доменные события.
-- [ ] Полноценная политика allowlist и security hardening входящего HTML (sanitization).
-- [ ] Расширить контроль ошибок источников (`error_streak`, `last_error_at`, `last_success_at`) в runtime-логике.
+- [x] Полноценная политика allowlist и security hardening входящего HTML (sanitization).
+- [x] Расширить контроль ошибок источников (`error_streak`, `last_error_at`, `last_success_at`) в runtime-логике.
 
 ## 3.2 Intelligence / AI
 
@@ -219,6 +233,7 @@
 - Публичные storage-ссылки: `docker compose exec -T app php artisan storage:link`
 - Инициализация топологии RabbitMQ: `docker compose exec -T app php artisan news:messaging:setup`
 - Сбор новостей: `docker compose exec -T app php artisan news:crawl`
+- Принудительный сбор с игнорированием runtime-backoff: `docker compose exec -T app php artisan news:crawl --ignore-backoff`
 - Обработка очередей: `docker compose exec -T app php artisan queue:work --queue=crawler_tasks,intelligence_tasks,media_tasks --tries=3`
 - Backfill медиа-ассетов: `docker compose exec -T app php artisan news:media:backfill --dry-run`
 - Тесты: `docker compose exec -T app composer test` (или `make test`)

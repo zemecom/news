@@ -85,6 +85,7 @@ _SOURCE: Directory Structure_
             │   │   ├── FetchSourceJob.php
             │   │   ├── ProcessNewsJob.php
             │   ├── Services/
+            │   │   └── IncomingContentSanitizer.php
             │   │   └── RawNewsFactory.php
             ├── CrawlerServiceProvider.php
             ├── Domain/
@@ -115,6 +116,8 @@ _SOURCE: Directory Structure_
             │       │   ├── DefaultTelegramParser.php
             │       │   ├── ToporLiveTelegramParser.php
             │       ├── TheVergeRssParser.php
+            │   └── Security/
+            │       ├── SourceUrlPolicy.php
             │   └── Services/
             │       └── DbDeduplicator.php
             │       └── RssParserResolver.php
@@ -179,6 +182,7 @@ _SOURCE: Directory Structure_
             └── Application/
                 ├── Services/
                 │   └── FingerprintGenerator.php
+                │   └── SourceRuntimeHealthPolicy.php
             └── Domain/
                 └── Contracts/
                     ├── NewsStore.php
@@ -196,6 +200,6 @@ _SOURCE: Directory Structure_
 ```
 ---
 **File Statistics**
-- **Size**: 8.59 KB
-- **Lines**: 202
+- **Size**: 8.8 KB
+- **Lines**: 206
 File: `../docs/PROJECT_STRUCTURE.md`

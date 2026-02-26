@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use Carbon\CarbonImmutable;
 use Illuminate\Console\Command;
 use Modules\Catalog\Infrastructure\Persistence\Models\NewsItem;
 use Modules\Catalog\Infrastructure\Persistence\Models\Source;
+use Modules\Shared\Application\Services\SourceRuntimeHealthPolicy;
 use Throwable;
 
 final class NewsCrawlCommand extends Command
@@ -16,11 +18,12 @@ final class NewsCrawlCommand extends Command
                             {--date-from= : Parse articles from this date (Y-m-d H:i:s)}
                             {--date-to= : Parse articles until this date (Y-m-d H:i:s)}
                             {--limit= : Maximum number of articles to parse per source}
+                            {--ignore-backoff : Ignore runtime source backoff and force fetch}
                             {--sync : Run synchronously without queue}';
 
     protected $description = 'Fetch active sources and enqueue raw news jobs (RabbitMQ-backed Laravel queue).';
 
-    public function handle(): int
+    public function handle(SourceRuntimeHealthPolicy $runtimeHealthPolicy): int
     {
         $query = Source::query()
             ->where('is_active', true)
@@ -32,7 +35,16 @@ final class NewsCrawlCommand extends Command
         }
 
         /** @var \Illuminate\Database\Eloquent\Collection<int, Source> $sources */
-        $sources = $query->get(['id', 'url', 'type', 'language_default']);
+        $sources = $query->get([
+            'id',
+            'url',
+            'type',
+            'language_default',
+            'last_success_at',
+            'last_error_at',
+            'error_streak',
+            'retry_backoff_state',
+        ]);
         if ($sources->isEmpty()) {
             $this->warn('No active sources found.');
 
@@ -68,6 +80,8 @@ final class NewsCrawlCommand extends Command
         }
 
         $isSync = (bool) $this->option('sync');
+        $ignoreBackoff = (bool) $this->option('ignore-backoff');
+        $now = CarbonImmutable::now();
 
         if ($isSync) {
             /** @var \Modules\Crawler\Application\Actions\FeedFetcherAction $fetcher */
@@ -78,6 +92,27 @@ final class NewsCrawlCommand extends Command
         foreach ($sources as $source) {
             $sourceId = (int) $source->getAttribute('id');
             $sourceUrl = (string) $source->getAttribute('url');
+
+            if (! $ignoreBackoff) {
+                $nextRetryAt = $runtimeHealthPolicy->resolveNextRetryAt(
+                    retryBackoffState: $this->normalizeRetryBackoffState($source->getAttribute('retry_backoff_state')),
+                    errorStreak: (int) $source->getAttribute('error_streak'),
+                    lastErrorAt: $source->getAttribute('last_error_at'),
+                );
+
+                if ($runtimeHealthPolicy->isInBackoffWindow($nextRetryAt, $now)) {
+                    $this->warn(sprintf(
+                        'Skipping source #%d (%s): temporary backoff until %s (error_streak=%d).',
+                        $sourceId,
+                        $sourceUrl,
+                        $nextRetryAt?->setTimezone((string) config('app.timezone', 'UTC'))->toDateTimeString() ?? 'n/a',
+                        (int) $source->getAttribute('error_streak')
+                    ));
+
+                    continue;
+                }
+            }
+
             try {
                 if ($isSync) {
                     $this->info(sprintf('Sync-fetching source #%d (%s)...', $sourceId, $sourceUrl));
@@ -152,5 +187,13 @@ final class NewsCrawlCommand extends Command
         $this->info(sprintf('Finished. Processed %d sources.', $sources->count()));
 
         return self::SUCCESS;
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function normalizeRetryBackoffState(mixed $state): ?array
+    {
+        return is_array($state) ? $state : null;
     }
 }

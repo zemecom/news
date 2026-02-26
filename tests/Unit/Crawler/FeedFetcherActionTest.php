@@ -8,6 +8,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
 use Modules\Crawler\Application\Actions\FeedFetcherAction;
+use Modules\Crawler\Application\Services\IncomingContentSanitizer;
 use Modules\Crawler\Application\Services\RawNewsFactory;
 use Modules\Crawler\Domain\Contracts\RawPublisher;
 use Modules\Crawler\Domain\Contracts\RssClient;
@@ -27,7 +28,7 @@ final class FeedFetcherActionTest extends TestCase
         $rssClient = $this->createMock(RssClient::class);
         $telegramClient = $this->createMock(TelegramClient::class);
         $publisher = $this->createMock(RawPublisher::class);
-        $rawNewsFactory = new RawNewsFactory(new FingerprintGenerator);
+        $rawNewsFactory = new RawNewsFactory(new FingerprintGenerator, new IncomingContentSanitizer);
 
         $source = [
             'id' => 11,
@@ -87,7 +88,7 @@ final class FeedFetcherActionTest extends TestCase
         $rssClient = $this->createMock(RssClient::class);
         $telegramClient = $this->createMock(TelegramClient::class);
         $publisher = $this->createMock(RawPublisher::class);
-        $rawNewsFactory = new RawNewsFactory(new FingerprintGenerator);
+        $rawNewsFactory = new RawNewsFactory(new FingerprintGenerator, new IncomingContentSanitizer);
 
         $rssClient
             ->expects($this->never())
