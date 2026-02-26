@@ -107,6 +107,10 @@
     - Репозиторий и модели для хранения сырого и обогащенного контента.
     - Дедуп на уровне БД через `raw_fingerprint` (unique).
     - Поддержка media (`image_url`, `media`) и `source_metadata`.
+    - Добавлены индексы производительности под delivery-фильтры:
+        - `news_items_source_status_feed_idx` (`source_id`, `status`, `published_at`, `id`) для курсорной ленты по источнику;
+        - `news_items_tags_gin_idx` (GIN `jsonb_path_ops`) для `whereJsonContains(tags, ...)`;
+        - trigram GIN индексы `news_items_title_original_trgm_idx` и `news_items_title_generated_trgm_idx` для поиска `ILIKE`.
     - Добавлено отдельное хранилище `news_media_assets`:
         - хранит `source_url` (оригинал), `local_path` (локальная копия), MIME/size/checksum и статус загрузки;
         - API отдает `image_url`/`media` как эффективные ссылки (локальные при наличии) + `*_original`/`*_local` для fallback.
@@ -188,7 +192,7 @@
 
 ## 3.3 Catalog / поиск
 
-- [ ] Добавить/проверить индексы под фактический профиль запросов (GIN/trigram/и т.д.).
+- [x] Добавить/проверить индексы под фактический профиль запросов (GIN/trigram/и т.д.).
 - [ ] Реализовать `pgvector`-ветку дедупа/поиска (или задокументированный fallback-only режим).
 - [ ] Архивирование старых данных в отдельное хранилище по retention-политике.
 
