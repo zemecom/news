@@ -41,7 +41,7 @@ services:
       args:
         <<: *app_build_args
         WITH_XDEBUG: ${WITH_XDEBUG_WORKER:-0}
-    command: ["php", "artisan", "queue:work", "--queue=crawler_tasks,intelligence_tasks,media_tasks", "--tries=3", "--sleep=1", "--timeout=120"]
+    command: ["sh", "docker/bin/start-worker.sh"]
     ports: []
     healthcheck:
       test: ["CMD", "php", "artisan", "app:health-check"]

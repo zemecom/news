@@ -150,6 +150,7 @@
     - `smoke-api` в `Makefile` использует `http://127.0.0.1:8000` (совместимо с текущим compose без nginx).
     - Для dev включен `RoadRunner reload` через `.rr.yaml`; `make dev`, `make serve` и контейнерный `CMD` запускают Octane с `--rr-config=.rr.yaml`.
     - Старт Octane вынесен в `docker/bin/start-octane.sh`: бинарь `rr` переносится из `/app/rr` в `/tmp/roadrunner-bin/rr` и удаляется из корня проекта.
+    - Старт worker вынесен в `docker/bin/start-worker.sh`: перед `queue:work` автоматически декларируются очереди `crawler_tasks`, `intelligence_tasks`, `media_tasks` (устраняет `basic.get not_found` в RabbitMQ логах).
 - Для локальных медиа добавлен обязательный `storage:link` в setup-процессы.
 
 ---
