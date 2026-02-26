@@ -38,11 +38,8 @@ RUN --mount=type=cache,target=/var/cache/apk \
     php85-zip \
     php85-sockets \
     php85-pecl-redis \
+    ca-certificates \
     icu-data-full \
-    nodejs \
-    npm \
-    git \
-    unzip \
     && ln -s /usr/bin/php85 /usr/bin/php
 
 # Configure Opcache (common settings)
@@ -60,7 +57,7 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
     CMD php -m || exit 1
 
 EXPOSE 8000
-CMD ["php", "artisan", "octane:start", "--server=roadrunner", "--host=0.0.0.0", "--rpc-port=6001", "--port=8000"]
+CMD ["sh", "docker/bin/start-octane.sh"]
 
 # ==========================================
 # DEV STAGE (Local Development)
@@ -73,8 +70,13 @@ ENV PHP_OPCACHE_VALIDATE_TIMESTAMPS="1"
 # Setup Xdebug if needed
 ARG WITH_XDEBUG=0
 RUN --mount=type=cache,target=/var/cache/apk \
-    if [ "$WITH_XDEBUG" = "1" ]; then \
-    apk update && apk add php85-pecl-xdebug \
+    apk update && apk add \
+    nodejs \
+    npm \
+    git \
+    unzip \
+    && if [ "$WITH_XDEBUG" = "1" ]; then \
+    apk add php85-pecl-xdebug \
     && if [ -f docker/php/conf.d/xdebug.ini ]; then cp docker/php/conf.d/xdebug.ini /etc/php85/conf.d/xdebug.ini; fi; \
     fi
 

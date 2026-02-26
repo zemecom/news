@@ -318,6 +318,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller as Controller;
 use App\Http\Requests\Api\NewsIndexRequest as NewsIndexRequest;
+use Carbon\CarbonImmutable as CarbonImmutable;
 use Illuminate\Http\JsonResponse as JsonResponse;
 use Modules\Delivery\Application\Actions\ListNewsAction as ListNewsAction;
 use Modules\Delivery\Application\Actions\ListPublicSourcesAction as ListPublicSourcesAction;
@@ -492,7 +493,12 @@ final class NewsIndexRequest extends FormRequest
 ```php
 namespace App\Livewire;
 
+use Carbon\Carbon as Carbon;
+use Illuminate\Support\Facades\Artisan as Artisan;
 use Livewire\Component as Component;
+use Modules\Catalog\Infrastructure\Persistence\Models\Source as Source;
+use Modules\Crawler\Application\Jobs\FetchSourceJob as FetchSourceJob;
+use Throwable as Throwable;
 
 class CrawlerLog extends Component
 {
@@ -516,6 +522,21 @@ class CrawlerLog extends Component
 
 
 	public function updateLog(): void
+	{
+	}
+
+
+	private function writeLog(string $line): void
+	{
+	}
+
+
+	private function appendLog(string $line): void
+	{
+	}
+
+
+	private function parseDate(?string $value): ?Carbon
 	{
 	}
 
@@ -864,14 +885,31 @@ final class PreloadNewsMediaJob implements ShouldQueue
 
 
 ```
+###  Path: `/src/Modules/Catalog/Application/Listeners/QueueMediaPreloadListener.php`
+
+```php
+namespace Modules\Catalog\Application\Listeners;
+
+use Modules\Catalog\Application\Jobs\PreloadNewsMediaJob as PreloadNewsMediaJob;
+use Modules\Shared\Domain\Events\NewsEnriched as NewsEnriched;
+
+final readonly class QueueMediaPreloadListener
+{
+	public function handle(NewsEnriched $event): void
+	{
+	}
+}
+
+
+```
 ###  Path: `/src/Modules/Catalog/Application/Listeners/UpdateSourceStatusListener.php`
 
 ```php
 namespace Modules\Catalog\Application\Listeners;
 
 use Modules\Catalog\Domain\Contracts\SourceRepository as SourceRepository;
-use Modules\Crawler\Domain\Events\SourceFetchFailed as SourceFetchFailed;
-use Modules\Crawler\Domain\Events\SourceFetchSucceeded as SourceFetchSucceeded;
+use Modules\Shared\Domain\Events\SourceFetchFailed as SourceFetchFailed;
+use Modules\Shared\Domain\Events\SourceFetchSucceeded as SourceFetchSucceeded;
 
 final readonly class UpdateSourceStatusListener
 {
@@ -898,13 +936,18 @@ namespace Modules\Catalog;
 
 use Illuminate\Support\Facades\Event as Event;
 use Illuminate\Support\ServiceProvider as ServiceProvider;
+use Modules\Catalog\Application\Listeners\QueueMediaPreloadListener as QueueMediaPreloadListener;
 use Modules\Catalog\Application\Listeners\UpdateSourceStatusListener as UpdateSourceStatusListener;
 use Modules\Catalog\Domain\Contracts\NewsMediaAssetRepository as NewsMediaAssetRepository;
 use Modules\Catalog\Domain\Contracts\NewsRepository as NewsRepository;
+use Modules\Catalog\Domain\Contracts\SourceRepository as SourceRepository;
 use Modules\Catalog\Infrastructure\Persistence\EloquentNewsMediaAssetRepository as EloquentNewsMediaAssetRepository;
 use Modules\Catalog\Infrastructure\Persistence\EloquentNewsRepository as EloquentNewsRepository;
-use Modules\Crawler\Domain\Events\SourceFetchFailed as SourceFetchFailed;
-use Modules\Crawler\Domain\Events\SourceFetchSucceeded as SourceFetchSucceeded;
+use Modules\Catalog\Infrastructure\Persistence\EloquentSourceRepository as EloquentSourceRepository;
+use Modules\Shared\Domain\Contracts\NewsStore as NewsStore;
+use Modules\Shared\Domain\Events\NewsEnriched as NewsEnriched;
+use Modules\Shared\Domain\Events\SourceFetchFailed as SourceFetchFailed;
+use Modules\Shared\Domain\Events\SourceFetchSucceeded as SourceFetchSucceeded;
 use Override as Override;
 
 final class CatalogServiceProvider extends ServiceProvider
@@ -979,21 +1022,11 @@ interface NewsMediaAssetRepository
 ```php
 namespace Modules\Catalog\Domain\Contracts;
 
-use Modules\Shared\Domain\DTO\EnrichedNewsData as EnrichedNewsData;
-use Modules\Shared\Domain\DTO\RawNewsData as RawNewsData;
+use Modules\Shared\Domain\Contracts\NewsStore as NewsStore;
 
-interface NewsRepository
+interface NewsRepository extends NewsStore
 {
-	public function existsByFingerprint(string $fingerprint): bool;
-
-
 	public function findIdByFingerprint(string $fingerprint): int;
-
-
-	public function storeRaw(RawNewsData $raw): int;
-
-
-	public function storeEnriched(EnrichedNewsData $enriched): void;
 
 
 	/**
@@ -1362,6 +1395,8 @@ use Modules\Crawler\Application\Services\RawNewsFactory as RawNewsFactory;
 use Modules\Crawler\Domain\Contracts\RawPublisher as RawPublisher;
 use Modules\Crawler\Domain\Contracts\RssClient as RssClient;
 use Modules\Crawler\Domain\Contracts\TelegramClient as TelegramClient;
+use Modules\Shared\Domain\Events\SourceFetchFailed as SourceFetchFailed;
+use Modules\Shared\Domain\Events\SourceFetchSucceeded as SourceFetchSucceeded;
 use Throwable as Throwable;
 
 final readonly class FeedFetcherAction
@@ -1655,46 +1690,6 @@ interface TelegramParser
 
 
 	public function supports(string $channel): bool;
-}
-
-
-```
-###  Path: `/src/Modules/Crawler/Domain/Events/SourceFetchFailed.php`
-
-```php
-namespace Modules\Crawler\Domain\Events;
-
-use Illuminate\Foundation\Events\Dispatchable as Dispatchable;
-
-final readonly class SourceFetchFailed
-{
-	use Dispatchable;
-
-	public function __construct(
-		public int $sourceId,
-		public string $errorMessage,
-	) {
-	}
-}
-
-
-```
-###  Path: `/src/Modules/Crawler/Domain/Events/SourceFetchSucceeded.php`
-
-```php
-namespace Modules\Crawler\Domain\Events;
-
-use Illuminate\Foundation\Events\Dispatchable as Dispatchable;
-
-final readonly class SourceFetchSucceeded
-{
-	use Dispatchable;
-
-	public function __construct(
-		public int $sourceId,
-		public int $itemCount,
-	) {
-	}
 }
 
 
@@ -2310,8 +2305,10 @@ namespace Modules\Delivery;
 
 use Illuminate\Support\ServiceProvider as ServiceProvider;
 use Modules\Delivery\Domain\Contracts\NewsFeedReader as NewsFeedReader;
+use Modules\Delivery\Domain\Contracts\NewsMediaResolver as NewsMediaResolver;
 use Modules\Delivery\Domain\Contracts\SourceAdminReader as SourceAdminReader;
 use Modules\Delivery\Domain\Contracts\SourcePublicReader as SourcePublicReader;
+use Modules\Delivery\Infrastructure\Persistence\DbNewsMediaResolver as DbNewsMediaResolver;
 use Modules\Delivery\Infrastructure\Persistence\EloquentNewsFeedReader as EloquentNewsFeedReader;
 use Modules\Delivery\Infrastructure\Persistence\EloquentSourceAdminReader as EloquentSourceAdminReader;
 use Modules\Delivery\Infrastructure\Persistence\EloquentSourcePublicReader as EloquentSourcePublicReader;
@@ -2350,6 +2347,29 @@ interface NewsFeedReader
 
 
 	public function count(NewsFeedFilters $filters): int;
+}
+
+
+```
+###  Path: `/src/Modules/Delivery/Domain/Contracts/NewsMediaResolver.php`
+
+```php
+namespace Modules\Delivery\Domain\Contracts;
+
+interface NewsMediaResolver
+{
+	/**
+	 * @param  list<int>  $newsItemIds
+	 * @return array<int, array{
+	 *   image_url:?string,
+	 *   image_url_original:?string,
+	 *   image_url_local:?string,
+	 *   media:list<array{url:string, type:?string}>,
+	 *   media_original:list<array{url:string, type:?string}>,
+	 *   media_local:list<array{url:string, type:?string}>
+	 * }>
+	 */
+	public function resolveForNewsItems(array $newsItemIds): array;
 }
 
 
@@ -2404,9 +2424,55 @@ final readonly class NewsFeedFilters
 		public ?int $sourceId = null,
 	) {
 	}
+}
 
 
-	public static function fromRequest(\Illuminate\Http\Request $request): self
+```
+###  Path: `/src/Modules/Delivery/Infrastructure/Persistence/DbNewsMediaResolver.php`
+
+```php
+namespace Modules\Delivery\Infrastructure\Persistence;
+
+use Illuminate\Database\DatabaseManager as DatabaseManager;
+use Illuminate\Support\Facades\Storage as Storage;
+use Modules\Delivery\Domain\Contracts\NewsMediaResolver as NewsMediaResolver;
+
+final readonly class DbNewsMediaResolver implements NewsMediaResolver
+{
+	private const SLOT_COVER = 'cover';
+
+	public function __construct(
+		private DatabaseManager $db,
+	) {
+	}
+
+
+	public function resolveForNewsItems(array $newsItemIds): array
+	{
+	}
+
+
+	private function resolveLocalUrl(string $diskName, ?string $localPath): ?string
+	{
+	}
+
+
+	/**
+	 * @return array{
+	 *   image_url:?string,
+	 *   image_url_original:?string,
+	 *   image_url_local:?string,
+	 *   media:list<array{url:string, type:?string}>,
+	 *   media_original:list<array{url:string, type:?string}>,
+	 *   media_local:list<array{url:string, type:?string}>
+	 * }
+	 */
+	private function defaultMediaState(): array
+	{
+	}
+
+
+	private function normalizeString(mixed $value): ?string
 	{
 	}
 }
@@ -2422,8 +2488,8 @@ use Illuminate\Contracts\Pagination\CursorPaginator as CursorPaginator;
 use Illuminate\Database\DatabaseManager as DatabaseManager;
 use Illuminate\Database\Query\Builder as Builder;
 use Illuminate\Pagination\Cursor as Cursor;
-use Modules\Catalog\Domain\Contracts\NewsMediaAssetRepository as NewsMediaAssetRepository;
 use Modules\Delivery\Domain\Contracts\NewsFeedReader as NewsFeedReader;
+use Modules\Delivery\Domain\Contracts\NewsMediaResolver as NewsMediaResolver;
 use Modules\Delivery\Domain\DTO\NewsFeedFilters as NewsFeedFilters;
 use Modules\Shared\Domain\Enum\NewsStatus as NewsStatus;
 
@@ -2431,7 +2497,7 @@ final readonly class EloquentNewsFeedReader implements NewsFeedReader
 {
 	public function __construct(
 		private DatabaseManager $db,
-		private NewsMediaAssetRepository $mediaAssets,
+		private NewsMediaResolver $mediaAssets,
 	) {
 	}
 
@@ -2613,11 +2679,12 @@ final class ProcessRawNewsListener implements ShouldQueue
 ```php
 namespace Modules\Intelligence\Application\Pipeline;
 
-use Modules\Catalog\Domain\Contracts\NewsRepository as NewsRepository;
 use Modules\Intelligence\Application\Pipeline\Steps\PipelineStep as PipelineStep;
 use Modules\Intelligence\Domain\Contracts\EnrichedPublisher as EnrichedPublisher;
+use Modules\Shared\Domain\Contracts\NewsStore as NewsStore;
 use Modules\Shared\Domain\DTO\EnrichedNewsData as EnrichedNewsData;
 use Modules\Shared\Domain\DTO\RawNewsData as RawNewsData;
+use Modules\Shared\Domain\Events\NewsEnriched as NewsEnriched;
 
 final readonly class NewsProcessingPipeline
 {
@@ -2627,7 +2694,7 @@ final readonly class NewsProcessingPipeline
 	public function __construct(
 		private array $steps,
 		private EnrichedPublisher $publisher,
-		private NewsRepository $news,
+		private NewsStore $news,
 	) {
 	}
 
@@ -2705,15 +2772,15 @@ final readonly class ClassifyStep implements PipelineStep
 ```php
 namespace Modules\Intelligence\Application\Pipeline\Steps;
 
-use Modules\Catalog\Domain\Contracts\NewsRepository as NewsRepository;
 use Modules\Intelligence\Application\Pipeline\SkipMessageException as SkipMessageException;
+use Modules\Shared\Domain\Contracts\NewsStore as NewsStore;
 use Modules\Shared\Domain\DTO\EnrichedNewsData as EnrichedNewsData;
 use Modules\Shared\Domain\DTO\RawNewsData as RawNewsData;
 
 final readonly class DeduplicateStep implements PipelineStep
 {
 	public function __construct(
-		private NewsRepository $news,
+		private NewsStore $news,
 	) {
 	}
 
@@ -3062,7 +3129,6 @@ final readonly class EnrichedPublisher implements EnrichedPublisherContract
 namespace Modules\Intelligence;
 
 use Illuminate\Support\ServiceProvider as ServiceProvider;
-use Modules\Catalog\Domain\Contracts\NewsRepository as NewsRepository;
 use Modules\Intelligence\Application\Pipeline\NewsProcessingPipeline as NewsProcessingPipeline;
 use Modules\Intelligence\Application\Pipeline\Steps\AntiClickbaitStep as AntiClickbaitStep;
 use Modules\Intelligence\Application\Pipeline\Steps\ClassifyStep as ClassifyStep;
@@ -3083,6 +3149,7 @@ use Modules\Intelligence\Infrastructure\LLM\KeywordClassifier as KeywordClassifi
 use Modules\Intelligence\Infrastructure\LLM\KeywordSentimentAnalyzer as KeywordSentimentAnalyzer;
 use Modules\Intelligence\Infrastructure\LLM\ObjectivelyTitleGenerator as ObjectivelyTitleGenerator;
 use Modules\Intelligence\Infrastructure\Messaging\EnrichedPublisher as EnrichedPublisher;
+use Modules\Shared\Domain\Contracts\NewsStore as NewsStore;
 use Override as Override;
 
 final class IntelligenceServiceProvider extends ServiceProvider
@@ -3134,6 +3201,27 @@ final class FingerprintGenerator
 	private function normalizeLink(string $link): string
 	{
 	}
+}
+
+
+```
+###  Path: `/src/Modules/Shared/Domain/Contracts/NewsStore.php`
+
+```php
+namespace Modules\Shared\Domain\Contracts;
+
+use Modules\Shared\Domain\DTO\EnrichedNewsData as EnrichedNewsData;
+use Modules\Shared\Domain\DTO\RawNewsData as RawNewsData;
+
+interface NewsStore
+{
+	public function existsByFingerprint(string $fingerprint): bool;
+
+
+	public function storeRaw(RawNewsData $raw): int;
+
+
+	public function storeEnriched(EnrichedNewsData $enriched): void;
 }
 
 
@@ -3260,6 +3348,25 @@ enum NewsStatus: string
 
 
 ```
+###  Path: `/src/Modules/Shared/Domain/Events/NewsEnriched.php`
+
+```php
+namespace Modules\Shared\Domain\Events;
+
+use Illuminate\Foundation\Events\Dispatchable as Dispatchable;
+
+final readonly class NewsEnriched
+{
+	use Dispatchable;
+
+	public function __construct(
+		public int $rawId,
+	) {
+	}
+}
+
+
+```
 ###  Path: `/src/Modules/Shared/Domain/Events/RawNewsCreated.php`
 
 ```php
@@ -3277,8 +3384,48 @@ final readonly class RawNewsCreated
 
 
 ```
+###  Path: `/src/Modules/Shared/Domain/Events/SourceFetchFailed.php`
+
+```php
+namespace Modules\Shared\Domain\Events;
+
+use Illuminate\Foundation\Events\Dispatchable as Dispatchable;
+
+final readonly class SourceFetchFailed
+{
+	use Dispatchable;
+
+	public function __construct(
+		public int $sourceId,
+		public string $errorMessage,
+	) {
+	}
+}
+
+
+```
+###  Path: `/src/Modules/Shared/Domain/Events/SourceFetchSucceeded.php`
+
+```php
+namespace Modules\Shared\Domain\Events;
+
+use Illuminate\Foundation\Events\Dispatchable as Dispatchable;
+
+final readonly class SourceFetchSucceeded
+{
+	use Dispatchable;
+
+	public function __construct(
+		public int $sourceId,
+		public int $itemCount,
+	) {
+	}
+}
+
+
+```
 ---
 **File Statistics**
-- **Size**: 72.65 KB
-- **Lines**: 3279
+- **Size**: 76.35 KB
+- **Lines**: 3432
 File: `../docs/PROJECT_INTERFACE.md`

@@ -10,6 +10,8 @@ use Modules\Crawler\Application\Services\RawNewsFactory;
 use Modules\Crawler\Domain\Contracts\RawPublisher;
 use Modules\Crawler\Domain\Contracts\RssClient;
 use Modules\Crawler\Domain\Contracts\TelegramClient;
+use Modules\Shared\Domain\Events\SourceFetchFailed;
+use Modules\Shared\Domain\Events\SourceFetchSucceeded;
 use Throwable;
 
 final readonly class FeedFetcherAction
@@ -63,7 +65,7 @@ final readonly class FeedFetcherAction
 
             $logger->info(sprintf('[Fetcher] Source #%d finished. Total: %d, New: %d, Duplicates: %d', $source['id'], $stats['total'], $stats['new'], $stats['duplicates']));
 
-            $this->events->dispatch(new \Modules\Crawler\Domain\Events\SourceFetchSucceeded(
+            $this->events->dispatch(new SourceFetchSucceeded(
                 (int) $source['id'],
                 $stats['total']
             ));
@@ -72,7 +74,7 @@ final readonly class FeedFetcherAction
         } catch (Throwable $e) {
             $logger->error(sprintf('[Fetcher] Source #%d failed: %s', $source['id'], $e->getMessage()));
 
-            $this->events->dispatch(new \Modules\Crawler\Domain\Events\SourceFetchFailed(
+            $this->events->dispatch(new SourceFetchFailed(
                 (int) $source['id'],
                 $e->getMessage()
             ));

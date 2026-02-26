@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Modules\Intelligence;
 
 use Illuminate\Support\ServiceProvider;
-use Modules\Catalog\Domain\Contracts\NewsRepository;
 use Modules\Intelligence\Application\Pipeline\NewsProcessingPipeline;
 use Modules\Intelligence\Application\Pipeline\Steps\AntiClickbaitStep;
 use Modules\Intelligence\Application\Pipeline\Steps\ClassifyStep;
@@ -26,6 +25,7 @@ use Modules\Intelligence\Infrastructure\LLM\KeywordClassifier;
 use Modules\Intelligence\Infrastructure\LLM\KeywordSentimentAnalyzer;
 use Modules\Intelligence\Infrastructure\LLM\ObjectivelyTitleGenerator;
 use Modules\Intelligence\Infrastructure\Messaging\EnrichedPublisher;
+use Modules\Shared\Domain\Contracts\NewsStore;
 use Override;
 
 final class IntelligenceServiceProvider extends ServiceProvider
@@ -36,7 +36,7 @@ final class IntelligenceServiceProvider extends ServiceProvider
         $this->app->singleton(NewsProcessingPipeline::class, fn ($app) => new NewsProcessingPipeline(
             steps: $app->make('news.pipeline.steps.ordered'),
             publisher: $app->make(EnrichedPublisherContract::class),
-            news: $app->make(NewsRepository::class),
+            news: $app->make(NewsStore::class),
         ));
         $this->app->singleton(EnrichedPublisher::class, fn ($app) => new EnrichedPublisher(
             connection: $app->make(\PhpAmqpLib\Connection\AMQPStreamConnection::class),

@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Modules\Catalog\Application\Listeners;
 
 use Modules\Catalog\Domain\Contracts\SourceRepository;
-use Modules\Crawler\Domain\Events\SourceFetchFailed;
-use Modules\Crawler\Domain\Events\SourceFetchSucceeded;
+use Modules\Shared\Domain\Events\SourceFetchFailed;
+use Modules\Shared\Domain\Events\SourceFetchSucceeded;
 
 final readonly class UpdateSourceStatusListener
 {

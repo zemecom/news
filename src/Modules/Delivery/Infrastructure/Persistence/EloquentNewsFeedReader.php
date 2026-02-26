@@ -8,8 +8,8 @@ use Illuminate\Contracts\Pagination\CursorPaginator;
 use Illuminate\Database\DatabaseManager;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Pagination\Cursor;
-use Modules\Catalog\Domain\Contracts\NewsMediaAssetRepository;
 use Modules\Delivery\Domain\Contracts\NewsFeedReader;
+use Modules\Delivery\Domain\Contracts\NewsMediaResolver;
 use Modules\Delivery\Domain\DTO\NewsFeedFilters;
 use Modules\Shared\Domain\Enum\NewsStatus;
 
@@ -17,7 +17,7 @@ final readonly class EloquentNewsFeedReader implements NewsFeedReader
 {
     public function __construct(
         private DatabaseManager $db,
-        private NewsMediaAssetRepository $mediaAssets,
+        private NewsMediaResolver $mediaAssets,
     ) {}
 
     /**

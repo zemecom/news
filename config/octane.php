@@ -107,8 +107,8 @@ return [
         OperationTerminated::class => [
             FlushOnce::class,
             FlushTemporaryContainerInstances::class,
-            // DisconnectFromDatabases::class,
-            // CollectGarbage::class,
+            DisconnectFromDatabases::class,
+            CollectGarbage::class,
         ],
 
         WorkerErrorOccurred::class => [
@@ -137,7 +137,7 @@ return [
     ],
 
     'flush' => [
-        //
+        \PhpAmqpLib\Connection\AMQPStreamConnection::class,
     ],
 
     /*

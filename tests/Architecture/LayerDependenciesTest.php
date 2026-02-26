@@ -13,11 +13,20 @@ arch('disallow_http_facade', function () {
 });
 
 arch('modules_respect_boundaries', function () {
-    expect('Modules\\Crawler')
-        ->not->toUse(['Modules\\Catalog', 'Modules\\Delivery', 'Modules\\Intelligence']);
+    $modules = ['Crawler', 'Catalog', 'Delivery', 'Intelligence'];
 
-    expect('Modules\\Intelligence')
-        ->not->toUse(['Modules\\Delivery']);
+    foreach ($modules as $module) {
+        $foreignModules = array_values(array_map(
+            static fn (string $name): string => "Modules\\{$name}",
+            array_filter($modules, static fn (string $name): bool => $name !== $module),
+        ));
+
+        expect("Modules\\{$module}\\Domain")
+            ->not->toUse($foreignModules);
+
+        expect("Modules\\{$module}\\Application")
+            ->not->toUse($foreignModules);
+    }
 });
 
 arch('domain_layer_is_pure', function () {

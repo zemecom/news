@@ -97,7 +97,7 @@ return [
                 ],
             ],
             'worker' => env('RABBITMQ_WORKER', 'default'),
-            'retry_after' => (int) env('RABBITMQ_RETRY_AFTER', 90),
+            'retry_after' => (int) env('RABBITMQ_RETRY_AFTER', 180),
             'after_commit' => false,
         ],
 

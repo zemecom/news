@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace Modules\Crawler\Domain\Events;
+namespace Modules\Shared\Domain\Events;
 
 use Illuminate\Foundation\Events\Dispatchable;
 
-final readonly class SourceFetchFailed
+final readonly class SourceFetchSucceeded
 {
     use Dispatchable;
 
     public function __construct(
         public int $sourceId,
-        public string $errorMessage,
+        public int $itemCount,
     ) {}
 }

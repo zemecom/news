@@ -4,7 +4,7 @@ COMPOSER   = $(DOCKER_APP) composer
 ARTISAN    = $(DOCKER_APP) php artisan
 NPM        = $(DOCKER_APP) npm
 
-.PHONY: up down build dev npm-dev help logs docs-deps
+.PHONY: up down build dev npm-dev help logs docs-deps app worker
 .PHONY: setup-local setup-ci migrate messaging-setup
 .PHONY: test test-arch test-all acceptance smoke-api ci-check
 .PHONY: analyze psalm psalm-taint lint lint-check rector rector-check validate audit
@@ -27,7 +27,7 @@ build:
 dev:
 	@# Run development servers concurrently (server, queue, logs, vite) inside Docker
 	$(DOCKER_APP) npx concurrently -c "#93c5fd,#c4b5fd,#fb7185,#fdba74" \
-		"php artisan octane:start --server=roadrunner --host=0.0.0.0 --rpc-port=6001 --port=8000" \
+		"sh docker/bin/start-octane.sh" \
 		"php artisan queue:listen --tries=1 --timeout=0" \
 		"php artisan pail --timeout=0" \
 		"npm run dev" \
@@ -95,9 +95,9 @@ acceptance:
 
 smoke-api:
 	@# Run basic smoke tests against the API (inside container)
-	$(DOCKER_APP) sh scripts/smoke-api.sh http://nginx
+	$(DOCKER_APP) sh scripts/smoke-api.sh http://127.0.0.1:8000
 
-ci-check: validate audit lint-check analyze psalm-taint test
+ci-check: validate audit lint-check analyze psalm-taint test test-arch
 	@# Run all CI pipeline checks (validate, audit, lint, phpstan, psalm, tests)
 
 # --- Static Analysis & Linting ---
@@ -140,6 +140,14 @@ audit:
 
 # --- Application Operations ---
 
+app:
+	@# Enter the app container shell
+	docker compose exec -it app sh
+
+worker:
+	@# Enter the worker container shell
+	docker compose exec -it worker sh
+
 crawl:
 	@# Run the crawler command manually
 	$(ARTISAN) news:crawl
@@ -158,7 +166,7 @@ queue:
 
 serve:
 	@# Serve the application inside Docker
-	$(ARTISAN) octane:start --server=roadrunner --host=0.0.0.0 --rpc-port=6001 --port=8000
+	$(DOCKER_APP) sh docker/bin/start-octane.sh
 
 logs:
 	@# View output from containers

@@ -72,7 +72,7 @@ final class FeedFetcherActionTest extends TestCase
         $events = $this->createMock(\Illuminate\Contracts\Events\Dispatcher::class);
         $events->expects($this->once())
             ->method('dispatch')
-            ->with($this->isInstanceOf(\Modules\Crawler\Domain\Events\SourceFetchSucceeded::class));
+            ->with($this->isInstanceOf(\Modules\Shared\Domain\Events\SourceFetchSucceeded::class));
 
         $action = new FeedFetcherAction($rssClient, $telegramClient, $publisher, $rawNewsFactory, $deduplicator, $events);
         $action($source);
@@ -108,7 +108,7 @@ final class FeedFetcherActionTest extends TestCase
         $events = $this->createMock(\Illuminate\Contracts\Events\Dispatcher::class);
         $events->expects($this->once())
             ->method('dispatch')
-            ->with($this->isInstanceOf(\Modules\Crawler\Domain\Events\SourceFetchFailed::class));
+            ->with($this->isInstanceOf(\Modules\Shared\Domain\Events\SourceFetchFailed::class));
 
         $action = new FeedFetcherAction($rssClient, $telegramClient, $publisher, $rawNewsFactory, $deduplicator, $events);
         $action([

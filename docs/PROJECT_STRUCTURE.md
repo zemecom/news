@@ -60,6 +60,7 @@ _SOURCE: Directory Structure_
             │   ├── Jobs/
             │   │   ├── PreloadNewsMediaJob.php
             │   ├── Listeners/
+            │   │   └── QueueMediaPreloadListener.php
             │   │   └── UpdateSourceStatusListener.php
             ├── CatalogServiceProvider.php
             ├── Domain/
@@ -88,16 +89,13 @@ _SOURCE: Directory Structure_
             ├── CrawlerServiceProvider.php
             ├── Domain/
             │   ├── Contracts/
-            │   │   ├── ApiParser.php
-            │   │   ├── Deduplicator.php
-            │   │   ├── RawPublisher.php
-            │   │   ├── RssClient.php
-            │   │   ├── RssParser.php
-            │   │   ├── TelegramClient.php
-            │   │   ├── TelegramParser.php
-            │   ├── Events/
-            │   │   └── SourceFetchFailed.php
-            │   │   └── SourceFetchSucceeded.php
+            │   │   └── ApiParser.php
+            │   │   └── Deduplicator.php
+            │   │   └── RawPublisher.php
+            │   │   └── RssClient.php
+            │   │   └── RssParser.php
+            │   │   └── TelegramClient.php
+            │   │   └── TelegramParser.php
             ├── Infrastructure/
             │   └── Http/
             │       ├── RssClient.php
@@ -132,12 +130,14 @@ _SOURCE: Directory Structure_
             ├── Domain/
             │   ├── Contracts/
             │   │   ├── NewsFeedReader.php
+            │   │   ├── NewsMediaResolver.php
             │   │   ├── SourceAdminReader.php
             │   │   ├── SourcePublicReader.php
             │   ├── DTO/
             │   │   └── NewsFeedFilters.php
             ├── Infrastructure/
             │   └── Persistence/
+            │       └── DbNewsMediaResolver.php
             │       └── EloquentNewsFeedReader.php
             │       └── EloquentSourceAdminReader.php
             │       └── EloquentSourcePublicReader.php
@@ -180,17 +180,22 @@ _SOURCE: Directory Structure_
                 ├── Services/
                 │   └── FingerprintGenerator.php
             └── Domain/
+                └── Contracts/
+                    ├── NewsStore.php
                 └── DTO/
                     ├── EnrichedNewsData.php
                     ├── RawNewsData.php
                 └── Enum/
                     ├── NewsStatus.php
                 └── Events/
+                    └── NewsEnriched.php
                     └── RawNewsCreated.php
+                    └── SourceFetchFailed.php
+                    └── SourceFetchSucceeded.php
 
 ```
 ---
 **File Statistics**
-- **Size**: 8.34 KB
-- **Lines**: 197
+- **Size**: 8.59 KB
+- **Lines**: 202
 File: `../docs/PROJECT_STRUCTURE.md`

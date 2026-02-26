@@ -2,16 +2,15 @@
 
 declare(strict_types=1);
 
-namespace Modules\Crawler\Domain\Events;
+namespace Modules\Shared\Domain\Events;
 
 use Illuminate\Foundation\Events\Dispatchable;
 
-final readonly class SourceFetchSucceeded
+final readonly class NewsEnriched
 {
     use Dispatchable;
 
     public function __construct(
-        public int $sourceId,
-        public int $itemCount,
+        public int $rawId,
     ) {}
 }

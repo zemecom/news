@@ -4,7 +4,12 @@ declare(strict_types=1);
 
 namespace App\Livewire;
 
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Artisan;
 use Livewire\Component;
+use Modules\Catalog\Infrastructure\Persistence\Models\Source;
+use Modules\Crawler\Application\Jobs\FetchSourceJob;
+use Throwable;
 
 class CrawlerLog extends Component
 {
@@ -31,31 +36,78 @@ class CrawlerLog extends Component
 
     public function startParsing(): void
     {
-        $params = [];
-        if ($this->sourceId) {
-            $params[] = "--source-id={$this->sourceId}";
-        }
-        if ($this->dateFrom) {
-            $params[] = "--date-from='{$this->dateFrom}'";
-        }
-        if ($this->dateTo) {
-            $params[] = "--date-to='{$this->dateTo}'";
-        }
-        if ($this->limit) {
-            $params[] = "--limit={$this->limit}";
-        }
-        $params[] = '--sync';
+        $this->isStarted = false;
+        $this->writeLog('Starting crawler...');
 
-        $paramString = implode(' ', $params);
-        $artisan = base_path('artisan');
+        try {
+            $dateFrom = $this->parseDate($this->dateFrom);
+            $dateTo = $this->parseDate($this->dateTo);
+            $limit = is_int($this->limit) && $this->limit > 0 ? $this->limit : null;
 
-        // Clear previous log
-        file_put_contents($this->logFile, "Starting crawler with params: {$paramString}...\n");
+            if ($dateFrom !== null && $dateTo !== null && $dateFrom->gt($dateTo)) {
+                [$dateFrom, $dateTo] = [$dateTo, $dateFrom];
+                $this->appendLog('date-from is greater than date-to; values were swapped automatically.');
+            }
 
-        $cmd = "nohup php {$artisan} news:crawl {$paramString} --no-ansi >> {$this->logFile} 2>&1 < /dev/null &";
-        exec($cmd);
+            if ($this->sourceId !== null) {
+                $source = Source::query()
+                    ->whereKey($this->sourceId)
+                    ->first(['id', 'url', 'type', 'language_default']);
 
-        $this->isStarted = true;
+                if ($source === null) {
+                    $this->appendLog(sprintf('Source #%d not found.', $this->sourceId));
+
+                    return;
+                }
+
+                $sourceId = (int) $source->getAttribute('id');
+                $sourceUrl = (string) $source->getAttribute('url');
+                $sourceType = (string) $source->getAttribute('type');
+                $sourceLanguage = $source->getAttribute('language_default');
+
+                FetchSourceJob::dispatch(
+                    source: [
+                        'id' => $sourceId,
+                        'url' => $sourceUrl,
+                        'type' => $sourceType,
+                        'language_default' => $sourceLanguage,
+                    ],
+                    dateFrom: $dateFrom,
+                    dateTo: $dateTo,
+                    limit: $limit,
+                );
+
+                $this->appendLog(sprintf(
+                    'Queued source #%d (%s).',
+                    $sourceId,
+                    $sourceUrl,
+                ));
+            } else {
+                $options = ['--no-ansi' => true];
+                if ($this->dateFrom !== null && trim($this->dateFrom) !== '') {
+                    $options['--date-from'] = $dateFrom?->toDateTimeString();
+                }
+                if ($this->dateTo !== null && trim($this->dateTo) !== '') {
+                    $options['--date-to'] = $dateTo?->toDateTimeString();
+                }
+                if ($limit !== null) {
+                    $options['--limit'] = $limit;
+                }
+
+                $exitCode = Artisan::call('news:crawl', $options);
+                $commandOutput = trim((string) Artisan::output());
+
+                if ($commandOutput !== '') {
+                    $this->appendLog($commandOutput);
+                }
+
+                $this->appendLog($exitCode === 0 ? 'Crawl command finished.' : 'Crawl command failed.');
+            }
+
+            $this->isStarted = true;
+        } catch (Throwable $e) {
+            $this->appendLog('Failed to start crawler: '.$e->getMessage());
+        }
     }
 
     public function updateLog(): void
@@ -63,6 +115,25 @@ class CrawlerLog extends Component
         if ($this->isStarted && file_exists($this->logFile)) {
             $this->output = file_get_contents($this->logFile) ?: 'Running...';
         }
+    }
+
+    private function writeLog(string $line): void
+    {
+        file_put_contents($this->logFile, $line.PHP_EOL);
+    }
+
+    private function appendLog(string $line): void
+    {
+        file_put_contents($this->logFile, $line.PHP_EOL, FILE_APPEND);
+    }
+
+    private function parseDate(?string $value): ?Carbon
+    {
+        if ($value === null || trim($value) === '') {
+            return null;
+        }
+
+        return Carbon::parse($value);
     }
 
     public function render(): \Illuminate\Contracts\View\View

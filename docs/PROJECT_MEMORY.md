@@ -79,12 +79,14 @@
     - Поддержан массовый Telegram fetch через AJAX-pagination (`before`) с встроенным rate-limiting и остановкой по диапазону дат.
     - Парсер Telegram (`DefaultTelegramParser`) корректно извлекает все медиафайлы из альбомов и прикрепленные ссылки.
     - Парсинг асинхронный: команда `news:crawl` распределяет задания (`FetchSourceJob`) в очередь `crawler_tasks`.
-    - Внедрен мониторинг здоровья источников (**Source Health Tracking**): `FeedFetcherAction` генерирует доменные события, которые слушатель в `Catalog` использует для обновления `last_success_at`, `last_error_at` и `error_streak`.
+    - Внедрен мониторинг здоровья источников (**Source Health Tracking**): `FeedFetcherAction` публикует события в `Shared\Domain\Events`, которые слушатель в `Catalog` использует для обновления `last_success_at`, `last_error_at` и `error_streak`.
     - Команда диспетчеризации: `php artisan news:crawl`.
 
 - **Intelligence**
     - Pipeline реализован: dedup -> lang detect -> translate -> classify -> sentiment -> anti-clickbait -> importance -> moderation -> finalize.
     - Сейчас AI-обогащение эвристическое (без реальных LLM провайдеров).
+    - Для снижения сцепления с `Catalog` pipeline использует общий контракт `Shared\Domain\Contracts\NewsStore`.
+    - После enrichment публикуется событие `Shared\Domain\Events\NewsEnriched`; постановка `PreloadNewsMediaJob` теперь происходит в `Catalog` через listener.
     - Обработка запускается через Laravel Queue (RabbitMQ driver): `php artisan queue:work --queue=crawler_tasks,intelligence_tasks,media_tasks`.
 
 - **Catalog**
@@ -102,6 +104,7 @@
         - `GET /api/news/{id}`
         - `GET /api/sources`
         - `GET /api/admin/sources` (RBAC)
+    - Для media enrichment в delivery-ридере используется собственный `NewsMediaResolver` (без прямой зависимости на `Catalog` contracts).
     - Web-лента на `/` с фильтрами и догрузкой (cursor-based).
 
 ## 2.3 Очереди/события
@@ -110,6 +113,7 @@
     - `crawler_tasks`,
     - `intelligence_tasks`,
     - `media_tasks`.
+- Межмодульные события (`SourceFetchSucceeded`, `SourceFetchFailed`, `NewsEnriched`) перенесены в `Shared\Domain\Events`.
 - Exchange: `news_flow` (topic) используется для доменных AMQP-событий после enrichment.
 - Routing keys: `enriched.ready`, `enriched.ready.important`, `enriched.rejected`.
 - Очереди exchange-контура: `queue.delivery_feed`, `queue.delivery_push`.
@@ -127,6 +131,7 @@
 ## 2.5 Инфраструктура и локальное хранение данных
 
 - Docker Compose поднимает `app` (RoadRunner), `postgres`, `redis`, `rabbitmq`, `worker` (Laravel Queue worker для `crawler_tasks,intelligence_tasks,media_tasks`). Nginx удален за ненадобностью.
+- Build target для Docker-образа вынесен в `DOCKER_BUILD_TARGET` (`local`/`production`) вместо жёсткой привязки к `APP_ENV`.
 - Данные Postgres теперь персистятся на диск проекта:
     - `./.docker-data/postgres:/var/lib/postgresql/data`.
 - Данные Redis и RabbitMQ также персистятся на диск проекта:
@@ -139,6 +144,12 @@
     - Образ `runtime` переведен на использование не-root пользователя `www-data` для повышения безопасности.
     - Включено расширение `opcache` с оптимальными настройками для production-контура.
     - Оптимизировано копирование файлов для лучшего использования кэша Docker-слоев.
+    - Сервисы данных (`postgres`, `redis`, `rabbitmq`) по умолчанию биндятся только на `127.0.0.1` (через переменные `*_BIND`).
+    - RabbitMQ учетные данные в compose берутся из `.env`; дефолт `guest/guest` убран.
+    - `RABBITMQ_RETRY_AFTER` увеличен до `180`, чтобы быть больше worker `--timeout=120` и исключить преждевременный requeue.
+    - `smoke-api` в `Makefile` использует `http://127.0.0.1:8000` (совместимо с текущим compose без nginx).
+    - Для dev включен `RoadRunner reload` через `.rr.yaml`; `make dev`, `make serve` и контейнерный `CMD` запускают Octane с `--rr-config=.rr.yaml`.
+    - Старт Octane вынесен в `docker/bin/start-octane.sh`: бинарь `rr` переносится из `/app/rr` в `/tmp/roadrunner-bin/rr` и удаляется из корня проекта.
 - Для локальных медиа добавлен обязательный `storage:link` в setup-процессы.
 
 ---
