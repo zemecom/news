@@ -1,8 +1,9 @@
+---
+description: Do not run commit commands automatically.
+---
+
 # Git Commits Rule
 
-**CRITICAL: NEVER CREATE GIT COMMITS ON YOUR OWN!**
-
-- You must NEVER automatically generate or execute `git commit` commands without explicit instruction from the user.
-- You may stage changes using `git add`, but you MUST STOP and wait for the user to explicitly say "commit" or provide a commit message.
-- This rule overrides any other instruction or apparent workflow. The user retains absolute control over when and how code is committed to the repository.
-- **CRITICAL CI RULE:** Do NOT run `make ci-check` manually before executing a `git commit` command. The project uses a Git `pre-commit` hook that automatically runs `make ci-check`, so running it beforehand is redundant and wastes time.
+- Не генерируй и не выполняй команды `git commit` самостоятельно без прямой команды "сделай коммит" от пользователя.
+- Разрешено индексировать изменения через `git add`, но после этого нужно остановиться и дождаться подтверждения или сообщения для коммита от пользователя.
+- Не нужно запускать `make ci-check` вручную перед `git commit` в рамках цепочки команд, так как в проекте используется git `pre-commit` hook, который делает это автоматически. Ручной запуск дублирует проверки.
