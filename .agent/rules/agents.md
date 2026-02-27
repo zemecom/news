@@ -1,4 +1,5 @@
 ---
+trigger: always_on
 description: Always follow the project conventions defined in AGENTS.md.
 ---
 
