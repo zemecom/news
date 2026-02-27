@@ -13,6 +13,16 @@ use Modules\Delivery\Application\Actions\ListPublicSourcesAction;
 use Modules\Delivery\Application\Actions\ShowNewsAction;
 use Modules\Delivery\Domain\DTO\NewsFeedFilters;
 
+/**
+ * API контроллер для отдачи новостей клиентам (Web, Mobile).
+ *
+ * В рамках Модульного Монолита этот класс (слой Framework) выступает лишь "официантом".
+ * Он не содержит бизнес-логики и SQL-запросов. Его единственная задача:
+ * 1. Принять HTTP-запрос (NewsIndexRequest)
+ * 2. Сконвертировать данные в строго типизированный DTO (NewsFeedFilters)
+ * 3. Передать DTO в слой Application модуля Delivery (ListNewsAction)
+ * 4. Вернуть полученный ответ в формате JSON.
+ */
 final class NewsController extends Controller
 {
     public function __construct(

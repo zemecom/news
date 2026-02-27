@@ -63,8 +63,8 @@ final readonly class RssClient implements RssClientContract
                 }
 
                 $pubDate = \Carbon\Carbon::parse($item['pubDate'])->setTimezone('UTC');
-                $from = $dateFrom ? $dateFrom->copy()->setTimezone('UTC') : null;
-                $to = $dateTo ? $dateTo->copy()->setTimezone('UTC') : null;
+                $from = $dateFrom instanceof \Carbon\Carbon ? $dateFrom->copy()->setTimezone('UTC') : null;
+                $to = $dateTo instanceof \Carbon\Carbon ? $dateTo->copy()->setTimezone('UTC') : null;
 
                 if ($from && $pubDate->lt($from)) {
                     return false;

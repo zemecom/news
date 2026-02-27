@@ -11,6 +11,16 @@ use Modules\Shared\Domain\DTO\EnrichedNewsData;
 use Modules\Shared\Domain\DTO\RawNewsData;
 use Modules\Shared\Domain\Events\NewsEnriched;
 
+/**
+ * Конвейер (Pipeline) обработки сырых новостей в модуле Intelligence (Слой: Application).
+ *
+ * Реализует паттерн Chain of Responsibility / Pipeline.
+ * 1. Принимает DTO `RawNewsData` на вход.
+ * 2. Прогоняет его через набор шагов (`PipelineStep`): перевод, суммаризация, сентимент-анализ и т.д.
+ * 3. Если шаг выбрасывает `SkipMessageException` — обработка прерывается.
+ * 4. Если результат стал `EnrichedNewsData`, конвейер сохраняет результат в БД (Catalog),
+ *    вызывает доменное событие `NewsEnriched` и пушит его подписчикам для дальнейшей доставки.
+ */
 final readonly class NewsProcessingPipeline
 {
     /** @param PipelineStep[] $steps */

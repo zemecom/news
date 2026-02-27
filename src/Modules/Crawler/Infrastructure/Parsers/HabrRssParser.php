@@ -26,12 +26,10 @@ final class HabrRssParser extends DefaultRssParser
         $descriptionHtml = (string) ($item->description ?? '');
         $imageUrl = $mapped['image_url'];
 
-        // Fallback: extract image from <img> tag in description HTML
         if ($imageUrl === null && $descriptionHtml !== '' && preg_match('/<img[^>]+src=["\']([^"\']+)["\']/i', $descriptionHtml, $matches)) {
             $imageUrl = $matches[1];
         }
 
-        // Extract clean text from description (remove img tags, "Читать далее" links, strip HTML)
         $descriptionText = $descriptionHtml;
         $descriptionText = preg_replace('/<img[^>]*>/i', '', $descriptionText) ?? $descriptionText;
         $descriptionText = preg_replace('/<a[^>]*>\s*Читать далее\s*<\/a>/iu', '', $descriptionText) ?? $descriptionText;

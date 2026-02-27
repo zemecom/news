@@ -16,12 +16,12 @@ final class SourceRuntimeHealthPolicy
     public function resolveNextRetryAt(?array $retryBackoffState, int $errorStreak, mixed $lastErrorAt): ?CarbonImmutable
     {
         $nextRetryAtFromState = $this->parseDateTime($retryBackoffState['next_retry_at'] ?? null);
-        if ($nextRetryAtFromState !== null) {
+        if ($nextRetryAtFromState instanceof \Carbon\CarbonImmutable) {
             return $nextRetryAtFromState;
         }
 
         $failedAt = $this->parseDateTime($lastErrorAt);
-        if ($failedAt === null) {
+        if (! $failedAt instanceof \Carbon\CarbonImmutable) {
             return null;
         }
 
@@ -30,7 +30,7 @@ final class SourceRuntimeHealthPolicy
 
     public function calculateBackoffMinutes(int $errorStreak): int
     {
-        if ((bool) config('crawler.runtime.health.enabled', true) !== true) {
+        if (! (bool) config('crawler.runtime.health.enabled', true)) {
             return 0;
         }
 
@@ -68,7 +68,7 @@ final class SourceRuntimeHealthPolicy
     public function buildFailureBackoffState(int $errorStreak, CarbonInterface $failedAt): ?array
     {
         $nextRetryAt = $this->calculateNextRetryAt($errorStreak, $failedAt);
-        if ($nextRetryAt === null) {
+        if (! $nextRetryAt instanceof \Carbon\CarbonImmutable) {
             return null;
         }
 
@@ -84,11 +84,11 @@ final class SourceRuntimeHealthPolicy
 
     public function isInBackoffWindow(?CarbonImmutable $nextRetryAt, ?CarbonInterface $now = null): bool
     {
-        if ($nextRetryAt === null) {
+        if (! $nextRetryAt instanceof \Carbon\CarbonImmutable) {
             return false;
         }
 
-        $referenceNow = $now !== null
+        $referenceNow = $now instanceof \Carbon\CarbonInterface
             ? CarbonImmutable::instance($now)
             : CarbonImmutable::now();
 

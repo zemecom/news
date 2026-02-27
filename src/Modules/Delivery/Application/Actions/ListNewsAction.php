@@ -8,6 +8,14 @@ use Illuminate\Contracts\Pagination\CursorPaginator;
 use Modules\Delivery\Domain\Contracts\NewsFeedReader;
 use Modules\Delivery\Domain\DTO\NewsFeedFilters;
 
+/**
+ * Точка входа в бизнес-логику получения списка новостей (Модуль Delivery).
+ * Слой: Application.
+ *
+ * Этот Action ничего не знает про Eloquent или PostgreSQL.
+ * Он использует Inversion of Control (IoC), опираясь на контракт NewsFeedReader из Domain слоя.
+ * Фактическая реализация (EloquentNewsFeedReader) будет подставлена Laravel Service Container'ом.
+ */
 final readonly class ListNewsAction
 {
     public function __construct(private NewsFeedReader $reader) {}

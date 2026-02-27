@@ -7,6 +7,15 @@ namespace Modules\Shared\Application\Services;
 use Carbon\CarbonImmutable;
 use Modules\Shared\Domain\DTO\RawNewsData;
 
+/**
+ * Генератор детерминированных отпечатков (Fingerprints) для новостей.
+ * Слой: Application (модуль Shared).
+ *
+ * Решает проблему дедупликации данных. За счет создания предсказуемого хэша (SHA-256)
+ * на основе комбинации (Идентификатор Источника + Внешний ID / Заголовок / Ссылка + Дата с точностью до минуты),
+ * мы можем наложить Unique Constraint на БД в модуле Catalog. Это гарантирует, что даже
+ * при параллельном парсинге (вызовах Crawler) в базу попадет только один уникальный инстанс новости.
+ */
 final class FingerprintGenerator
 {
     public function generate(

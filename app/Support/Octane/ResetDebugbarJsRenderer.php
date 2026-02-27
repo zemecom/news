@@ -21,7 +21,6 @@ final class ResetDebugbarJsRenderer
 
         try {
             $property = new ReflectionProperty($debugbar, 'jsRenderer');
-            $property->setAccessible(true);
             $property->setValue($debugbar, null);
         } catch (ReflectionException) {
             // The internals may change between package versions; ignore safely.

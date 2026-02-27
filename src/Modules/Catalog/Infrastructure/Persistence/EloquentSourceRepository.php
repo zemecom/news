@@ -9,9 +9,9 @@ use Modules\Catalog\Domain\Contracts\SourceRepository;
 use Modules\Catalog\Infrastructure\Persistence\Models\Source;
 use Modules\Shared\Application\Services\SourceRuntimeHealthPolicy;
 
-final class EloquentSourceRepository implements SourceRepository
+final readonly class EloquentSourceRepository implements SourceRepository
 {
-    public function __construct(private readonly SourceRuntimeHealthPolicy $runtimeHealthPolicy) {}
+    public function __construct(private SourceRuntimeHealthPolicy $runtimeHealthPolicy) {}
 
     public function updateSuccess(int $sourceId): void
     {

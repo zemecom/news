@@ -15,8 +15,7 @@ class DefaultRssParser implements RssParser
      */
     public function parse(string $xmlBody): Collection
     {
-        // Простая обёртка: парсинг RSS/Atom
-        // Используем @ для подавления предупреждений при некорректном XML
+        // Подавляем предупреждения при некорректном XML
         $xml = @simplexml_load_string($xmlBody, 'SimpleXMLElement', LIBXML_NOCDATA);
         $items = [];
 
@@ -24,18 +23,14 @@ class DefaultRssParser implements RssParser
             return collect();
         }
 
-        // RSS 2.0
         if (property_exists($xml->channel, 'item') && $xml->channel->item !== null) {
             foreach ($xml->channel->item as $item) {
-                // Передаем элемент для обработки в защищенный метод, чтобы наследники могли переопределить логику
                 $mapped = $this->mapItem($item);
                 if ($mapped !== []) {
                     $items[] = $mapped;
                 }
             }
-        }
-        // Atom 1.0 (например, The Verge)
-        elseif (property_exists($xml, 'entry') && $xml->entry !== null) {
+        } elseif (property_exists($xml, 'entry') && $xml->entry !== null) {
             foreach ($xml->entry as $entry) {
                 $mapped = $this->mapAtomEntry($entry);
                 if ($mapped !== []) {
@@ -49,7 +44,7 @@ class DefaultRssParser implements RssParser
 
     public function supports(string $url): bool
     {
-        return true; // Базовый парсер поддерживает всё как fallback
+        return true;
     }
 
     /**
@@ -60,7 +55,6 @@ class DefaultRssParser implements RssParser
         $media = [];
         $imageUrl = null;
 
-        // RSS enclosure
         if (property_exists($item, 'enclosure') && $item->enclosure !== null) {
             foreach ($item->enclosure as $enclosure) {
                 $url = (string) ($enclosure['url'] ?? '');
@@ -74,7 +68,6 @@ class DefaultRssParser implements RssParser
             }
         }
 
-        // media:content
         if (isset($item->{'media:content'})) {
             foreach ($item->{'media:content'} as $mc) {
                 $url = (string) ($mc['url'] ?? '');
@@ -112,7 +105,6 @@ class DefaultRssParser implements RssParser
         $imageUrl = null;
         $namespaces = $entry->getNamespaces(true);
 
-        // media:content / media:group
         if (isset($namespaces['media'])) {
             $mediaNodes = $entry->children($namespaces['media']);
             if (property_exists($mediaNodes, 'content') && $mediaNodes->content !== null) {
@@ -141,7 +133,6 @@ class DefaultRssParser implements RssParser
             }
         }
 
-        // Link handling (Atom uses <link href="..." />)
         $link = '';
         if (property_exists($entry, 'link')) {
             foreach ($entry->link as $l) {
@@ -153,7 +144,6 @@ class DefaultRssParser implements RssParser
             }
         }
 
-        // Content handling
         $content = (string) ($entry->content ?? '');
         if ($content === '') {
             $content = (string) ($entry->summary ?? '');
@@ -166,8 +156,8 @@ class DefaultRssParser implements RssParser
             'content' => $content,
             'pubDate' => (string) ($entry->updated ?? $entry->published ?? ''),
             'guid' => (string) ($entry->id ?? ''),
-            'language' => '', // Atom usually defines language at feed level
-            'categories' => [], // TODO: parse categories if needed
+            'language' => '',
+            'categories' => [],
             'author' => (string) ($entry->author->name ?? ''),
             'image_url' => $imageUrl,
             'media' => $media,

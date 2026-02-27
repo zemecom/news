@@ -45,7 +45,7 @@ class CrawlerLog extends Component
             $dateTo = $this->parseDate($this->dateTo);
             $limit = is_int($this->limit) && $this->limit > 0 ? $this->limit : null;
 
-            if ($dateFrom !== null && $dateTo !== null && $dateFrom->gt($dateTo)) {
+            if ($dateFrom instanceof \Carbon\Carbon && $dateTo instanceof \Carbon\Carbon && $dateFrom->gt($dateTo)) {
                 [$dateFrom, $dateTo] = [$dateTo, $dateFrom];
                 $this->appendLog('date-from is greater than date-to; values were swapped automatically.');
             }

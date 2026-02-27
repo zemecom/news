@@ -196,7 +196,6 @@ class DefaultTelegramParser implements TelegramParser
 
     protected function extractTitleFromNode(DOMXPath $xpath, DOMNode $node, string $content, string $externalId): string
     {
-        // Find the main message text element (not inside reply block)
         $textNodes = $xpath->query(
             ".//*[contains(concat(' ', normalize-space(@class), ' '), ' tgme_widget_message_text ')]"
             ."[not(ancestor::*[contains(concat(' ', normalize-space(@class), ' '), ' tgme_widget_message_reply ')])]"
@@ -208,7 +207,6 @@ class DefaultTelegramParser implements TelegramParser
             $textEl = $textNodes->item(0);
 
             if ($textEl instanceof DOMNode) {
-                // Try to find bold element within the main text
                 $boldTitle = $this->evalString($xpath, $textEl, 'string(./b[1] | ./strong[1])');
                 if ($boldTitle !== '') {
                     return $boldTitle;

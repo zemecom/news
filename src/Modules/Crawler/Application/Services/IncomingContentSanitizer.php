@@ -163,9 +163,8 @@ final class IncomingContentSanitizer
     private function stripDangerousHtml(string $value): string
     {
         $value = preg_replace('/<\s*(script|style|iframe|object|embed|svg|math)\b[^>]*>.*?<\s*\/\s*\1\s*>/is', ' ', $value) ?? $value;
-        $value = preg_replace('/<!--.*?-->/s', ' ', $value) ?? $value;
 
-        return $value;
+        return preg_replace('/<!--.*?-->/s', ' ', $value) ?? $value;
     }
 
     private function replaceBlockTagsWithBreaks(string $value): string

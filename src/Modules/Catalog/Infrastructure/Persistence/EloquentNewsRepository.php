@@ -10,6 +10,15 @@ use Modules\Shared\Domain\DTO\EnrichedNewsData;
 use Modules\Shared\Domain\DTO\RawNewsData;
 use Modules\Shared\Domain\Enum\NewsStatus;
 
+/**
+ * Фактическая реализация репозитория для работы с новостями через Eloquent ORM.
+ * Модуль: Catalog. Слой: Infrastructure.
+ *
+ * Инкапсулирует в себе все SQL/PostgreSQL особенности.
+ * Для остальных модулей (например, модуля Intelligence) этот класс неизвестен,
+ * они общаются исключительно через абстрактный контракт `NewsRepository` (Inversion of Control),
+ * что позволяет легко подменять БД или мокать её в тестах.
+ */
 final class EloquentNewsRepository implements NewsRepository
 {
     public function existsByFingerprint(string $fingerprint): bool

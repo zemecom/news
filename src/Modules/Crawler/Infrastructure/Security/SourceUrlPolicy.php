@@ -93,7 +93,7 @@ final class SourceUrlPolicy
 
     private function assertHostIsPublic(string $host, string $sourceType): void
     {
-        if ((bool) config('crawler.security.deny_private_hosts', true) !== true) {
+        if (! (bool) config('crawler.security.deny_private_hosts', true)) {
             return;
         }
 

@@ -148,7 +148,7 @@ final class NewsMediaBackfillCommand extends Command
                 }
 
                 try {
-                    dispatch((new PreloadNewsMediaJob((int) $item->id))->onQueue($queueName));
+                    dispatch(new PreloadNewsMediaJob((int) $item->id)->onQueue($queueName));
                     $queuedCount++;
                 } catch (Throwable $e) {
                     $failedCount++;
@@ -223,13 +223,7 @@ final class NewsMediaBackfillCommand extends Command
             return false;
         }
 
-        foreach ($media as $mediaItem) {
-            if ($this->extractMediaUrl($mediaItem) !== null) {
-                return true;
-            }
-        }
-
-        return false;
+        return array_any($media, fn ($mediaItem) => $this->extractMediaUrl($mediaItem) !== null);
     }
 
     private function extractMediaUrl(mixed $mediaItem): ?string
