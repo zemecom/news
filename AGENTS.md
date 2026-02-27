@@ -26,17 +26,17 @@
 
 ## Правила валидации
 
-- Рекомендуется запускать `make ci-check` для проверки кода до коммита при изменениях в логике (`app/`, `src/Modules/`).
-- При коммите проверки (`make ci-check`) запускаются автоматически через git pre-commit hook, поэтому ручной запуск перед `git commit` не обязателен.
+- Рекомендуется запускать проверки кода до коммита при изменениях в логике (`app/`, `src/Modules/`) через `make` на хосте или напрямую внутри контейнера `app`.
+- При коммите проверки запускаются автоматически через git pre-commit hook, поэтому ручной запуск перед `git commit` не обязателен.
 
 ## Правила работы с Docker
 
-- **ВСЕ команды разработки напрямую (artisan, composer, pest, phpstan, pint) должны выполняться внутри Docker-контейнера `app`**.
+- **ВСЕ команды разработки и проверки напрямую (artisan, composer, pest, phpstan, pint, npm и т.д.) должны выполняться внутри Docker-контейнера `app`**.
     - ❌ `php artisan migrate` (на хосте)
     - ❌ `./vendor/bin/pest` (на хосте)
-    - ✅ `docker compose exec -it app php artisan migrate`
-    - ✅ `docker compose exec -it app ./vendor/bin/pest`
-- **Исключение — команды `make`**: Команды из `Makefile` (например, `make test`, `make ci-check`) уже оборачивают запуск в Docker, поэтому их МОЖНО и НУЖНО запускать прямо на хосте (в корне проекта).
+    - ✅ `docker compose exec app php artisan migrate`
+    - ✅ `docker compose exec app ./vendor/bin/pest`
+- **Исключение — команды `make`**: Команды из `Makefile` (например, `make test`, `make ci-check`, `make docs-deps`) МОЖНО запускать на хосте из корня проекта, так как они сами оборачивают команды в Docker.
 
 ## Правила самопроверки
 

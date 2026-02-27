@@ -6,7 +6,7 @@ NPM        = $(DOCKER_APP) npm
 
 .PHONY: up down build dev npm-dev help logs docs-deps app worker
 .PHONY: setup-local setup-ci migrate messaging-setup
-.PHONY: test test-arch test-all acceptance smoke-api ci-check
+.PHONY: test test-arch test-all acceptance smoke-api ci-check agent-check
 .PHONY: analyze psalm psalm-taint lint lint-check rector rector-check validate audit
 .PHONY: crawl process-once queue serving media-backfill
 
@@ -80,10 +80,12 @@ setup-hooks:
 
 test:
 	@# Run PHPUnit tests inside the container
+	$(ARTISAN) octane:reload || true
 	$(COMPOSER) test
 
 test-arch:
 	@# Run architecture tests (Pest) to verify architectural rules
+	$(ARTISAN) octane:reload || true
 	$(COMPOSER) test:arch
 
 test-all: smoke-api test test-arch acceptance
@@ -91,14 +93,24 @@ test-all: smoke-api test test-arch acceptance
 
 acceptance:
 	@# Run acceptance tests
+	$(ARTISAN) octane:reload || true
 	$(COMPOSER) test:acceptance
 
 smoke-api:
 	@# Run basic smoke tests against the API (inside container)
+	$(ARTISAN) octane:reload || true
 	$(DOCKER_APP) sh scripts/smoke-api.sh http://127.0.0.1:8000
 
 ci-check: validate audit lint-check analyze psalm-taint test test-arch
-	@# Run all CI pipeline checks (validate, audit, lint, phpstan, psalm, tests)
+	@# Run all CI pipeline checks (validate, audit, lint-check, phpstan, psalm, tests)
+
+agent-check:
+	@# AI Agent helper: reload Octane, lint, generate docs, analyze, and test
+	$(ARTISAN) octane:reload || true
+	$(COMPOSER) lint
+	@make docs-deps
+	$(COMPOSER) analyze
+	@make test-all
 
 # --- Static Analysis & Linting ---
 
