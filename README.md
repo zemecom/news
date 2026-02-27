@@ -5,9 +5,13 @@ AI‑агрегатор новостей в формате modular monolith на
 
 ## Архитектура
 
-- Модули: `src/Modules/{Crawler,Intelligence,Catalog,Delivery}`
+- Модули: `src/Modules/{Crawler,Intelligence,Catalog,Delivery,Shared}`
+- Верхнеуровневые зоны в `src`: `Modules/`, `Support/`, `Infrastructure/`
 - Слои в каждом модуле: `Domain`, `Application`, `Infrastructure`
 - Контракты: зависимости между слоями только через интерфейсы (Domain/Contracts)
+- Локальный HTTP-сервер: Laravel Octane + RoadRunner
+
+Правила размещения кода в `src` описаны в `docs/PROJECT_MEMORY.md`.
 
 ## Требования и установка
 
@@ -40,6 +44,13 @@ make dev
 
 Доступ: `http://localhost:${APP_PORT:-8080}`, healthchecks: `/health/live`, `/health/ready`.
 По умолчанию: Приложение — `8080`, Vite (HMR) — `5173`. Порты настраиваются в `.env`.
+Локальный `APP_URL` по умолчанию: `http://localhost:8080`.
+
+### Локальная отладка
+
+- `Telescope`: [http://localhost:8080/telescope](http://localhost:8080/telescope) в `local` окружении.
+- `Debugbar`: включается через `DEBUGBAR_ENABLED=true` в `.env`.
+- При работе через Octane Debugbar сбрасывает внутренний JS renderer на каждый запрос, чтобы asset URL не залипал на внутреннем порту RoadRunner `:8000`.
 
 ## Команды (Makefile)
 
@@ -78,6 +89,8 @@ make logs          # Просмотр логов контейнеров
 - Запрещён `Http::get` (только интеграции).
 - Application не зависит от Infrastructure.
 - Domain не зависит от Application/Infrastructure.
+- `src/Support` не должен превращаться в свалку helper-классов без явной архитектурной роли.
+- `src/Infrastructure` используется только для общей инфраструктуры, а не для модуль-специфичных адаптеров.
 
 Тесты архитектуры лежат в `tests/Architecture`.
 
@@ -88,10 +101,10 @@ make logs          # Просмотр логов контейнеров
 ## Примечания
 
 - **PHP 8.5**: Код использует современные возможности (readonly classes, #[Override] и т.д.).
-- **Docker**: Образ `app` содержит PHP-FPM, Composer и Node.js/NPM.
+- **Docker**: Образ `app` запускает Laravel Octane на RoadRunner и содержит Composer и Node.js/NPM.
 - **Vite**: Фронтенд собирается и обслуживается также внутри контейнера.
 - **Secrets**: `.env` копируется из `.env.example` при `setup-local`. Для LLM‑интеграций пропиши свои ключи.
-- **Xdebug**: Включён по умолчанию в dev-сборке.
+- **Xdebug**: Управляется через `WITH_XDEBUG`, `WITH_XDEBUG_WORKER` и `XDEBUG_MODE` в `.env`.
 
 ---
 
