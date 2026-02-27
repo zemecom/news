@@ -335,6 +335,16 @@ use Modules\Delivery\Application\Actions\ListPublicSourcesAction as ListPublicSo
 use Modules\Delivery\Application\Actions\ShowNewsAction as ShowNewsAction;
 use Modules\Delivery\Domain\DTO\NewsFeedFilters as NewsFeedFilters;
 
+/**
+ * API контроллер для отдачи новостей клиентам (Web, Mobile).
+ *
+ * В рамках Модульного Монолита этот класс (слой Framework) выступает лишь "официантом".
+ * Он не содержит бизнес-логики и SQL-запросов. Его единственная задача:
+ * 1. Принять HTTP-запрос (NewsIndexRequest)
+ * 2. Сконвертировать данные в строго типизированный DTO (NewsFeedFilters)
+ * 3. Передать DTO в слой Application модуля Delivery (ListNewsAction)
+ * 4. Вернуть полученный ответ в формате JSON.
+ */
 final class NewsController extends Controller
 {
 	public function __construct(
@@ -690,6 +700,14 @@ use Modules\Delivery\DeliveryServiceProvider as DeliveryServiceProvider;
 use Modules\Intelligence\IntelligenceServiceProvider as IntelligenceServiceProvider;
 use Override as Override;
 
+/**
+ * Агрегирующий провайдер для регистрации всех подсистем проекта (Модульный Монолит).
+ * Слой: App (Framework / Glue).
+ *
+ * Вместо того чтобы регистрировать каждый ServiceProvider модуля в config/app.php,
+ * мы регистрируем их здесь. Это обеспечивает единую и явную точку входа
+ * для всех модулей: Crawler, Intelligence, Catalog, Delivery.
+ */
 final class ModulesServiceProvider extends ServiceProvider
 {
 	#[Override]
@@ -710,30 +728,22 @@ use Illuminate\Support\Facades\Gate as Gate;
 use Laravel\Telescope\IncomingEntry as IncomingEntry;
 use Laravel\Telescope\Telescope as Telescope;
 use Laravel\Telescope\TelescopeApplicationServiceProvider as TelescopeApplicationServiceProvider;
+use Override as Override;
 
 class TelescopeServiceProvider extends TelescopeApplicationServiceProvider
 {
-	/**
-	 * Register any application services.
-	 */
+	#[Override]
 	public function register(): void
 	{
 	}
 
 
-	/**
-	 * Prevent sensitive request details from being logged by Telescope.
-	 */
 	protected function hideSensitiveRequestDetails(): void
 	{
 	}
 
 
-	/**
-	 * Register the Telescope gate.
-	 *
-	 * This gate determines who can access Telescope in non-local environments.
-	 */
+	#[Override]
 	protected function gate(): void
 	{
 	}
@@ -797,6 +807,25 @@ final readonly class MessagingTopologyService
 
 
 	private function declareQueue(AMQPChannel $channel, string $name, bool $quorum): void
+	{
+	}
+}
+
+
+```
+###  Path: `/app/Support/Octane/ResetDebugbarJsRenderer.php`
+
+```php
+namespace App\Support\Octane;
+
+use Fruitcake\LaravelDebugbar\LaravelDebugbar as LaravelDebugbar;
+use Laravel\Octane\Events\RequestReceived as RequestReceived;
+use ReflectionException as ReflectionException;
+use ReflectionProperty as ReflectionProperty;
+
+final class ResetDebugbarJsRenderer
+{
+	public function handle(RequestReceived $event): void
 	{
 	}
 }
@@ -922,6 +951,14 @@ use Modules\Catalog\Domain\Contracts\SourceRepository as SourceRepository;
 use Modules\Shared\Domain\Events\SourceFetchFailed as SourceFetchFailed;
 use Modules\Shared\Domain\Events\SourceFetchSucceeded as SourceFetchSucceeded;
 
+/**
+ * Слушатель доменных событий кроулера о статусе источника (Слой: Application).
+ *
+ * Пример межмодульного взаимодействия (Event-Driven Architecture):
+ * Модуль Crawler генерирует событие (FetchSucceeded/FetchFailed),
+ * а этот слушатель в модуле Catalog перехватывает его и обновляет счетчики
+ * ошибок/успехов ресурса (таблица Sources), управляя механизмом Backoff в дальнейшем.
+ */
 final readonly class UpdateSourceStatusListener
 {
 	public function __construct(
@@ -930,9 +967,6 @@ final readonly class UpdateSourceStatusListener
 	}
 
 
-	/**
-	 * Handle the event.
-	 */
 	public function handle(object $event): void
 	{
 	}
@@ -1187,6 +1221,15 @@ use Modules\Shared\Domain\DTO\EnrichedNewsData as EnrichedNewsData;
 use Modules\Shared\Domain\DTO\RawNewsData as RawNewsData;
 use Modules\Shared\Domain\Enum\NewsStatus as NewsStatus;
 
+/**
+ * Фактическая реализация репозитория для работы с новостями через Eloquent ORM.
+ * Модуль: Catalog. Слой: Infrastructure.
+ *
+ * Инкапсулирует в себе все SQL/PostgreSQL особенности.
+ * Для остальных модулей (например, модуля Intelligence) этот класс неизвестен,
+ * они общаются исключительно через абстрактный контракт `NewsRepository` (Inversion of Control),
+ * что позволяет легко подменять БД или мокать её в тестах.
+ */
 final class EloquentNewsRepository implements NewsRepository
 {
 	public function existsByFingerprint(string $fingerprint): bool
@@ -1226,10 +1269,10 @@ use Modules\Catalog\Domain\Contracts\SourceRepository as SourceRepository;
 use Modules\Catalog\Infrastructure\Persistence\Models\Source as Source;
 use Modules\Shared\Application\Services\SourceRuntimeHealthPolicy as SourceRuntimeHealthPolicy;
 
-final class EloquentSourceRepository implements SourceRepository
+final readonly class EloquentSourceRepository implements SourceRepository
 {
 	public function __construct(
-		private readonly SourceRuntimeHealthPolicy $runtimeHealthPolicy,
+		private SourceRuntimeHealthPolicy $runtimeHealthPolicy,
 	) {
 	}
 
@@ -1417,6 +1460,17 @@ use Modules\Shared\Domain\Events\SourceFetchFailed as SourceFetchFailed;
 use Modules\Shared\Domain\Events\SourceFetchSucceeded as SourceFetchSucceeded;
 use Throwable as Throwable;
 
+/**
+ * Главный оркестратор модуля Crawler (Слой: Application).
+ *
+ * Алгоритм работы:
+ * 1. Получает сырые данные о канале/ленте (`$source`).
+ * 2. Делегирует HTTP-скачивание клиентам (TelegramClient или RssClient) слой Infrastructure.
+ * 3. Превращает "сырой" ответ в DTO `RawNewsData` через фабрику.
+ * 4. Проверяет дубликаты через интерфейс `Deduplicator` (сохраняя идемпотентность парсинга).
+ * 5. Уникальные посты отправляет в RabbitMQ (через `RawPublisher`) для модуля Intelligence.
+ * 6. Выбрасывает доменные события об успехе/ошибке (для обновления статусов в модуле Catalog).
+ */
 final readonly class FeedFetcherAction
 {
 	public function __construct(
@@ -1914,13 +1968,15 @@ use Modules\Crawler\Application\Jobs\ProcessNewsJob as ProcessNewsJob;
 use Modules\Crawler\Domain\Contracts\RawPublisher as RawPublisherContract;
 use Modules\Shared\Domain\DTO\RawNewsData as RawNewsData;
 
+/**
+ * Инфраструктурный адаптер для отправки "сырых" новостей в очередь (Слой: Infrastructure).
+ *
+ * Реализует контракт RawPublisherContract. Вместо прямой синхронной передачи
+ * в модуль Intelligence, публикатор сериализует DTO и отправляет команду-job (`ProcessNewsJob`)
+ * в RabbitMQ. Это позволяет масштабировать процесс обработки LLM независимо от краулеров.
+ */
 final readonly class RawPublisher implements RawPublisherContract
 {
-	public function __construct()
-	{
-	}
-
-
 	public function publish(RawNewsData $raw): void
 	{
 	}
@@ -2355,6 +2411,14 @@ use Illuminate\Contracts\Pagination\CursorPaginator as CursorPaginator;
 use Modules\Delivery\Domain\Contracts\NewsFeedReader as NewsFeedReader;
 use Modules\Delivery\Domain\DTO\NewsFeedFilters as NewsFeedFilters;
 
+/**
+ * Точка входа в бизнес-логику получения списка новостей (Модуль Delivery).
+ * Слой: Application.
+ *
+ * Этот Action ничего не знает про Eloquent или PostgreSQL.
+ * Он использует Inversion of Control (IoC), опираясь на контракт NewsFeedReader из Domain слоя.
+ * Фактическая реализация (EloquentNewsFeedReader) будет подставлена Laravel Service Container'ом.
+ */
 final readonly class ListNewsAction
 {
 	public function __construct(
@@ -2841,6 +2905,16 @@ use Modules\Shared\Domain\DTO\EnrichedNewsData as EnrichedNewsData;
 use Modules\Shared\Domain\DTO\RawNewsData as RawNewsData;
 use Modules\Shared\Domain\Events\NewsEnriched as NewsEnriched;
 
+/**
+ * Конвейер (Pipeline) обработки сырых новостей в модуле Intelligence (Слой: Application).
+ *
+ * Реализует паттерн Chain of Responsibility / Pipeline.
+ * 1. Принимает DTO `RawNewsData` на вход.
+ * 2. Прогоняет его через набор шагов (`PipelineStep`): перевод, суммаризация, сентимент-анализ и т.д.
+ * 3. Если шаг выбрасывает `SkipMessageException` — обработка прерывается.
+ * 4. Если результат стал `EnrichedNewsData`, конвейер сохраняет результат в БД (Catalog),
+ *    вызывает доменное событие `NewsEnriched` и пушит его подписчикам для дальнейшей доставки.
+ */
 final readonly class NewsProcessingPipeline
 {
 	/**
@@ -3151,6 +3225,13 @@ namespace Modules\Intelligence\Infrastructure\LLM;
 
 use Modules\Intelligence\Domain\Contracts\Translator as Translator;
 
+/**
+ * Базовая эвристическая "заглушка" для перевода.
+ * Модуль: Intelligence. Слой: Infrastructure.
+ *
+ * В реальном приложении здесь будет адаптер к DeepL, Google Translate или локальной нейросети.
+ * Класс реализует доменный контракт `Translator`, скрывая детали запросов к внешнему API.
+ */
 final class HeuristicTranslator implements Translator
 {
 	public function translate(string $text, string $targetLanguage, string $sourceLanguage): string
@@ -3330,6 +3411,15 @@ namespace Modules\Shared\Application\Services;
 use Carbon\CarbonImmutable as CarbonImmutable;
 use Modules\Shared\Domain\DTO\RawNewsData as RawNewsData;
 
+/**
+ * Генератор детерминированных отпечатков (Fingerprints) для новостей.
+ * Слой: Application (модуль Shared).
+ *
+ * Решает проблему дедупликации данных. За счет создания предсказуемого хэша (SHA-256)
+ * на основе комбинации (Идентификатор Источника + Внешний ID / Заголовок / Ссылка + Дата с точностью до минуты),
+ * мы можем наложить Unique Constraint на БД в модуле Catalog. Это гарантирует, что даже
+ * при параллельном парсинге (вызовах Crawler) в базу попадет только один уникальный инстанс новости.
+ */
 final class FingerprintGenerator
 {
 	public function generate(
@@ -3630,6 +3720,6 @@ final readonly class SourceFetchSucceeded
 ```
 ---
 **File Statistics**
-- **Size**: 80.21 KB
-- **Lines**: 3635
+- **Size**: 86.95 KB
+- **Lines**: 3726
 File: `../docs/PROJECT_INTERFACE.md`

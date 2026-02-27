@@ -49,8 +49,11 @@ _SOURCE: Directory Structure_
     │   ├── ModulesServiceProvider.php
     │   ├── TelescopeServiceProvider.php
     ├── Services/
-    │   └── HealthCheckService.php
-    │   └── MessagingTopologyService.php
+    │   ├── HealthCheckService.php
+    │   ├── MessagingTopologyService.php
+    ├── Support/
+    │   └── Octane/
+    │       └── ResetDebugbarJsRenderer.php
 └── src/
     └── Modules/
         └── Catalog/
@@ -200,6 +203,6 @@ _SOURCE: Directory Structure_
 ```
 ---
 **File Statistics**
-- **Size**: 8.8 KB
-- **Lines**: 206
+- **Size**: 8.9 KB
+- **Lines**: 209
 File: `../docs/PROJECT_STRUCTURE.md`

@@ -150,6 +150,7 @@
 
 - Docker Compose поднимает `app` (RoadRunner), `postgres`, `redis`, `rabbitmq`, `worker` (Laravel Queue worker для `crawler_tasks,intelligence_tasks,media_tasks`). Nginx удален за ненадобностью.
 - Build target для Docker-образа вынесен в `DOCKER_BUILD_TARGET` (`local`/`production`) вместо жёсткой привязки к `APP_ENV`.
+- Для локальной отладки через Laravel Debugbar в Octane подключен `ResetDebugbarJsRenderer` на `RequestReceived`, чтобы Debugbar не переиспользовал устаревший base URL между запросами и не генерировал asset-ссылки на внутренний порт RoadRunner `:8000`.
 - Данные Postgres теперь персистятся на диск проекта:
     - `./.docker-data/postgres:/var/lib/postgresql/data`.
 - Данные Redis и RabbitMQ также персистятся на диск проекта:
