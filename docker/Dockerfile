@@ -47,7 +47,8 @@ RUN --mount=type=cache,target=/var/cache/apk \
 ENV PHP_OPCACHE_ENABLE="1" \
     PHP_OPCACHE_MAX_ACCELERATED_FILES="10000" \
     PHP_OPCACHE_MEMORY_CONSUMPTION="192" \
-    PHP_OPCACHE_MAX_WASTED_PERCENTAGE="10"
+    PHP_OPCACHE_MAX_WASTED_PERCENTAGE="10" \
+    PATH="/tmp/roadrunner-bin:${PATH}"
 
 
 # Install Composer
