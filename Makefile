@@ -1,3 +1,5 @@
+SERVICES = app worker postgres redis rabbitmq
+
 # Executables variables
 DOCKER_APP = docker compose exec -T app
 COMPOSER   = $(DOCKER_APP) composer
@@ -14,7 +16,11 @@ NPM        = $(DOCKER_APP) npm
 
 up:
 	@# Start the application in detached mode (background)
-	docker compose up -d
+	@if ! docker compose up -d --remove-orphans; then \
+		echo "docker compose up failed; removing stale service containers and retrying..."; \
+		docker compose rm -f -s $(SERVICES) || true; \
+		docker compose up -d --remove-orphans; \
+	fi
 
 down:
 	@# Stop and remove containers, networks, images, and volumes
@@ -46,7 +52,11 @@ npm-dev:
 
 setup-local:
 	@# Install dependencies and setup environment for local development via Docker
-	docker compose up -d --build
+	@if ! docker compose up -d --build --remove-orphans; then \
+		echo "docker compose up --build failed; removing stale service containers and retrying..."; \
+		docker compose rm -f -s $(SERVICES) || true; \
+		docker compose up -d --build --remove-orphans; \
+	fi
 	$(COMPOSER) install
 	$(NPM) install
 	cp .env.example .env || true
