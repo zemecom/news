@@ -50,11 +50,12 @@ services:
       retries: 3
 
   postgres:
-    image: postgres:17-alpine
+    image: postgres:18-alpine
     environment:
       POSTGRES_USER: ${DB_USERNAME:-smartnews}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-smartnews}
       POSTGRES_DB: ${DB_DATABASE:-smartnews}
+      PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
       - ./.docker-data/postgres:/var/lib/postgresql/data
     ports:
@@ -67,7 +68,7 @@ services:
     restart: unless-stopped
 
   redis:
-    image: redis:7-alpine
+    image: redis:8-alpine
     volumes:
       - ./.docker-data/redis:/data
     ports:
@@ -80,7 +81,7 @@ services:
     restart: unless-stopped
 
   rabbitmq:
-    image: rabbitmq:4-management-alpine
+    image: rabbitmq:4.2-management-alpine
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-smartnews}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-smartnews}

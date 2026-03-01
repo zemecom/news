@@ -101,7 +101,8 @@ make logs          # Просмотр логов контейнеров
 ## Примечания
 
 - **PHP 8.5**: Код использует современные возможности (readonly classes, #[Override] и т.д.).
-- **Docker**: Образ `app` запускает Laravel Octane на RoadRunner и содержит Composer и Node.js/NPM.
+- **Docker**: Локальный стек использует `postgres:18-alpine`, `redis:8-alpine`, `rabbitmq:4.2-management-alpine`; образ `app` запускает Laravel Octane на RoadRunner и содержит Composer и Node.js/NPM.
+- **PostgreSQL 18**: После обновления с ветки `17` существующий каталог `./.docker-data/postgres` может потребовать миграции данных или пересоздания локальной базы, если данные не нужны.
 - **Vite**: Фронтенд собирается и обслуживается также внутри контейнера.
 - **Secrets**: `.env` копируется из `.env.example` при `setup-local`. Для LLM‑интеграций пропиши свои ключи.
 - **Xdebug**: Управляется через `WITH_XDEBUG`, `WITH_XDEBUG_WORKER` и `XDEBUG_MODE` в `.env`.

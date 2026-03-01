@@ -4,7 +4,7 @@ COMPOSER   = $(DOCKER_APP) composer
 ARTISAN    = $(DOCKER_APP) php artisan
 NPM        = $(DOCKER_APP) npm
 
-.PHONY: up down build dev npm-dev help logs docs-deps app worker
+.PHONY: up down build rebuild dev npm-dev help logs docs-deps app worker
 .PHONY: setup-local setup-ci migrate messaging-setup
 .PHONY: test test-arch test-all acceptance smoke-api ci-check agent-check
 .PHONY: analyze psalm psalm-taint lint lint-check rector rector-check validate audit
@@ -23,6 +23,10 @@ down:
 build:
 	@# Build or rebuild services
 	docker compose build
+
+rebuild:
+	@# Rebuild services from scratch without Docker layer cache
+	docker compose build --no-cache
 
 dev:
 	@# Run development servers concurrently (server, queue, logs, vite) inside Docker

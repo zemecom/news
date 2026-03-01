@@ -186,6 +186,12 @@
 - Для локальной отладки через Laravel Debugbar в Octane подключен `ResetDebugbarJsRenderer` на `RequestReceived`, чтобы Debugbar не переиспользовал устаревший base URL между запросами и не генерировал asset-ссылки на внутренний порт RoadRunner `:8000`.
 - Данные Postgres теперь персистятся на диск проекта:
     - `./.docker-data/postgres:/var/lib/postgresql/data`.
+- Локальный Docker-стек обновлен до актуальных стабильных линий образов:
+    - `postgres:18-alpine` c явным `PGDATA=/var/lib/postgresql/data/pgdata` для совместимого запуска на PostgreSQL 18;
+    - `redis:8-alpine`;
+    - `rabbitmq:4.2-management-alpine`;
+    - базовый образ приложения `alpine:3.23.3` с установленным системным `curl` (необходим для smoke-тестов и отладки);
+    - build-time Composer image `composer:2.9.5`.
 - Данные Redis и RabbitMQ также персистятся на диск проекта:
     - `./.docker-data/redis:/data`,
     - `./.docker-data/rabbitmq:/var/lib/rabbitmq`.
@@ -196,6 +202,7 @@
     - Образ `runtime` переведен на использование не-root пользователя `www-data` для повышения безопасности.
     - Включено расширение `opcache` с оптимальными настройками для production-контура.
     - Оптимизировано копирование файлов для лучшего использования кэша Docker-слоев.
+    - В `Makefile` добавлен отдельный target `make rebuild` для полной пересборки Docker-образов без layer cache.
     - Сервисы данных (`postgres`, `redis`, `rabbitmq`) по умолчанию биндятся только на `127.0.0.1` (через переменные `*_BIND`).
     - RabbitMQ учетные данные в compose берутся из `.env`; дефолт `guest/guest` убран.
     - `RABBITMQ_RETRY_AFTER` увеличен до `180`, чтобы быть больше worker `--timeout=120` и исключить преждевременный requeue.

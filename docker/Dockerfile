@@ -1,7 +1,7 @@
 # ==========================================
 # BASE STAGE (Foundation for both Dev & Prod)
 # ==========================================
-FROM alpine:3.23 AS base
+FROM alpine:3.23.3 AS base
 
 WORKDIR /app
 
@@ -40,6 +40,7 @@ RUN --mount=type=cache,target=/var/cache/apk \
     php85-pecl-redis \
     ca-certificates \
     icu-data-full \
+    curl \
     && ln -s /usr/bin/php85 /usr/bin/php
 
 # Configure Opcache (common settings)
@@ -50,7 +51,7 @@ ENV PHP_OPCACHE_ENABLE="1" \
 
 
 # Install Composer
-COPY --from=composer:latest /usr/bin/composer /usr/local/bin/composer
+COPY --from=composer:2.9.5 /usr/bin/composer /usr/local/bin/composer
 
 # Healthcheck
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \

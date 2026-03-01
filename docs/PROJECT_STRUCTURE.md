@@ -203,6 +203,6 @@ _SOURCE: Directory Structure_
 ```
 ---
 **File Statistics**
-- **Size**: 8.93 KB
-- **Lines**: 210
+- **Size**: 8.9 KB
+- **Lines**: 209
 File: `../docs/PROJECT_STRUCTURE.md`
