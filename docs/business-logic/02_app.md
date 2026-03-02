@@ -1,67 +1,330 @@
-# 02. Слой Framework: Директория `app`
+# 02. Framework Layer: Что Реально Живёт в `app/`
 
-Итак, RoadRunner передал свеженький запрос (или была вызвана консольная команда). В дело вступает директория `app/`.
+В модульном монолите самая частая ошибка мышления такая: человек видит Laravel-папку `app/` и автоматически считает, что именно там лежит основная логика. В этом проекте это не так. Главная логика размазана по модулям в `src/Modules`, а `app/` в основном играет роль framework glue-слоя.
 
-В классическом Laravel в `app/` хранится всё — модели (`User`, `Post`), бизнес-логика (Сервисы), почта и события. Но у нас в Модульном Монолите у папки `app` совершенно иная и строгая роль.
-**В этой папке НЕТ И НЕ ДОЛЖНО БЫТЬ никакой чистой бизнес-логики.** Это "клей", инфраструктурный фасад, который связывает Laravel с нашими независимыми модулями (из `src/Modules/`).
+## Зачем существует эта часть системы
 
-Давай разберем детально каждый класс.
+`app/` отвечает за интеграцию проекта с Laravel runtime:
 
-## 1. Service Providers (Регистрация модулей)
-*(Где: `app/Providers/`)*
+- контроллеры принимают HTTP;
+- middleware режут доступ и добавляют инфраструктурное поведение;
+- команды дают CLI точки входа;
+- service provider-ы собирают приложение;
+- Filament/Livewire подключают админский UI;
+- глобальные framework-specific модели вроде `User` остаются там, где их ожидает Laravel ecosystem.
 
-При старте воркера (см. `01_entrypoint.md`) Laravel читает массив провайдеров в файле `bootstrap/providers.php`. Среди них находятся наши `AppServiceProvider` и `ModulesServiceProvider`.
+## Ключевые файлы и классы
 
-### Класс: `ModulesServiceProvider`
-Открой этот файл. Ты увидишь внутри метод `register()`, в котором мы перечисляем сервис-провайдеры наших модулей:
-```php
-$this->app->register(\Modules\Crawler\CrawlerServiceProvider::class);
-$this->app->register(\Modules\Intelligence\IntelligenceServiceProvider::class);
-// ... и так далее
-```
-**Зачем?** Если ты создашь новый модуль `src/Modules/Billing`, Laravel ничего о нём не знает. Он не загрузит его роуты, не забиндит его интерфейсы. `ModulesServiceProvider` — это главный "рубильник", который включает наши изолированные модули в общее приложение.
+| Путь | Роль |
+| --- | --- |
+| `app/Providers/ModulesServiceProvider.php` | Включает модульные service provider-ы |
+| `app/Providers/AppServiceProvider.php` | Глобальный AMQP connection и локальный Telescope |
+| `app/Http/Controllers/...` | HTTP surface проекта |
+| `app/Http/Requests/Api/NewsIndexRequest.php` | Валидация query-параметров ленты |
+| `app/Http/Middleware/EnsureUserIsAdmin.php` | RBAC для admin API |
+| `app/Console/Commands/*.php` | CLI точки входа |
+| `app/Providers/Filament/AdminPanelProvider.php` | Конфигурация админ-панели |
+| `app/Models/User.php` | Laravel auth-модель пользователя |
+| `app/Services/*.php` | Глобальные инфраструктурные сервисы приложения |
 
-В самом же `AppServiceProvider` мы настраиваем глобальные вещи: например, делаем так, чтобы Eloquent не лениво подгружал связи (Model::preventLazyLoading()), потому что N+1 запросы — это зло для производительности.
+## Как `app/` собирает приложение
 
-## 2. Console Commands (Точки входа для CLI)
-*(Где: `app/Console/Commands/`)*
+### `ModulesServiceProvider`
 
-Если HTTP-запросы входят через роуты (которые лежат в `routes/*.php` и ведут в контроллеры), то консольные скрипты (которые запускает Cron/Makefile) лежат именно здесь.
+Этот provider делает одну простую, но системообразующую вещь: регистрирует service provider-ы модулей:
 
-### Класс: `NewsCrawlCommand`
-Эта команда вызывается по расписанию (`php artisan news:crawl`). 
-Посмотри на неё: она **вообще не умеет парсить**. И она не ходит в RabbitMQ! 
-Её реализация сводится к тому, чтобы:
-1. Получить из DI-контейнера `SourceRepository` (контракт из Catalog).
-2. Узнать список активных источников.
-3. Проверить флажок `--ignore-backoff` (об этом в главе `07` про отладку).
-4. Задиспатчить задачу `FetchSourceJob` для каждого источника.
-Эту команду может прочитать даже менеджер. Логика делегирована внутрь модулей.
+- `CrawlerServiceProvider`
+- `IntelligenceServiceProvider`
+- `CatalogServiceProvider`
+- `DeliveryServiceProvider`
 
-### Скрипты инициализации (`MessagingSetupCommand`, `HealthCheckCommand`)
-- `MessagingSetupCommand` — вызывается один раз (есть в `Makefile` как `setup-local`). Она создает в RabbitMQ нужные Exchange (`news_flow`) и связывает очереди. Сама логика создания скрыта в `MessagingTopologyService`. 
-- `HealthCheckCommand` — пингует Redis и RabbitMQ для Kubernetes Readiness Probes. У нее есть делегат `HealthCheckService`.
+Зачем это нужно:
 
-## 3. Http Controllers & Middleware
-*(Где: `app/Http/`)*
+1. Laravel сам по себе не знает о `src/Modules`.
+2. Контракты и реализации внутри модулей должны попасть в service container.
+3. Слушатели событий и биндинги модулей должны быть зарегистрированы централизованно.
 
-Контроллеры в папке `app/` — это "официанты". 
+Это важный architectural seam: framework знает о модулях, а модули не обязаны знать о framework-композиции.
 
-Например, `FeedPageController` (отвечает за главную веб-страницу).
-Он принимает запрос, но сам за новостями в базу не лезет. Он обращается к `ListNewsAction` (класс из модуля Delivery), получает от него массив данных, и просто передает этот массив во вьюшку Blade: `return view('feed', ['news' => $result])`.
+### `AppServiceProvider`
 
-В `Middleware` лежат классы типа `EnsureUserIsAdmin`. Middleware встает на пути HTTP-запроса ДО того, как он попадет в контроллер. `EnsureUserIsAdmin` проверяет, есть ли у пользователя права, и если нет — прерывает запрос (возвращает 403 HTTP статус).
+Здесь регистрируется глобальный `AMQPStreamConnection` на основе `queue.connections.rabbitmq`, а также локально подключается `TelescopeServiceProvider`.
 
-## 4. Исключения: Модель User и Livewire
-Зачем в `app/Models/User.php` лежит модель пользователя?
-Потому что авторизация Laravel и админка Filament завязаны на глобальную таблицу `users`. Пока мы не выделяли отдельный модуль `Auth`, модель юзера живёт в базовой директории, чтобы Filament-панели могли из коробки работать с аутентификацией админов.
+Это хороший пример правильного содержимого `app/`:
 
-Класс `Livewire\CrawlerLog` — это Livewire-компонент, который на лету по веб-сокету/ajax подгружает логи парсера в браузер. Компоненты Livewire тоже принято держать в папке `app/`, чтобы фреймворк мог автоматически искать их шаблоны.
+- код явно framework/integration-specific;
+- он не принадлежит одному конкретному бизнес-модулю;
+- он нужен на уровне всего приложения.
 
----
+## Контроллеры: thin controllers, но без фанатизма
 
-### Главный урок папки `app/`
-Если тебе нужно описать сложную логику проверки подписки или скидок пользователя, **не пиши** этот код в `app/Http/Controllers/BillingController`. Создай модуль, напиши класс в `Application`, и пусть контроллер просто вызывает метод `->charge($amount)`.
-`app/` должна оставаться тупой и тонкой.
+### `NewsController`
 
-А как выглядят "Тонкие контроллеры"? Давай смотреть на примере модуля `Delivery`. Переходи к `03_delivery.md`!
+Это главный публичный API-контроллер.
+
+Он обслуживает:
+
+- `GET /api/news`
+- `GET /api/news/{id}`
+- `GET /api/sources`
+
+Что он делает правильно:
+
+1. Получает typed input через `NewsIndexRequest`.
+2. Собирает DTO `NewsFeedFilters`.
+3. Передаёт всё в `ListNewsAction`, `ShowNewsAction`, `ListPublicSourcesAction`.
+4. Формирует JSON response shape.
+
+Чего он не делает:
+
+- не пишет SQL;
+- не ходит в RabbitMQ;
+- не работает напрямую с моделями `NewsItem` или `Source`;
+- не реализует доменные правила.
+
+### `SourceController`
+
+Admin API endpoint `GET /api/admin/sources`.
+
+Он делегирует чтение в `ListSourcesAction`. Это read-only endpoint. Никакого админского CRUD через этот controller сейчас нет, только чтение списка.
+
+### `FeedPageController`
+
+Главная web-страница `/` просто возвращает view `feed`. Это важно: web-страница не дублирует backend-логику ленты на сервере. Реальный read flow остаётся в API/Delivery.
+
+### `HealthController`
+
+Есть два health endpoint-а:
+
+- `/health/live` — просто возвращает `status=ok`;
+- `/health/ready` — вызывает `HealthCheckService` и проверяет `db`, `redis`, `rabbitmq`.
+
+Плюс в `bootstrap/app.php` включён стандартный Laravel health endpoint `/up`.
+
+## Form Request: `NewsIndexRequest`
+
+Этот класс валидирует query parameters для ленты новостей:
+
+- `cursor`
+- `per_page`
+- `category`
+- `sentiment_min`
+- `sentiment_max`
+- `important`
+- `date_from`
+- `date_to`
+- `q`
+
+Кроме обычных правил, он делает post-validation checks:
+
+1. `sentiment_min <= sentiment_max`
+2. `date_from <= date_to`
+
+То есть контроллер получает уже нормализованный и валидированный input layer.
+
+## Middleware и доступ
+
+### `EnsureUserIsAdmin`
+
+Этот middleware:
+
+1. Возвращает `401`, если пользователь не аутентифицирован.
+2. Возвращает `403`, если пользователь аутентифицирован, но не admin.
+3. Пропускает дальше только `App\Models\User` с `role=admin`.
+
+Он доступен как alias `role.admin` и используется в `routes/api.php`.
+
+### `AutoLoginAdmin`
+
+Это локальный convenience middleware для Filament admin panel:
+
+- если `app()->isLocal()`;
+- если включён `ADMIN_AUTO_LOGIN`;
+- если пользователь не залогинен;
+
+тогда в сессию логинится первый пользователь из базы.
+
+Это не domain logic. Это чисто локальное dev-удобство.
+
+## Console Commands как framework entrypoints
+
+### `NewsCrawlCommand`
+
+Самая важная CLI-команда проекта.
+
+Что она реально делает:
+
+1. Читает активные `Source` через Eloquent-модель `Modules\Catalog\Infrastructure\Persistence\Models\Source`.
+2. Учитывает фильтр `--source-id`.
+3. Парсит `date-from`, `date-to`, `limit`.
+4. Переключает режимы `sync` и `async`.
+5. Проверяет backoff через `SourceRuntimeHealthPolicy`.
+6. Автоматически подбирает `dateFrom` от последней новости источника, если пользователь не задал диапазон явно.
+7. Либо диспатчит `FetchSourceJob`, либо вызывает `FeedFetcherAction` синхронно.
+
+Очень важная interview-деталь: эта команда **не идеально чистая архитектурно**, потому что в framework-слое напрямую использует Eloquent-модели `Source` и `NewsItem`. Это не катастрофа, но это именно компромисс, а не образцовая гексагональная изоляция.
+
+### `NewsMediaBackfillCommand`
+
+Операционная команда для дозаполнения `news_media_assets` по уже существующим новостям.
+
+Поддерживает:
+
+- диапазон `from-id / to-id`
+- `limit`
+- `chunk`
+- `queue`
+- `--all`
+- `--sync`
+- `--dry-run`
+
+Это полезно для миграционного и операционного сценария: если структура хранения медиа появилась позже основного контента, можно переиндексировать существующие записи без нового краулинга.
+
+### `MessagingSetupCommand`
+
+Оборачивает `MessagingTopologyService` и декларативно создаёт exchange, queues и bindings в RabbitMQ. Это инфраструктурный bootstrap.
+
+### `HealthCheckCommand`
+
+CLI-проверка здоровья приложения для DB/Redis/RabbitMQ.
+
+## Глобальные сервисы уровня приложения
+
+### `MessagingTopologyService`
+
+Создаёт topology для exchange `news_flow`:
+
+- exchange type: `topic`
+- queue `queue.delivery_feed`
+- queue `queue.delivery_push`
+- bind `enriched.ready`
+- bind `enriched.ready.important`
+
+Важно: это не Laravel Queue. Это отдельный AMQP exchange-контур.
+
+### `HealthCheckService`
+
+Проверяет:
+
+- `DB::connection()->getPdo()`
+- `Redis::command('ping')`
+- открытие/закрытие AMQP channel
+
+Это readiness-check уровня инфраструктуры, а не бизнес-диагностика.
+
+## Filament и framework-specific UI
+
+### `AdminPanelProvider`
+
+Поднимает Filament panel:
+
+- id: `admin`
+- path: `/admin`
+- login enabled
+- auto-discover resources/pages/widgets
+- middleware stack для cookies/session/csrf
+- добавляет `AutoLoginAdmin`
+
+### `SourceResource`
+
+Resource построен поверх Eloquent-модели `Source`, то есть админка напрямую работает с persistence model Catalog-модуля. Это нормальный pragmatic shortcut для admin-поверхности.
+
+### `SourcesTable`
+
+Показывает:
+
+- `name`
+- `url`
+- `type`
+- `is_active`
+- `news_items_count`
+- `latest_article_at`
+- `earliest_article_at`
+- `last_success_at`
+- `error_streak`
+
+Есть action `Run`, который открывает модалку с crawler UI.
+
+## `User` как исключение из модульной логики
+
+Модель `App\Models\User` остаётся в `app/Models` по pragmatic причинам:
+
+1. Laravel auth ecosystem ожидает её там.
+2. Filament напрямую интегрируется с auth-моделью.
+3. Отдельного модуля `Auth` в проекте пока нет.
+
+Она знает о `role`, умеет `isAdmin()` и реализует `FilamentUser`.
+
+## Какие данные здесь проходят и как они меняются
+
+| Уровень | Данные |
+| --- | --- |
+| HTTP controller | `Request`, `JsonResponse`, DTO-фильтры |
+| Middleware | текущий пользователь и access decision |
+| Commands | CLI options, коллекции Eloquent-моделей, dispatch jobs |
+| Services | технические результаты health/messaging bootstrap |
+| Filament | persistence records для админского UI |
+
+## Какие есть ограничения, риски и edge cases
+
+1. `NewsCrawlCommand` работает не через domain contract, а через Eloquent-модели.
+2. `app/` всё равно местами знает слишком много о runtime-деталях модулей.
+3. Admin-панель завязана на persistence-модели, а не на отдельный application facade.
+4. `AutoLoginAdmin` удобен локально, но его нельзя воспринимать как production-аутентификацию.
+
+## Что важно для Octane/RoadRunner и очередей
+
+1. Controllers и middleware не должны хранить mutable состояние между запросами.
+2. Глобальные singletons из providers должны быть stateless или очень аккуратными.
+3. Console commands и HTTP-runtime имеют разный lifecycle, это нужно проговаривать отдельно.
+
+## Что могут спросить на собеседовании
+
+### Вопрос
+Почему `app/` в этом проекте не содержит бизнес-логику?
+
+**Короткий ответ:** потому что бизнес-логика вынесена в модульные слои `src/Modules`, а `app/` оставлен как Laravel glue layer.
+
+**Развёрнутый ответ:** `app/` нужен, чтобы интегрировать проект с HTTP, CLI, auth, middleware, providers, Filament и другими framework-specific точками. Это снижает связность между бизнес-кодом и Laravel runtime.
+
+**На что обратить внимание:** упомяни, что это цель архитектуры, но не абсолютная чистота.
+
+### Вопрос
+Насколько тонкие контроллеры в этом проекте?
+
+**Короткий ответ:** достаточно тонкие: они валидируют input, собирают DTO и делегируют работу action-классам.
+
+**Развёрнутый ответ:** `NewsController` почти полностью соответствует идее thin controller. Но в целом правильнее говорить не "они нулевые", а "они держат transport concerns и orchestration request/response".
+
+**На что обратить внимание:** не обещай, что любой controller здесь идеально чистый, если ты не проверил код.
+
+### Вопрос
+Есть ли в `app/` архитектурные компромиссы?
+
+**Короткий ответ:** да, самый заметный — `NewsCrawlCommand` использует persistence-модели напрямую.
+
+**Развёрнутый ответ:** это упрощает операционный сценарий и читаемость команды, но с точки зрения чистой hexagonal границы framework слой становится чуть сильнее связан с persistence-моделью, чем хотелось бы.
+
+**На что обратить внимание:** на интервью это лучше подавать как осознанный trade-off, а не как "ошибку".
+
+## Куда смотреть в коде
+
+- `bootstrap/app.php`
+- `app/Providers/ModulesServiceProvider.php`
+- `app/Providers/AppServiceProvider.php`
+- `app/Http/Controllers/Api/NewsController.php`
+- `app/Http/Controllers/Api/Admin/SourceController.php`
+- `app/Http/Controllers/Web/FeedPageController.php`
+- `app/Http/Controllers/HealthController.php`
+- `app/Http/Requests/Api/NewsIndexRequest.php`
+- `app/Http/Middleware/EnsureUserIsAdmin.php`
+- `app/Console/Commands/NewsCrawlCommand.php`
+- `app/Console/Commands/NewsMediaBackfillCommand.php`
+- `app/Providers/Filament/AdminPanelProvider.php`
+- `app/Models/User.php`
+
+## Связанные документы
+
+- [03. Модуль Delivery: Как Проект Отдаёт Данные Наружу](03_delivery.md) — как controllers делегируют чтение в Delivery
+- [07. Админка, Диагностика и Operational Debugging](07_admin_and_debugging.md) — что поверх `app/` построено для администрирования и диагностики
+- [09. Как Добавлять Новую Фичу в Этот Проект](09_how_to_add_feature.md) — как понять, должен ли новый код жить в `app/` или в модуле
