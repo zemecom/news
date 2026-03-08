@@ -248,6 +248,6 @@ Filament resource завязан прямо на Eloquent-модель `Source`.
 
 ## Связанные документы
 
-- [08. Инфраструктура: Docker, Сервисы, Makefile и Контейнерный Runtime](08_infrastructure.md) — где физически живут DB/Redis/RabbitMQ
-- [12. События, Очереди и Messaging](12_events_queues_and_messaging.md) — какие очереди диагностировать
-- [13. Безопасность, Отказы и Failure Modes](13_security_and_failure_modes.md) — как интерпретировать backoff и отказы
+- [08. Инфраструктура: Docker, Сервисы, Makefile и Контейнерный Runtime](08-infrastructure.md) — где физически живут DB/Redis/RabbitMQ
+- [12. События, Очереди и Messaging](12-events-queues-and-messaging.md) — какие очереди диагностировать
+- [13. Безопасность, Отказы и Failure Modes](13-security-and-failure-modes.md) — как интерпретировать backoff и отказы

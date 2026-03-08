@@ -103,12 +103,12 @@
 
 | Если спрашивают | Смотри |
 | --- | --- |
-| как идёт поток новости | [10. Сквозные Runtime-Сценарии](10_end_to_end_flows.md) |
-| как устроена БД | [11. Модель Данных, Таблицы и Индексы](11_data_model_and_indexes.md) |
-| чем jobs отличаются от events | [12. События, Очереди и Messaging](12_events_queues_and_messaging.md) |
-| как решена безопасность | [13. Безопасность, Отказы и Failure Modes](13_security_and_failure_modes.md) |
-| что тестируется и как | [14. Тестирование и Quality Gates](14_testing_and_quality_gates.md) |
-| где слабые места проекта | [17. Текущие Ограничения и Архитектурные Компромиссы](17_known_limitations_and_tradeoffs.md) |
+| как идёт поток новости | [10. Сквозные Runtime-Сценарии](10-end-to-end-flows.md) |
+| как устроена БД | [11. Модель Данных, Таблицы и Индексы](11-data-model-and-indexes.md) |
+| чем jobs отличаются от events | [12. События, Очереди и Messaging](12-events-queues-and-messaging.md) |
+| как решена безопасность | [13. Безопасность, Отказы и Failure Modes](13-security-and-failure-modes.md) |
+| что тестируется и как | [14. Тестирование и Quality Gates](14-testing-and-quality-gates.md) |
+| где слабые места проекта | [17. Текущие Ограничения и Архитектурные Компромиссы](17-known-limitations-and-tradeoffs.md) |
 
 ## 10 фраз, которые стоит уметь произнести без запинки
 
@@ -125,5 +125,5 @@
 
 ## Связанные документы
 
-- [15. Банк Вопросов и Ответов для Собеседования](15_interview_question_bank.md)
-- [17. Текущие Ограничения и Архитектурные Компромиссы](17_known_limitations_and_tradeoffs.md)
+- [15. Банк Вопросов и Ответов для Собеседования](question-bank.md)
+- [17. Текущие Ограничения и Архитектурные Компромиссы](17-known-limitations-and-tradeoffs.md)

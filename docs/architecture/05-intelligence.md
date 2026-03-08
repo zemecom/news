@@ -358,6 +358,6 @@ Routing key выбирается так:
 
 ## Связанные документы
 
-- [06. Модули Catalog и Shared: Хранение, Контракты и Межмодульные События](06_catalog_shared.md) — куда pipeline сохраняет результат
-- [12. События, Очереди и Messaging](12_events_queues_and_messaging.md) — различие между Laravel Queue и AMQP публикацией
-- [17. Текущие Ограничения и Архитектурные Компромиссы](17_known_limitations_and_tradeoffs.md) — почему Intelligence сейчас частично skeletal
+- [06. Модули Catalog и Shared: Хранение, Контракты и Межмодульные События](06-catalog-shared.md) — куда pipeline сохраняет результат
+- [12. События, Очереди и Messaging](12-events-queues-and-messaging.md) — различие между Laravel Queue и AMQP публикацией
+- [17. Текущие Ограничения и Архитектурные Компромиссы](17-known-limitations-and-tradeoffs.md) — почему Intelligence сейчас частично skeletal

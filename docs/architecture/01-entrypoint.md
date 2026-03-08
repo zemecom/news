@@ -12,6 +12,12 @@
 2. CLI-команды через `php artisan ...`.
 3. Очереди через worker-процесс `queue:work`.
 
+Плюс есть важная четвёртая сущность, которую легко перепутать с полноценным runtime:
+
+4. Laravel schedule definition в `routes/console.php`.
+
+Важно: schedule в коде описан, но в текущем локальном Docker-стеке нет отдельного выделенного scheduler-процесса. Для практического operational-разбора смотри также [../guides/runtime-operations.md](../guides/runtime-operations.md).
+
 ## Ключевые файлы и классы
 
 | Файл | Роль |
@@ -255,6 +261,7 @@ php artisan queue:work \
 
 ## Связанные документы
 
-- [02. Framework Layer: Что Реально Живёт в app/](02_app.md) — что именно bootstrap-ится внутри `app/`
-- [08. Инфраструктура: Docker, Сервисы, Makefile и Контейнерный Runtime](08_infrastructure.md) — как это упаковано в Docker
-- [12. События, Очереди и Messaging](12_events_queues_and_messaging.md) — как поверх этого runtime устроены очереди и messaging
+- [../guides/runtime-operations.md](../guides/runtime-operations.md) — практическая карта runtime-процессов, scheduler-а и ручных команд
+- [02. Framework Layer: Что Реально Живёт в app/](02-app.md) — что именно bootstrap-ится внутри `app/`
+- [08. Инфраструктура: Docker, Сервисы, Makefile и Контейнерный Runtime](08-infrastructure.md) — как это упаковано в Docker
+- [12. События, Очереди и Messaging](12-events-queues-and-messaging.md) — как поверх этого runtime устроены очереди и messaging

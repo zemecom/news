@@ -307,6 +307,6 @@ erDiagram
 
 ## Связанные документы
 
-- [06. Модули Catalog и Shared: Хранение, Контракты и Межмодульные События](06_catalog_shared.md)
-- [03. Модуль Delivery: Как Проект Отдаёт Данные Наружу](03_delivery.md)
-- [13. Безопасность, Отказы и Failure Modes](13_security_and_failure_modes.md)
+- [06. Модули Catalog и Shared: Хранение, Контракты и Межмодульные События](06-catalog-shared.md)
+- [03. Модуль Delivery: Как Проект Отдаёт Данные Наружу](03-delivery.md)
+- [13. Безопасность, Отказы и Failure Modes](13-security-and-failure-modes.md)

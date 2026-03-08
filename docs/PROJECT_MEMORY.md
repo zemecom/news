@@ -9,7 +9,9 @@
 - Корень `src` зарезервирован под три верхнеуровневые зоны: `Modules/` (бизнес-модули и shared kernel), `Support/` (общие технические абстракции), `Infrastructure/` (общая инфраструктурная обвязка для нескольких модулей).
 - Карта интерфейсов классов: `docs/PROJECT_INTERFACE.md`.
 - Карта структуры проекта: `docs/PROJECT_STRUCTURE.md`.
-- В `docs/business-logic/` поддерживается расширенный набор учебной документации по проекту в interview-oriented формате: обзорные главы `00-09`, cross-cutting документы `10-17`, отдельные разборы runtime flow, схемы данных, messaging, security, testing, шпаргалка и банк вопросов для подготовки к собеседованию.
+- В `docs/architecture/` поддерживается расширенный набор учебной документации по проекту в interview-oriented формате: обзорные главы `00-08`, cross-cutting документы `10-17`, отдельные разборы runtime flow, схемы данных, messaging, security, testing и компромиссов.
+- Каталог `docs/` теперь разложен по назначению: `start/` для первого входа в проект, `guides/` для playbook-документов, `reference/` для API и конфигурации, `interview/` для вопросника и шпаргалки. Корневой `docs/README.md` служит точкой входа, а `PROJECT_MEMORY.md`, `PROJECT_STRUCTURE.md`, `PROJECT_INTERFACE.md` остаются в корне как канонические compatibility-файлы.
+- Для распространения документации в офлайн-формате добавлен PDF export workflow: `scripts/docs-pdf/build.sh` собирает три отдельных PDF через `pandoc + prince`, использует стили из `scripts/docs-pdf/` и складывает артефакты в `artifacts/docs/` (`onboarding-learning`, `architecture-runtime`, `reference`).
 
 ---
 
@@ -183,6 +185,7 @@
 ## 2.5 Инфраструктура и локальное хранение данных
 
 - Docker Compose поднимает `app` (RoadRunner), `postgres`, `redis`, `rabbitmq`, `worker` (Laravel Queue worker для `crawler_tasks,intelligence_tasks,media_tasks`). Nginx удален за ненадобностью.
+- В `routes/console.php` определено расписание `news:crawl -> everyMinute()`, но в текущем `docker-compose.yml` нет выделенного scheduler-процесса с `schedule:run`/`schedule:work`; для локального и учебного сценария основным запуском сбора нужно считать ручной `news:crawl`.
 - Build target для Docker-образа вынесен в `DOCKER_BUILD_TARGET` (`local`/`production`) вместо жёсткой привязки к `APP_ENV`.
 - Для локальной отладки через Laravel Debugbar в Octane подключен `ResetDebugbarJsRenderer` на `RequestReceived`, чтобы Debugbar не переиспользовал устаревший base URL между запросами и не генерировал asset-ссылки на внутренний порт RoadRunner `:8000`.
 - Данные Postgres теперь персистятся на диск проекта:
@@ -277,6 +280,7 @@
 - Старт окружения: `docker compose up -d --build` (сервер автоматически запустится через `php artisan octane:start`)
 - Миграции: `docker compose exec -T app php artisan migrate --force`
 - Сиды: `docker compose exec -T app php artisan db:seed --force`
+- Demo-лента для онбординга: `docker compose exec -T app php artisan db:seed --class=NewsItemSeeder --force`
 - Публичные storage-ссылки: `docker compose exec -T app php artisan storage:link`
 - Инициализация топологии RabbitMQ: `docker compose exec -T app php artisan news:messaging:setup`
 - Сбор новостей: `docker compose exec -T app php artisan news:crawl`

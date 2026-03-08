@@ -226,6 +226,6 @@ sequenceDiagram
 
 ## Связанные документы
 
-- [05. Модуль Intelligence: Pipeline Обработки Сырой Новости](05_intelligence.md)
-- [06. Модули Catalog и Shared: Хранение, Контракты и Межмодульные События](06_catalog_shared.md)
-- [08. Инфраструктура: Docker, Сервисы, Makefile и Контейнерный Runtime](08_infrastructure.md)
+- [05. Модуль Intelligence: Pipeline Обработки Сырой Новости](05-intelligence.md)
+- [06. Модули Catalog и Shared: Хранение, Контракты и Межмодульные События](06-catalog-shared.md)
+- [08. Инфраструктура: Docker, Сервисы, Makefile и Контейнерный Runtime](08-infrastructure.md)

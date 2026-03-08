@@ -80,6 +80,18 @@ Healthcheck у него завязан на `http://127.0.0.1:8000/up`.
 - AMQP port `5672`
 - management UI `15672`
 
+### Отдельного `scheduler` сервиса сейчас нет
+
+Это важно проговорить явно: в `docker-compose.yml` сейчас есть `app`, `worker`, `postgres`, `redis`, `rabbitmq`, но нет выделенного сервиса под `php artisan schedule:run` или `php artisan schedule:work`.
+
+При этом schedule definition в коде существует в `routes/console.php`.
+
+Практически это значит:
+
+1. расписание `news:crawl` описано;
+2. но в локальном compose нет отдельного процесса, который исполнял бы его автоматически;
+3. для ручного и учебного сценария основной командой остаётся `make crawl`.
+
 ## Что важно понимать про `app` и `worker`
 
 Хотя оба контейнера построены из одного образа, у них разные runtime-роли:
@@ -220,7 +232,7 @@ php artisan storage:link
 
 ## База данных и миграции как часть инфраструктурной картины
 
-Проект использует PostgreSQL 18 и JSONB-поля для части динамических данных. Миграции описаны отдельно в документе [11. Модель Данных, Таблицы и Индексы](11_data_model_and_indexes.md), но operationally важно помнить:
+Проект использует PostgreSQL 18 и JSONB-поля для части динамических данных. Миграции описаны отдельно в документе [11. Модель Данных, Таблицы и Индексы](11-data-model-and-indexes.md), но operationally важно помнить:
 
 1. схема разворачивается через `php artisan migrate`;
 2. локальные данные персистятся на диск проекта;
@@ -295,6 +307,8 @@ php artisan storage:link
 
 ## Связанные документы
 
-- [01. Точки Входа, Boot Lifecycle и Octane Runtime](01_entrypoint.md) — lifecycle процессов
-- [11. Модель Данных, Таблицы и Индексы](11_data_model_and_indexes.md) — схема БД
-- [12. События, Очереди и Messaging](12_events_queues_and_messaging.md) — сообщения и очереди
+- [../guides/runtime-operations.md](../guides/runtime-operations.md) — практическая карта процессов и scheduler-а
+- [../reference/config/env.md](../reference/config/env.md) — какие `.env`-переменные реально влияют на runtime
+- [01. Точки Входа, Boot Lifecycle и Octane Runtime](01-entrypoint.md) — lifecycle процессов
+- [11. Модель Данных, Таблицы и Индексы](11-data-model-and-indexes.md) — схема БД
+- [12. События, Очереди и Messaging](12-events-queues-and-messaging.md) — сообщения и очереди

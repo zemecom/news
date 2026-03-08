@@ -397,6 +397,6 @@ Delivery знает:
 
 ## Связанные документы
 
-- [05. Модуль Intelligence: Pipeline Обработки Сырой Новости](05_intelligence.md) — кто именно сохраняет `EnrichedNewsData`
-- [11. Модель Данных, Таблицы и Индексы](11_data_model_and_indexes.md) — физическая схема таблиц
-- [12. События, Очереди и Messaging](12_events_queues_and_messaging.md) — вся event/queue topology
+- [05. Модуль Intelligence: Pipeline Обработки Сырой Новости](05-intelligence.md) — кто именно сохраняет `EnrichedNewsData`
+- [11. Модель Данных, Таблицы и Индексы](11-data-model-and-indexes.md) — физическая схема таблиц
+- [12. События, Очереди и Messaging](12-events-queues-and-messaging.md) — вся event/queue topology

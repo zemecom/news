@@ -231,7 +231,7 @@ sequenceDiagram
 
 ## Связанные документы
 
-- [03. Модуль Delivery: Как Проект Отдаёт Данные Наружу](03_delivery.md)
-- [04. Модуль Crawler: Получение Сырого Контента](04_crawler.md)
-- [05. Модуль Intelligence: Pipeline Обработки Сырой Новости](05_intelligence.md)
-- [06. Модули Catalog и Shared: Хранение, Контракты и Межмодульные События](06_catalog_shared.md)
+- [03. Модуль Delivery: Как Проект Отдаёт Данные Наружу](03-delivery.md)
+- [04. Модуль Crawler: Получение Сырого Контента](04-crawler.md)
+- [05. Модуль Intelligence: Pipeline Обработки Сырой Новости](05-intelligence.md)
+- [06. Модули Catalog и Shared: Хранение, Контракты и Межмодульные События](06-catalog-shared.md)

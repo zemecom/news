@@ -292,7 +292,7 @@ dispatch(new ProcessNewsJob($raw));
 2. `RawPublisher` превращает это в `ProcessNewsJob`.
 3. Job ставится в очередь `intelligence_tasks`.
 
-Следующий этап уже не часть Crawler. Он описан в документе [05. Модуль Intelligence: Pipeline Обработки Сырой Новости](05_intelligence.md).
+Следующий этап уже не часть Crawler. Он описан в документе [05. Модуль Intelligence: Pipeline Обработки Сырой Новости](05-intelligence.md).
 
 ## Какие данные здесь проходят и как они меняются
 
@@ -369,6 +369,6 @@ Crawler живёт на стыке CLI, очередей и внешней се�
 
 ## Связанные документы
 
-- [05. Модуль Intelligence: Pipeline Обработки Сырой Новости](05_intelligence.md) — что происходит после `ProcessNewsJob`
-- [12. События, Очереди и Messaging](12_events_queues_and_messaging.md) — очереди, в которые публикует Crawler
-- [13. Безопасность, Отказы и Failure Modes](13_security_and_failure_modes.md) — защита и отказные сценарии ingestion
+- [05. Модуль Intelligence: Pipeline Обработки Сырой Новости](05-intelligence.md) — что происходит после `ProcessNewsJob`
+- [12. События, Очереди и Messaging](12-events-queues-and-messaging.md) — очереди, в которые публикует Crawler
+- [13. Безопасность, Отказы и Failure Modes](13-security-and-failure-modes.md) — защита и отказные сценарии ingestion

@@ -46,11 +46,41 @@ make dev
 По умолчанию: Приложение — `8080`, Vite (HMR) — `5173`. Порты настраиваются в `.env`.
 Локальный `APP_URL` по умолчанию: `http://localhost:8080`.
 
+### Первый осмысленный запуск
+
+После `make setup-local` и `make dev` проект уже поднимется, но demo-лента новостей не появится сама. Для первого знакомства с проектом выполни ещё:
+
+```bash
+docker compose exec -T app php artisan db:seed --force
+docker compose exec -T app php artisan db:seed --class=NewsItemSeeder --force
+```
+
+Затем проверь:
+
+```bash
+curl "http://localhost:8080/api/sources"
+curl "http://localhost:8080/api/news?per_page=2"
+```
+
+Это важный onboarding-шаг: стандартный `DatabaseSeeder` добавляет пользователей и источники, а demo-news лежат в отдельном `NewsItemSeeder`.
+
 ### Локальная отладка
 
 - `Telescope`: [http://localhost:8080/telescope](http://localhost:8080/telescope) в `local` окружении.
 - `Debugbar`: включается через `DEBUGBAR_ENABLED=true` в `.env`.
 - При работе через Octane Debugbar сбрасывает внутренний JS renderer на каждый запрос, чтобы asset URL не залипал на внутреннем порту RoadRunner `:8000`.
+
+## Если ты впервые в проекте
+
+Начни не с больших архитектурных глав, а с практического маршрута:
+
+1. [docs/start/junior-onboarding.md](docs/start/junior-onboarding.md)
+2. [docs/reference/api/news-api.md](docs/reference/api/news-api.md)
+3. [docs/guides/runtime-operations.md](docs/guides/runtime-operations.md)
+4. [docs/reference/config/env.md](docs/reference/config/env.md)
+5. [docs/start/learning-path.md](docs/start/learning-path.md)
+
+Если нужен уже глубокий архитектурный разбор модулей и runtime-потоков, переходи в `docs/architecture/`.
 
 ## Команды (Makefile)
 
@@ -97,6 +127,26 @@ make logs          # Просмотр логов контейнеров
 ## CI
 
 `.github/workflows/ci.yml`: прогоняет `make ci-check`.
+
+## Документация
+
+Документация теперь разложена по назначению:
+
+1. `docs/README.md` — единая карта документации и маршруты чтения.
+2. `docs/start/` — практический onboarding и учебный путь для джуна.
+3. `docs/architecture/` — подробные архитектурные и runtime-разборы проекта.
+4. `docs/guides/` и `docs/reference/` — операционные playbook-документы, API и конфигурация.
+5. `docs/interview/` — interview pack и шпаргалки.
+
+Быстрые точки входа:
+
+- [docs/README.md](docs/README.md)
+- [docs/start/junior-onboarding.md](docs/start/junior-onboarding.md)
+- [docs/reference/api/news-api.md](docs/reference/api/news-api.md)
+- [docs/reference/config/env.md](docs/reference/config/env.md)
+- [docs/guides/runtime-operations.md](docs/guides/runtime-operations.md)
+- [docs/start/learning-path.md](docs/start/learning-path.md)
+- [docs/architecture/00-overview.md](docs/architecture/00-overview.md)
 
 ## Примечания
 

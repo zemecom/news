@@ -264,6 +264,6 @@ DB unique constraint по `raw_fingerprint`.
 
 ## Связанные документы
 
-- [04. Модуль Crawler: Получение Сырого Контента](04_crawler.md)
-- [06. Модули Catalog и Shared: Хранение, Контракты и Межмодульные События](06_catalog_shared.md)
-- [17. Текущие Ограничения и Архитектурные Компромиссы](17_known_limitations_and_tradeoffs.md)
+- [04. Модуль Crawler: Получение Сырого Контента](04-crawler.md)
+- [06. Модули Catalog и Shared: Хранение, Контракты и Межмодульные События](06-catalog-shared.md)
+- [17. Текущие Ограничения и Архитектурные Компромиссы](17-known-limitations-and-tradeoffs.md)
