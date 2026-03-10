@@ -32,4 +32,5 @@ exec php artisan octane:start \
     --host=0.0.0.0 \
     --rpc-port=6001 \
     --port=8000 \
+    --workers="${OCTANE_WORKERS:-1}" \
     "$@"
