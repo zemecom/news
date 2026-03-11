@@ -140,7 +140,7 @@ cp .env.example .env
 
 ### Обычная локальная разработка
 
-Оставь `.env.example` почти как есть.
+Оставь `.env.example` почти как есть. В таком режиме `worker` не стартует автоматически и это нормально: локалка экономит память, а очереди можно поднять отдельно через `docker compose --profile queue up -d worker`.
 
 ### Локальная отладка HTTP через IDE
 
@@ -153,6 +153,12 @@ XDEBUG_CLIENT_HOST=host.docker.internal
 XDEBUG_CLIENT_PORT=9003
 ```
 
+После изменения `WITH_XDEBUG` пересобери контейнер:
+
+```bash
+docker compose up -d --build app
+```
+
 ### Локальная отладка очередей
 
 Проверь:
@@ -160,6 +166,12 @@ XDEBUG_CLIENT_PORT=9003
 ```dotenv
 WITH_XDEBUG_WORKER=1
 XDEBUG_MODE=debug
+```
+
+И подними сам `worker` профилем:
+
+```bash
+docker compose --profile queue up -d worker
 ```
 
 ### Быстрый вход в admin-панель

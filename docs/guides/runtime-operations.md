@@ -55,10 +55,10 @@ docker compose exec -T app php artisan octane:reload
 Он запускается командой:
 
 ```bash
-sh docker/bin/start-worker.sh
+docker compose --profile queue up -d worker
 ```
 
-а внутри скрипта стартует:
+А внутри контейнера уже стартует:
 
 ```bash
 php artisan queue:work \
@@ -81,6 +81,7 @@ php artisan queue:work \
 1. `worker` и `app` — это разные long-lived процессы.
 2. Падение или зависание worker-а не обязательно сразу ломает HTTP.
 3. Проблемы асинхронного пайплайна нужно диагностировать отдельно от web-layer.
+4. В локальном Docker-стеке `worker` вынесен в профиль `queue`, чтобы не держать лишнюю память, пока очереди не нужны.
 
 ## 4. `make dev` и почему он немного особенный
 
@@ -95,7 +96,7 @@ php artisan queue:work \
 
 То есть локально у тебя могут одновременно существовать:
 
-1. штатный `worker` контейнер из `docker compose up`;
+1. штатный `worker` контейнер из `docker compose --profile queue up -d worker`;
 2. queue listener внутри `make dev`.
 
 Для первого знакомства это нормально. Главное понимать, что это dev-удобство, а не отдельная бизнес-логика проекта.

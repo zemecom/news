@@ -184,12 +184,12 @@
 
 ## 2.5 Инфраструктура и локальное хранение данных
 
-- Docker Compose поднимает `app` (RoadRunner), `postgres`, `redis`, `rabbitmq`, `worker` (Laravel Queue worker для `crawler_tasks,intelligence_tasks,media_tasks`). Nginx удален за ненадобностью.
+- Docker Compose поднимает базовый локальный стек `app` (RoadRunner), `postgres`, `redis`, `rabbitmq`; отдельный `worker` (Laravel Queue worker для `crawler_tasks,intelligence_tasks,media_tasks`) вынесен в профиль `queue` и поднимается только при необходимости. Nginx удален за ненадобностью.
 - В `routes/console.php` определено расписание `news:crawl -> everyMinute()`, но в текущем `docker-compose.yml` нет выделенного scheduler-процесса с `schedule:run`/`schedule:work`; для локального и учебного сценария основным запуском сбора нужно считать ручной `news:crawl`.
 - Build target для Docker-образа вынесен в `DOCKER_BUILD_TARGET` (`local`/`production`) вместо жёсткой привязки к `APP_ENV`.
 - Для локальной отладки через Laravel Debugbar в Octane подключен `ResetDebugbarJsRenderer` на `RequestReceived`, чтобы Debugbar не переиспользовал устаревший base URL между запросами и не генерировал asset-ссылки на внутренний порт RoadRunner `:8000`.
 - Данные Postgres теперь персистятся на диск проекта:
-    - `./.docker-data/postgres:/var/lib/postgresql/data`.
+    - `./docker/.data/postgres:/var/lib/postgresql/data`.
 - Локальный Docker-стек обновлен до актуальных стабильных линий образов:
     - `postgres:18-alpine` c явным `PGDATA=/var/lib/postgresql/data/pgdata` для совместимого запуска на PostgreSQL 18;
     - `redis:8-alpine`;
@@ -197,9 +197,9 @@
     - базовый образ приложения `alpine:3.23.3` с установленным системным `curl` (необходим для smoke-тестов и отладки);
     - build-time Composer image `composer:2.9.5`.
 - Данные Redis и RabbitMQ также персистятся на диск проекта:
-    - `./.docker-data/redis:/data`,
-    - `./.docker-data/rabbitmq:/var/lib/rabbitmq`.
-- Папка `.docker-data` добавлена в `.gitignore`.
+    - `./docker/.data/redis:/data`,
+    - `./docker/.data/rabbitmq:/var/lib/rabbitmq`.
+- Папка `docker/.data` добавлена в `.gitignore`.
 - Замечание из ревью по ext-zip/ext-xml закрыто:
     - runtime-слой Dockerfile собирает `zip` и `xml`.
 - **Docker Hardening & Performance**:
@@ -214,6 +214,9 @@
     - `smoke-api` в `Makefile` использует `http://127.0.0.1:8000` (совместимо с текущим compose без nginx).
     - Для dev включен `RoadRunner reload` через `.rr.yaml`; `make dev`, `make serve` и контейнерный `CMD` запускают Octane с `--rr-config=.rr.yaml`.
     - Локальный `app` контейнер теперь ограничен одним HTTP-воркером Octane по умолчанию через env-переменную `OCTANE_WORKERS=1`; значение можно переопределить в `.env`, если для отладки нужна большая параллельность.
+    - Для экономии RAM в локальной разработке `worker` больше не стартует по умолчанию: его нужно поднимать через `docker compose --profile queue up -d worker`, когда реально нужен queue runtime.
+    - В `Makefile` добавлен target `make worker-up`, который поднимает опциональный `worker` через профиль `queue` без ручного ввода `docker compose --profile queue up -d worker`.
+    - В текущем `.env` Xdebug по умолчанию отключен (`WITH_XDEBUG=0`), чтобы обычная пересборка `app` не тянула отладочный слой без явного запроса разработчика.
     - Старт Octane вынесен в `docker/bin/start-octane.sh`: бинарь `rr` переносится из `/app/rr` в `/tmp/roadrunner-bin/rr` и удаляется из корня проекта; образ приложения добавляет `/tmp/roadrunner-bin` в `PATH`, чтобы `php artisan octane:reload` работал и вне стартового shell без записи в системные каталоги.
     - Старт worker вынесен в `docker/bin/start-worker.sh`: перед `queue:work` автоматически декларируются очереди `crawler_tasks`, `intelligence_tasks`, `media_tasks` (устраняет `basic.get not_found` в RabbitMQ логах).
 - Для локальных медиа добавлен обязательный `storage:link` в setup-процессы.

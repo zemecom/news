@@ -50,6 +50,7 @@ Healthcheck у него завязан на `http://127.0.0.1:8000/up`.
 - `sh docker/bin/start-worker.sh`
 
 То есть это отдельный контейнер только для работы с очередями.
+В локальном compose он вынесен в профиль `queue`, чтобы не занимать RAM, пока асинхронный контур не нужен.
 
 ### `postgres`
 
@@ -57,7 +58,7 @@ Healthcheck у него завязан на `http://127.0.0.1:8000/up`.
 
 Данные лежат в:
 
-- `./.docker-data/postgres:/var/lib/postgresql/data`
+- `./docker/.data/postgres:/var/lib/postgresql/data`
 
 ### `redis`
 
@@ -65,7 +66,7 @@ Healthcheck у него завязан на `http://127.0.0.1:8000/up`.
 
 Данные лежат в:
 
-- `./.docker-data/redis:/data`
+- `./docker/.data/redis:/data`
 
 ### `rabbitmq`
 
@@ -73,7 +74,7 @@ Healthcheck у него завязан на `http://127.0.0.1:8000/up`.
 
 Данные лежат в:
 
-- `./.docker-data/rabbitmq:/var/lib/rabbitmq`
+- `./docker/.data/rabbitmq:/var/lib/rabbitmq`
 
 Снаружи доступны:
 

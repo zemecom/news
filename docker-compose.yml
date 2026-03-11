@@ -35,6 +35,7 @@ services:
 
   worker:
     <<: *app_base
+    profiles: ["queue"]
     build:
       context: .
       dockerfile: docker/Dockerfile
@@ -58,7 +59,7 @@ services:
       POSTGRES_DB: ${DB_DATABASE:-smartnews}
       PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
-      - ./.docker-data/postgres:/var/lib/postgresql/data
+      - ./docker/.data/postgres:/var/lib/postgresql/data
     ports:
       - "${POSTGRES_BIND:-127.0.0.1:5432}:5432"
     healthcheck:
@@ -71,7 +72,7 @@ services:
   redis:
     image: redis:8-alpine
     volumes:
-      - ./.docker-data/redis:/data
+      - ./docker/.data/redis:/data
     ports:
       - "${REDIS_BIND:-127.0.0.1:6379}:6379"
     healthcheck:
@@ -87,7 +88,7 @@ services:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-smartnews}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-smartnews}
     volumes:
-      - ./.docker-data/rabbitmq:/var/lib/rabbitmq
+      - ./docker/.data/rabbitmq:/var/lib/rabbitmq
     ports:
       - "${RABBITMQ_BIND:-127.0.0.1:5672}:5672"
       - "${RABBITMQ_MANAGEMENT_BIND:-127.0.0.1:15672}:15672"

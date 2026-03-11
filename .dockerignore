@@ -7,7 +7,7 @@
 
 # Local Environment & Secrets
 .env
-.docker-data
+docker/.data
 docker-compose.prod.yml
 .phpunit.result.cache
 .deptrac.cache

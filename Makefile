@@ -6,7 +6,7 @@ COMPOSER   = $(DOCKER_APP) composer
 ARTISAN    = $(DOCKER_APP) php artisan
 NPM        = $(DOCKER_APP) npm
 
-.PHONY: up down build rebuild dev npm-dev help logs docs-deps app worker
+.PHONY: up down build rebuild dev npm-dev help logs docs-deps app worker worker-up
 .PHONY: setup-local setup-ci migrate messaging-setup
 .PHONY: test test-arch test-all acceptance smoke-api ci-check agent-check
 .PHONY: analyze psalm psalm-taint lint lint-check rector rector-check validate audit
@@ -173,6 +173,10 @@ app:
 worker:
 	@# Enter the worker container shell
 	docker compose exec -it worker sh
+
+worker-up:
+	@# Start the optional queue worker container
+	docker compose --profile queue up -d worker
 
 crawl:
 	@# Run the crawler command manually

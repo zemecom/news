@@ -38,9 +38,10 @@ make setup-local
 make dev
 ```
 
-- `make setup-local`: Сберет образы, поднимет контейнеры и настроит окружение.
+- `make setup-local`: Сберет образы, поднимет базовый стек (`app`, `postgres`, `redis`, `rabbitmq`) и настроит окружение.
 - `make dev`: Запустит сервер, очереди и Vite одновременно (внутри Docker).
 - `make setup-hooks`: Настроит путь для git hooks (если нужно запустить отдельно от `setup-local`).
+- Фоновый контейнер `worker` теперь опционален для локалки и поднимается только при необходимости: `docker compose --profile queue up -d worker`.
 
 Доступ: `http://localhost:${APP_PORT:-8080}`, healthchecks: `/health/live`, `/health/ready`.
 По умолчанию: Приложение — `8080`, Vite (HMR) — `5173`. Порты настраиваются в `.env`.
@@ -109,6 +110,7 @@ make rector        # Rector (авто-рефакторинг)
 ```bash
 make crawl         # Запуск краулера вручную
 make queue         # Прослушивание очереди
+make worker-up     # Поднять отдельный queue worker
 make serve         # Запуск сервера
 make logs          # Просмотр логов контейнеров
 ```
@@ -151,11 +153,11 @@ make logs          # Просмотр логов контейнеров
 ## Примечания
 
 - **PHP 8.5**: Код использует современные возможности (readonly classes, #[Override] и т.д.).
-- **Docker**: Локальный стек использует `postgres:18-alpine`, `redis:8-alpine`, `rabbitmq:4.2-management-alpine`; образ `app` запускает Laravel Octane на RoadRunner и содержит Composer и Node.js/NPM.
-- **PostgreSQL 18**: После обновления с ветки `17` существующий каталог `./.docker-data/postgres` может потребовать миграции данных или пересоздания локальной базы, если данные не нужны.
+- **Docker**: Локальный стек использует `postgres:18-alpine`, `redis:8-alpine`, `rabbitmq:4.2-management-alpine`; образ `app` запускает Laravel Octane на RoadRunner и содержит Composer и Node.js/NPM. `worker` вынесен в профиль `queue`, чтобы не занимать RAM без необходимости.
+- **PostgreSQL 18**: После обновления с ветки `17` существующий каталог `./docker/.data/postgres` может потребовать миграции данных или пересоздания локальной базы, если данные не нужны.
 - **Vite**: Фронтенд собирается и обслуживается также внутри контейнера.
 - **Secrets**: `.env` копируется из `.env.example` при `setup-local`. Для LLM‑интеграций пропиши свои ключи.
-- **Xdebug**: Управляется через `WITH_XDEBUG`, `WITH_XDEBUG_WORKER` и `XDEBUG_MODE` в `.env`.
+- **Xdebug**: По умолчанию выключен; включается через `WITH_XDEBUG`, `WITH_XDEBUG_WORKER` и `XDEBUG_MODE` в `.env` с последующей пересборкой соответствующего контейнера.
 
 ---
 
