@@ -36,6 +36,8 @@
     - Pest + Arch tests, PHPStan, Psalm (в т.ч. taint), Pint, Rector.
     - **Laravel Telescope**: установлен для отладки в локальной среде (запросы, очереди, события).
     - Автоматический запуск `make ci-check` через `pre-commit` hook перед коммитом изменений.
+    - Coverage gate переведен на `pcov`: `make test-coverage` и `make ci-check` используют один tracked minimum из `.coverage-min`, а отчёты складываются в `artifacts/coverage/`.
+    - Блокирующий GitHub CI оставлен детерминированным: acceptance suite с внешними RSS smoke-check сценариями вынесен из обычного `push`/`pull_request` job в отдельный manual/scheduled контур.
 
 ## 2.2 Архитектура модулей
 
@@ -292,6 +294,7 @@
 - Обработка очередей: `docker compose exec -T app php artisan queue:work --queue=crawler_tasks,intelligence_tasks,media_tasks --tries=3`
 - Backfill медиа-ассетов: `docker compose exec -T app php artisan news:media:backfill --dry-run`
 - Тесты: `docker compose exec -T app composer test` (или `make test`)
+- Coverage: `docker compose exec -T app composer test:coverage` (или `make test-coverage`)
 - Статика: `docker compose exec -T app composer analyze` (или `make analyze`)
 - **Telescope**: доступен по адресу `http://localhost:8080/telescope` (только в `local` окружении)
 

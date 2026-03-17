@@ -90,7 +90,8 @@ curl "http://localhost:8080/api/news?per_page=2"
 ### Тестирование и Качество
 
 ```bash
-make test          # Unit/Feature тесты (PHPUnit)
+make test          # Unit/Feature тесты без acceptance и arch
+make test-coverage # Unit/Feature тесты с pcov и coverage gate
 make test-arch     # Проверка архитектурных правил (Pest)
 make ci-check      # Полный прогон (Lint, PHPStan, Psalm, Tests)
 make smoke-api     # Базовый тест API
@@ -128,7 +129,7 @@ make logs          # Просмотр логов контейнеров
 
 ## CI
 
-`.github/workflows/ci.yml`: прогоняет `make ci-check`.
+`.github/workflows/ci.yml`: на `push`/`pull_request` гоняет детерминированный quality gate (`validate`, `audit`, `lint`, `phpstan`, `psalm`, `coverage gate`, `arch`), а acceptance suite запускается отдельно по расписанию и вручную через `workflow_dispatch`.
 
 ## Документация
 

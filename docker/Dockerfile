@@ -77,6 +77,7 @@ RUN --mount=type=cache,target=/var/cache/apk \
     npm \
     git \
     unzip \
+    php85-pecl-pcov \
     && if [ "$WITH_XDEBUG" = "1" ]; then \
     apk add php85-pecl-xdebug \
     && if [ -f docker/php/conf.d/xdebug.ini ]; then cp docker/php/conf.d/xdebug.ini /etc/php85/conf.d/xdebug.ini; fi; \

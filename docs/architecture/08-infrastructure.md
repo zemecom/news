@@ -213,10 +213,11 @@ php artisan storage:link
 | --- | --- |
 | `make setup-local` | initial setup: compose up, install, `.env`, key, migrate, storage link |
 | `make dev` | interactive development runtime |
-| `make test` | reload Octane + test suite |
+| `make test` | reload Octane + unit/feature suite |
+| `make test-coverage` | reload Octane + unit/feature suite + pcov coverage gate |
 | `make test-arch` | architecture tests |
 | `make acceptance` | acceptance tests |
-| `make ci-check` | validate + audit + lint-check + analyze + psalm-taint + tests |
+| `make ci-check` | validate + audit + lint-check + analyze + psalm-taint + coverage gate + arch |
 | `make agent-check` | reload + lint + docs-deps + analyze + full test-all |
 | `make crawl` | ручной запуск `news:crawl` |
 | `make media-backfill` | ручной запуск backfill медиа |

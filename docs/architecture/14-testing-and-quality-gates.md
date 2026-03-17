@@ -74,11 +74,17 @@
 
 | Команда | Смысл |
 | --- | --- |
-| `make test` | тесты приложения |
+| `make test` | unit/feature tests |
+| `make test-coverage` | unit/feature tests + pcov coverage gate |
 | `make test-arch` | архитектурные тесты |
 | `make acceptance` | acceptance suite |
-| `make ci-check` | validate + audit + lint-check + analyze + psalm-taint + tests |
+| `make ci-check` | validate + audit + lint-check + analyze + psalm-taint + coverage gate + arch |
 | `make agent-check` | reload + lint + docs-deps + analyze + full test-all |
+
+GitHub CI разделяет эти контуры:
+
+- `push` / `pull_request`: только детерминированные quality gates.
+- `schedule` / `workflow_dispatch`: acceptance suite, включая внешние smoke-check сценарии.
 
 ## Статический анализ и стиль
 
@@ -134,7 +140,7 @@
 - что реальные внешние RSS feed-ы вообще можно скачать и распарсить;
 - что `RssParserResolver` выбирает parser и тот возвращает ожидаемый набор ключей.
 
-Важно: этот тест может быть помечен как skipped из-за сетевых условий, поэтому он полезен как интеграционный smoke-check, но не равен полностью детерминированному unit test.
+Важно: этот тест может быть помечен как skipped из-за сетевых условий, поэтому он полезен как интеграционный smoke-check, но не равен полностью детерминированному unit test. По этой причине он не должен блокировать обычный PR/push quality gate и вынесен в отдельный CI-контур.
 
 ## Что тесты пока не доказывают полностью
 

@@ -2703,6 +2703,7 @@ final readonly class DbNewsMediaResolver implements NewsMediaResolver
 ```php
 namespace Modules\Delivery\Infrastructure\Persistence;
 
+use Carbon\CarbonImmutable as CarbonImmutable;
 use Illuminate\Contracts\Pagination\CursorPaginator as CursorPaginator;
 use Illuminate\Database\DatabaseManager as DatabaseManager;
 use Illuminate\Database\Query\Builder as Builder;
@@ -2745,6 +2746,11 @@ final readonly class EloquentNewsFeedReader implements NewsFeedReader
 
 
 	private function decodeCursor(?string $cursor): ?Cursor
+	{
+	}
+
+
+	private function formatDateFilter(CarbonImmutable $date): string
 	{
 	}
 

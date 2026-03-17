@@ -8,7 +8,7 @@ NPM        = $(DOCKER_APP) npm
 
 .PHONY: up down build rebuild dev npm-dev help logs docs-deps app worker worker-up
 .PHONY: setup-local setup-ci migrate messaging-setup
-.PHONY: test test-arch test-all acceptance smoke-api ci-check agent-check
+.PHONY: test test-coverage test-arch test-all acceptance smoke-api ci-check agent-check
 .PHONY: analyze psalm psalm-taint lint lint-check rector rector-check validate audit
 .PHONY: crawl process-once queue serving media-backfill
 
@@ -97,6 +97,11 @@ test:
 	$(ARTISAN) octane:reload || true
 	$(COMPOSER) test
 
+test-coverage:
+	@# Run PHPUnit tests with pcov coverage and minimum threshold
+	$(ARTISAN) octane:reload || true
+	$(DOCKER_APP) sh scripts/test-coverage.sh
+
 test-arch:
 	@# Run architecture tests (Pest) to verify architectural rules
 	$(ARTISAN) octane:reload || true
@@ -115,7 +120,7 @@ smoke-api:
 	$(ARTISAN) octane:reload || true
 	$(DOCKER_APP) sh scripts/smoke-api.sh http://127.0.0.1:8000
 
-ci-check: validate audit lint-check analyze psalm-taint test test-arch
+ci-check: validate audit lint-check analyze psalm-taint test-coverage test-arch
 	@# Run all CI pipeline checks (validate, audit, lint-check, phpstan, psalm, tests)
 
 agent-check:

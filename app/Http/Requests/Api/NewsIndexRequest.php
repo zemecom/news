@@ -29,6 +29,7 @@ final class NewsIndexRequest extends FormRequest
             'date_from' => ['nullable', 'date'],
             'date_to' => ['nullable', 'date'],
             'q' => ['nullable', 'string', 'max:255'],
+            'source_id' => ['nullable', 'integer', 'min:1'],
         ];
     }
 

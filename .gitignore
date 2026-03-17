@@ -21,6 +21,7 @@
 /public/storage
 /storage/*.key
 /storage/pail
+/artifacts/coverage/
 /docker/.data/
 /vendor
 Homestead.json

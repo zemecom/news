@@ -75,8 +75,9 @@
         ],
         "test": [
             "@php artisan config:clear --ansi",
-            "@php artisan test"
+            "./vendor/bin/pest tests/Unit tests/Feature --exclude-group=acceptance"
         ],
+        "test:coverage": "sh scripts/test-coverage.sh",
         "test:arch": "pest --group=arch",
         "test:acceptance": "pest --group=acceptance",
         "lint": "pint",

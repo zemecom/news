@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Modules\Delivery\Infrastructure\Persistence;
 
+use Carbon\CarbonImmutable;
 use Illuminate\Contracts\Pagination\CursorPaginator;
 use Illuminate\Database\DatabaseManager;
 use Illuminate\Database\Query\Builder;
@@ -128,12 +129,12 @@ final readonly class EloquentNewsFeedReader implements NewsFeedReader
             $query->where('is_important', $filters->important);
         }
 
-        if ($filters->dateFrom instanceof \Carbon\CarbonImmutable) {
-            $query->where('published_at', '>=', $filters->dateFrom->toIso8601String());
+        if ($filters->dateFrom instanceof CarbonImmutable) {
+            $query->where('published_at', '>=', $this->formatDateFilter($filters->dateFrom));
         }
 
-        if ($filters->dateTo instanceof \Carbon\CarbonImmutable) {
-            $query->where('published_at', '<=', $filters->dateTo->toIso8601String());
+        if ($filters->dateTo instanceof CarbonImmutable) {
+            $query->where('published_at', '<=', $this->formatDateFilter($filters->dateTo));
         }
 
         if ($filters->query !== null && $filters->query !== '') {
@@ -157,6 +158,13 @@ final readonly class EloquentNewsFeedReader implements NewsFeedReader
         }
 
         return Cursor::fromEncoded($cursor);
+    }
+
+    private function formatDateFilter(CarbonImmutable $date): string
+    {
+        return $this->db->connection()->getDriverName() === 'pgsql'
+            ? $date->toIso8601String()
+            : $date->toDateTimeString();
     }
 
     /**
