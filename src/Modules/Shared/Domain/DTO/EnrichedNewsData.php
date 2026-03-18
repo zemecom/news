@@ -10,6 +10,7 @@ final readonly class EnrichedNewsData
 {
     /**
      * @param  array<int, string>  $tags
+     * @param  array<string, mixed>  $analysisMetadata
      */
     public function __construct(
         public int $rawId,
@@ -22,6 +23,7 @@ final readonly class EnrichedNewsData
         public NewsStatus $status,
         public ?string $moderationReason,
         public string $fingerprint,
+        public array $analysisMetadata = [],
     ) {}
 
     /**
@@ -37,7 +39,8 @@ final readonly class EnrichedNewsData
      *     importance?: bool,
      *     status?: NewsStatus,
      *     moderationReason?: ?string,
-     *     fingerprint?: string
+     *     fingerprint?: string,
+     *     analysisMetadata?: array<string, mixed>
      * } $overrides
      */
     public function with(array $overrides): self
@@ -53,6 +56,7 @@ final readonly class EnrichedNewsData
             status: $overrides['status'] ?? $this->status,
             moderationReason: $overrides['moderationReason'] ?? $this->moderationReason,
             fingerprint: $overrides['fingerprint'] ?? $this->fingerprint,
+            analysisMetadata: $overrides['analysisMetadata'] ?? $this->analysisMetadata,
         );
     }
 }

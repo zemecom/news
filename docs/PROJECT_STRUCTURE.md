@@ -10,18 +10,32 @@ _SOURCE: Directory Structure_
     │   │   └── MessagingSetupCommand.php
     │   │   └── NewsCrawlCommand.php
     │   │   └── NewsMediaBackfillCommand.php
+    │   │   └── SyncAiProviderStatsCommand.php
     ├── Filament/
+    │   ├── Pages/
+    │   │   ├── AiSandbox.php
     │   ├── Resources/
-    │   │   └── Sources/
-    │   │       └── Pages/
-    │   │           ├── CreateSource.php
-    │   │           ├── EditSource.php
-    │   │           ├── ListSources.php
-    │   │       └── Schemas/
-    │   │           ├── SourceForm.php
-    │   │       └── SourceResource.php
-    │   │       └── Tables/
-    │   │           └── SourcesTable.php
+    │   │   ├── AiProviderAccounts/
+    │   │   │   ├── AiProviderAccountResource.php
+    │   │   │   ├── Pages/
+    │   │   │   │   ├── EditAiProviderAccount.php
+    │   │   │   │   ├── ListAiProviderAccounts.php
+    │   │   │   ├── Schemas/
+    │   │   │   │   ├── AiProviderAccountForm.php
+    │   │   │   ├── Tables/
+    │   │   │   │   └── AiProviderAccountsTable.php
+    │   │   ├── Sources/
+    │   │   │   └── Pages/
+    │   │   │       ├── CreateSource.php
+    │   │   │       ├── EditSource.php
+    │   │   │       ├── ListSources.php
+    │   │   │   └── Schemas/
+    │   │   │       ├── SourceForm.php
+    │   │   │   └── SourceResource.php
+    │   │   │   └── Tables/
+    │   │   │       └── SourcesTable.php
+    │   ├── Widgets/
+    │   │   └── AiProviderStatusWidget.php
     ├── Http/
     │   ├── Controllers/
     │   │   ├── Api/
@@ -152,34 +166,68 @@ _SOURCE: Directory Structure_
             │   ├── Listeners/
             │   │   ├── ProcessRawNewsListener.php
             │   ├── Pipeline/
-            │   │   └── NewsProcessingPipeline.php
-            │   │   └── SkipMessageException.php
-            │   │   └── Steps/
-            │   │       └── AntiClickbaitStep.php
-            │   │       └── ClassifyStep.php
-            │   │       └── DeduplicateStep.php
-            │   │       └── FinalizeStep.php
-            │   │       └── ImportanceStep.php
-            │   │       └── LanguageDetectStep.php
-            │   │       └── ModerationStep.php
-            │   │       └── PipelineStep.php
-            │   │       └── SentimentStep.php
-            │   │       └── TranslateStep.php
+            │   │   ├── NewsProcessingPipeline.php
+            │   │   ├── SkipMessageException.php
+            │   │   ├── Steps/
+            │   │   │   └── AntiClickbaitStep.php
+            │   │   │   └── ChatGptCodexEnrichmentStep.php
+            │   │   │   └── ClassifyStep.php
+            │   │   │   └── DeduplicateStep.php
+            │   │   │   └── FinalizeStep.php
+            │   │   │   └── ImportanceStep.php
+            │   │   │   └── LanguageDetectStep.php
+            │   │   │   └── ModerationStep.php
+            │   │   │   └── PipelineStep.php
+            │   │   │   └── SentimentStep.php
+            │   │   │   └── TranslateStep.php
+            │   ├── Queue/
+            │   │   ├── Middleware/
+            │   │   │   └── ProviderConcurrencyMiddleware.php
+            │   ├── Services/
+            │   │   └── ActiveAiProviderResolver.php
+            │   │   └── RunAiSandboxAction.php
+            │   │   └── SyncAiProviderStatsAction.php
             ├── Domain/
             │   ├── Contracts/
-            │   │   └── Classifier.php
-            │   │   └── EnrichedPublisher.php
-            │   │   └── SentimentAnalyzer.php
-            │   │   └── TitleGenerator.php
-            │   │   └── Translator.php
+            │   │   ├── AiProviderAccountRepository.php
+            │   │   ├── AiProviderStatusManager.php
+            │   │   ├── Classifier.php
+            │   │   ├── EnrichedPublisher.php
+            │   │   ├── NewsAnalyzer.php
+            │   │   ├── SentimentAnalyzer.php
+            │   │   ├── TitleGenerator.php
+            │   │   ├── Translator.php
+            │   ├── DTO/
+            │   │   ├── AiProviderProfile.php
+            │   │   ├── NewsAnalysisResult.php
+            │   ├── Exceptions/
+            │   │   └── AiProviderException.php
+            │   │   └── AiProviderRateLimitException.php
+            │   │   └── AiProviderUnauthorizedException.php
             ├── Infrastructure/
+            │   ├── Codex/
+            │   │   ├── CodexAccountStatusSynchronizer.php
+            │   │   ├── CodexAppServerClient.php
+            │   │   ├── CodexAuthProcessManager.php
+            │   │   ├── CodexException.php
+            │   │   ├── CodexExecNewsAnalyzer.php
+            │   │   ├── CodexLoginManager.php
+            │   │   ├── CodexProcessRunner.php
+            │   │   ├── CodexProcessRunnerContract.php
+            │   │   ├── CodexUnauthorizedException.php
+            │   │   ├── CodexUsageLimitExceededException.php
+            │   │   ├── ShellCodexAuthProcessManager.php
             │   ├── LLM/
             │   │   ├── HeuristicTranslator.php
             │   │   ├── KeywordClassifier.php
             │   │   ├── KeywordSentimentAnalyzer.php
             │   │   ├── ObjectivelyTitleGenerator.php
             │   ├── Messaging/
-            │   │   └── EnrichedPublisher.php
+            │   │   ├── EnrichedPublisher.php
+            │   ├── Persistence/
+            │   │   └── EloquentAiProviderAccountRepository.php
+            │   │   └── Models/
+            │   │       └── AiProviderAccount.php
             ├── IntelligenceServiceProvider.php
         └── Shared/
             └── Application/
@@ -203,6 +251,6 @@ _SOURCE: Directory Structure_
 ```
 ---
 **File Statistics**
-- **Size**: 8.9 KB
-- **Lines**: 209
+- **Size**: 11.52 KB
+- **Lines**: 257
 File: `../docs/PROJECT_STRUCTURE.md`

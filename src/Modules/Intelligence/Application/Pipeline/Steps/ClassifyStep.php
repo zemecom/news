@@ -18,6 +18,10 @@ final readonly class ClassifyStep implements PipelineStep
             return $input;
         }
 
+        if (($input->metadata['category'] ?? null) !== null && isset($input->metadata['tags'])) {
+            return $input;
+        }
+
         $classification = $this->classifier->classify($input->content);
 
         return $input->with([

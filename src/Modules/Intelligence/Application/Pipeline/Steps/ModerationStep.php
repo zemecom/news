@@ -20,7 +20,7 @@ final class ModerationStep implements PipelineStep
         if (strtolower($category) === 'бытовой криминал') {
             return new EnrichedNewsData(
                 rawId: (int) $input->rawId,
-                titleGenerated: $input->title,
+                titleGenerated: isset($input->metadata['title_generated']) ? (string) $input->metadata['title_generated'] : $input->title,
                 contentTranslated: $input->content,
                 sentiment: (int) ($input->metadata['sentiment'] ?? 0),
                 category: $category,
@@ -29,6 +29,7 @@ final class ModerationStep implements PipelineStep
                 status: NewsStatus::REJECTED,
                 moderationReason: 'household_crime',
                 fingerprint: $input->fingerprint,
+                analysisMetadata: is_array($input->metadata['analysis'] ?? null) ? $input->metadata['analysis'] : [],
             );
         }
 

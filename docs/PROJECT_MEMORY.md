@@ -135,8 +135,19 @@
     - Команда диспетчеризации: `php artisan news:crawl`.
 
 - **Intelligence**
-    - Pipeline реализован: dedup -> lang detect -> translate -> classify -> sentiment -> anti-clickbait -> importance -> moderation -> finalize.
-    - Сейчас AI-обогащение эвристическое (без реальных LLM провайдеров).
+    - Pipeline реализован: dedup -> lang detect -> `chatgpt_codex` enrichment -> translate -> classify -> sentiment -> anti-clickbait -> importance -> moderation -> finalize.
+    - Добавлен primary LLM-провайдер `chatgpt_codex`, использующий подписку ChatGPT через `codex` CLI и модель `gpt-5.4-mini`.
+    - `chatgpt_codex` делает один structured-output вызов на новость и заполняет перевод, категорию, теги, sentiment и нейтральный заголовок; эвристические `TranslateStep` / `ClassifyStep` / `SentimentStep` / `AntiClickbaitStep` оставлены как идемпотентный fallback.
+    - Добавлены доменные порты/DTO для AI-провайдера (`AiProviderProfile`, `AiProviderAccountRepository`, `AiProviderStatusManager`), чтобы `Application` и `Domain` не зависели от infrastructure-моделей.
+    - Добавлена persistence-модель `ai_provider_accounts` и сид `chatgpt-default` для хранения профиля провайдера, auth/status snapshot и runtime-параметров.
+    - В админке Filament добавлены resource `AI Providers` и dashboard widget со статусом провайдера; доступны действия `Authenticate`, `Open Auth URL`, `Refresh Status`, `Cancel Auth`, `Logout`, а для device-auth в UI показывается одноразовый auth code.
+    - В профиле `AI Providers` можно выбирать не только модель Codex, но и `reasoning effort`; для `codex exec` это передаётся как `model_reasoning_effort`, а пустое значение оставляет дефолт выбранной модели.
+    - Список моделей в админке теперь plan-aware: для `plus` показывается тот же набор, что и в subscription-based Codex app (`GPT-5.4`, `GPT-5.4-Mini`, `GPT-5.3-Codex`, `GPT-5.2-Codex`, `GPT-5.2`, `GPT-5.1-Codex-Max`, `GPT-5.1-Codex-Mini`), а для `pro` дополнительно доступна `GPT-5.3-Codex-Spark`.
+    - Список `reasoning effort` в админке теперь зависит от выбранной модели и синхронизирован с текущим каталогом установленного `codex`: `gpt-5.1-codex-mini` даёт только `medium/high`, `gpt-5.1-codex-max` даёт `low/medium/high/xhigh`, а для актуального набора моделей `minimal` больше не предлагается.
+    - Добавлен общий refresh subscription-статистики провайдера: artisan-команда `ai-providers:sync-stats` каждые 5 минут обновляет auth/rate-limit snapshot через Laravel scheduler, а в Filament `AI Providers` появился header-action `Refresh Statistics` для ручного запуска того же sync-path из админки.
+    - В админке добавлена отдельная страница `AI Sandbox`: она запускает реальный `chatgpt_codex` news-analysis на произвольном заголовке/тексте, показывает перевод, нейтральный заголовок, категорию, теги, sentiment и raw analysis metadata, и использует текущую конфигурацию выбранного AI provider без отдельного override-конфига.
+    - Для надёжности login-flow в админке переведён на background `codex login --device-auth`: это убирает проблему с временным localhost callback (`localhost:1455`) при короткоживущем web-request. Статус и лимиты по-прежнему читаются через `codex app-server`, а анализ новостей выполняется через `codex exec`.
+    - Добавлен concurrency guard для LLM-провайдера через cache/Redis lock+slot semaphore; при занятом слоте job переоткладывается, а при `usageLimitExceeded` pipeline уходит в эвристический fallback.
     - Для снижения сцепления с `Catalog` pipeline использует общий контракт `Shared\Domain\Contracts\NewsStore`.
     - После enrichment публикуется событие `Shared\Domain\Events\NewsEnriched`; постановка `PreloadNewsMediaJob` теперь происходит в `Catalog` через listener.
     - Обработка запускается через Laravel Queue (RabbitMQ driver): `php artisan queue:work --queue=crawler_tasks,intelligence_tasks,media_tasks`.
@@ -201,9 +212,13 @@
 - Данные Redis и RabbitMQ также персистятся на диск проекта:
     - `./docker/.data/redis:/data`,
     - `./docker/.data/rabbitmq:/var/lib/rabbitmq`.
+- Auth-state Codex CLI теперь тоже персистится на диск проекта и шарится между `app`/`worker`, чтобы вход в ChatGPT не терялся после рестарта контейнеров.
+- При старте `app` и `worker` контейнеров теперь автоматически создаётся `CODEX_HOME_BASE` и запускается `ai-providers:sync-stats`, чтобы статус провайдера и лимиты восстанавливались из сохранённого Codex auth-state сразу после рестарта контейнера без ручного refresh в админке.
 - Папка `docker/.data` добавлена в `.gitignore`.
 - Замечание из ревью по ext-zip/ext-xml закрыто:
     - runtime-слой Dockerfile собирает `zip` и `xml`.
+- В runtime-образ добавлены Node.js 22+ и глобальный `@openai/codex`, чтобы и админка, и queue worker могли использовать ChatGPT Codex из контейнеров.
+- Filament admin panel теперь подключает собственную Vite theme `resources/css/filament/admin/theme.css`, чтобы utility-классы из `app/Filament/**` и `resources/views/filament/**` реально компилировались и кастомные виджеты/страницы не рендерились как неоформленный текст.
 - **Docker Hardening & Performance**:
     - Образ `runtime` переведен на использование не-root пользователя `www-data` для повышения безопасности.
     - Включено расширение `opcache` с оптимальными настройками для production-контура.
@@ -239,6 +254,8 @@
 - [ ] Подключить реальные LLM-провайдеры (OpenAI/Anthropic/DeepSeek).
 - [ ] Реализовать fallback-chain провайдеров.
 - [ ] Добавить лимиты токенов/мин по провайдерам.
+- [x] Реализовать CLI-провайдер `ChatGPT CLI` (`chatgpt_codex`) для использования лимитов подписки как primary/fallback канала.
+- [ ] Исследовать/реализовать CLI-провайдер `Gemini CLI` для использования лимитов подписки как отдельного routing/fallback канала.
 - [ ] Кэш ответов в Redis по fingerprint.
 - [ ] Уточнить/формализовать prompt-контракты и валидацию ответа модели.
 
@@ -274,7 +291,7 @@
 
 - **Init**: выполнен.
 - **Core (Crawler+Catalog без AI)**: выполнен.
-- **AI Integration**: частично (pipeline есть, реальные LLM пока нет).
+- **AI Integration**: частично (эвристический pipeline сохранён, `chatgpt_codex` на `gpt-5.4-mini` добавлен, остальные провайдеры и расширенный fallback-chain не завершены).
 - **UI/UX**: частично (web feed готова и имеет infinite scrolling, Livewire/Filament не завершены).
 - **Bot**: не выполнен.
 - **DevOps**: частично (docker и базовые k8s есть, production hardening не завершен).

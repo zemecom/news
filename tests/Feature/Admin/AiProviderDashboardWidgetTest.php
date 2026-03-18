@@ -1,0 +1,63 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Tests\Feature\Admin;
+
+use App\Filament\Widgets\AiProviderStatusWidget;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Livewire\Livewire;
+use Modules\Intelligence\Infrastructure\Persistence\Models\AiProviderAccount;
+use Tests\TestCase;
+
+final class AiProviderDashboardWidgetTest extends TestCase
+{
+    use RefreshDatabase;
+
+    public function test_ai_provider_widget_renders_dashboard_status_content(): void
+    {
+        $admin = User::query()->create([
+            'name' => 'Admin',
+            'email' => 'admin@example.com',
+            'password' => 'password',
+            'role' => 'admin',
+        ]);
+
+        AiProviderAccount::query()->create([
+            'slug' => 'chatgpt-default',
+            'provider' => AiProviderAccount::PROVIDER_CHATGPT_CODEX,
+            'display_name' => 'ChatGPT Codex',
+            'is_enabled' => true,
+            'codex_home_subpath' => 'chatgpt-default',
+            'default_model' => 'gpt-5.4-mini',
+            'default_reasoning_effort' => 'high',
+            'max_parallel_jobs' => 1,
+            'auth_status' => AiProviderAccount::STATUS_AUTHENTICATED,
+            'account_email' => 'admin@example.com',
+            'plan_type' => 'plus',
+            'rate_limit_snapshot' => [
+                'primary' => [
+                    'usedPercent' => 12,
+                    'resetsAt' => now()->addHour()->timestamp,
+                ],
+                'secondary' => [
+                    'usedPercent' => 34,
+                    'resetsAt' => now()->addDays(2)->timestamp,
+                    'windowDurationMins' => 10_080,
+                ],
+            ],
+        ]);
+
+        Livewire::actingAs($admin)
+            ->test(AiProviderStatusWidget::class)
+            ->assertSee('AI Provider')
+            ->assertSee('ChatGPT Codex')
+            ->assertSee('Authenticated')
+            ->assertSee('Runtime Snapshot')
+            ->assertSee('Used')
+            ->assertSee('12%')
+            ->assertSee('Week')
+            ->assertSee('34%');
+    }
+}

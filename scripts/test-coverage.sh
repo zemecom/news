@@ -27,6 +27,7 @@ mkdir -p "$ARTIFACT_DIR"
 echo "Running coverage with minimum ${MINIMUM}%"
 
 exec php \
+    -d memory_limit=512M \
     -d pcov.enabled=1 \
     -d pcov.directory="$ROOT_DIR" \
     ./vendor/bin/pest \

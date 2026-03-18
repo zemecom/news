@@ -140,6 +140,357 @@ final class NewsMediaBackfillCommand extends Command
 
 
 ```
+###  Path: `/app/Console/Commands/SyncAiProviderStatsCommand.php`
+
+```php
+namespace App\Console\Commands;
+
+use Illuminate\Console\Command as Command;
+use Modules\Intelligence\Application\Services\SyncAiProviderStatsAction as SyncAiProviderStatsAction;
+use Modules\Intelligence\Domain\DTO\AiProviderProfile as AiProviderProfile;
+
+final class SyncAiProviderStatsCommand extends Command
+{
+	protected $signature = 'ai-providers:sync-stats {--provider='.AiProviderProfile::PROVIDER_CHATGPT_CODEX.' : AI provider slug to sync}';
+	protected $description = 'Refresh AI provider auth status and subscription rate limits';
+
+
+	public function handle(SyncAiProviderStatsAction $syncStats): int
+	{
+	}
+}
+
+
+```
+###  Path: `/app/Filament/Pages/AiSandbox.php`
+
+```php
+namespace App\Filament\Pages;
+
+use BackedEnum as BackedEnum;
+use Filament\Forms\Components\Placeholder as Placeholder;
+use Filament\Forms\Components\Select as Select;
+use Filament\Forms\Components\TextInput as TextInput;
+use Filament\Forms\Components\Textarea as Textarea;
+use Filament\Forms\Concerns\InteractsWithForms as InteractsWithForms;
+use Filament\Forms\Contracts\HasForms as HasForms;
+use Filament\Notifications\Notification as Notification;
+use Filament\Pages\Page as Page;
+use Filament\Schemas\Components\Section as Section;
+use Filament\Schemas\Components\Utilities\Get as Get;
+use Filament\Schemas\Schema as Schema;
+use LogicException as LogicException;
+use Modules\Intelligence\Application\Services\ActiveAiProviderResolver as ActiveAiProviderResolver;
+use Modules\Intelligence\Application\Services\RunAiSandboxAction as RunAiSandboxAction;
+use Modules\Intelligence\Domain\Exceptions\AiProviderException as AiProviderException;
+use Modules\Intelligence\Infrastructure\Persistence\Models\AiProviderAccount as AiProviderAccount;
+use Override as Override;
+use Throwable as Throwable;
+use UnitEnum as UnitEnum;
+
+final class AiSandbox extends Page implements HasForms
+{
+	use InteractsWithForms;
+
+	protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-beaker';
+	protected static ?string $navigationLabel = 'AI Sandbox';
+	protected static string|UnitEnum|null $navigationGroup = 'AI';
+	protected static ?int $navigationSort = 11;
+	protected static ?string $title = 'AI Sandbox';
+	protected string $view = 'filament.pages.ai-sandbox';
+
+	/** @var array<string, mixed> */
+	public array $data = [];
+
+	/** @var array<string, mixed>|null */
+	public ?array $result = null;
+	public ?string $errorMessage = null;
+
+
+	public function mount(ActiveAiProviderResolver $resolver): void
+	{
+	}
+
+
+	public function form(Schema $schema): Schema
+	{
+	}
+
+
+	public function run(RunAiSandboxAction $sandbox): void
+	{
+	}
+
+
+	public function clearResult(): void
+	{
+	}
+
+
+	public function selectedProviderRecord(): ?AiProviderAccount
+	{
+	}
+
+
+	#[Override]
+	public function getMaxContentWidth(): \Filament\Support\Enums\Width
+	{
+	}
+
+
+	/**
+	 * @return array<int, string>
+	 */
+	private function providerOptions(): array
+	{
+	}
+
+
+	private function selectedProviderSummary(?int $providerId): string
+	{
+	}
+
+
+	private function findProvider(?int $providerId): ?AiProviderAccount
+	{
+	}
+
+
+	private function getFormSchema(): Schema
+	{
+	}
+}
+
+
+```
+###  Path: `/app/Filament/Resources/AiProviderAccounts/AiProviderAccountResource.php`
+
+```php
+namespace App\Filament\Resources\AiProviderAccounts;
+
+use App\Filament\Resources\AiProviderAccounts\Pages\EditAiProviderAccount as EditAiProviderAccount;
+use App\Filament\Resources\AiProviderAccounts\Pages\ListAiProviderAccounts as ListAiProviderAccounts;
+use App\Filament\Resources\AiProviderAccounts\Schemas\AiProviderAccountForm as AiProviderAccountForm;
+use App\Filament\Resources\AiProviderAccounts\Tables\AiProviderAccountsTable as AiProviderAccountsTable;
+use BackedEnum as BackedEnum;
+use Filament\Resources\Resource as Resource;
+use Filament\Schemas\Schema as Schema;
+use Filament\Support\Icons\Heroicon as Heroicon;
+use Filament\Tables\Table as Table;
+use Modules\Intelligence\Infrastructure\Persistence\Models\AiProviderAccount as AiProviderAccount;
+use Override as Override;
+use UnitEnum as UnitEnum;
+
+class AiProviderAccountResource extends Resource
+{
+	protected static ?string $model = AiProviderAccount::class;
+	protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+	protected static ?string $navigationLabel = 'AI Providers';
+	protected static UnitEnum|string|null $navigationGroup = 'AI';
+	protected static ?int $navigationSort = 10;
+
+
+	#[Override]
+	public static function form(Schema $schema): Schema
+	{
+	}
+
+
+	#[Override]
+	public static function table(Table $table): Table
+	{
+	}
+
+
+	#[Override]
+	public static function getPages(): array
+	{
+	}
+
+
+	#[Override]
+	public static function canCreate(): bool
+	{
+	}
+}
+
+
+```
+###  Path: `/app/Filament/Resources/AiProviderAccounts/Pages/EditAiProviderAccount.php`
+
+```php
+namespace App\Filament\Resources\AiProviderAccounts\Pages;
+
+use App\Filament\Resources\AiProviderAccounts\AiProviderAccountResource as AiProviderAccountResource;
+use Filament\Resources\Pages\EditRecord as EditRecord;
+use Filament\Support\Enums\Width as Width;
+use Override as Override;
+
+final class EditAiProviderAccount extends EditRecord
+{
+	protected static string $resource = AiProviderAccountResource::class;
+
+
+	#[Override]
+	protected function getHeaderActions(): array
+	{
+	}
+
+
+	#[Override]
+	public function getMaxContentWidth(): Width
+	{
+	}
+}
+
+
+```
+###  Path: `/app/Filament/Resources/AiProviderAccounts/Pages/ListAiProviderAccounts.php`
+
+```php
+namespace App\Filament\Resources\AiProviderAccounts\Pages;
+
+use App\Filament\Resources\AiProviderAccounts\AiProviderAccountResource as AiProviderAccountResource;
+use Filament\Actions\Action as Action;
+use Filament\Notifications\Notification as Notification;
+use Filament\Resources\Pages\ListRecords as ListRecords;
+use Filament\Support\Enums\Width as Width;
+use Modules\Intelligence\Application\Services\SyncAiProviderStatsAction as SyncAiProviderStatsAction;
+use Modules\Intelligence\Infrastructure\Persistence\Models\AiProviderAccount as AiProviderAccount;
+use Override as Override;
+use Throwable as Throwable;
+
+final class ListAiProviderAccounts extends ListRecords
+{
+	protected static string $resource = AiProviderAccountResource::class;
+
+
+	#[Override]
+	protected function getHeaderActions(): array
+	{
+	}
+
+
+	#[Override]
+	public function getMaxContentWidth(): Width
+	{
+	}
+}
+
+
+```
+###  Path: `/app/Filament/Resources/AiProviderAccounts/Schemas/AiProviderAccountForm.php`
+
+```php
+namespace App\Filament\Resources\AiProviderAccounts\Schemas;
+
+use Filament\Forms\Components\Select as Select;
+use Filament\Forms\Components\TextInput as TextInput;
+use Filament\Forms\Components\Textarea as Textarea;
+use Filament\Forms\Components\Toggle as Toggle;
+use Filament\Schemas\Components\Utilities\Get as Get;
+use Filament\Schemas\Components\Utilities\Set as Set;
+use Filament\Schemas\Schema as Schema;
+use Modules\Intelligence\Infrastructure\Persistence\Models\AiProviderAccount as AiProviderAccount;
+
+final class AiProviderAccountForm
+{
+	public static function configure(Schema $schema): Schema
+	{
+	}
+
+
+	/**
+	 * @return array<string, string>
+	 */
+	private static function availableModelOptions(?AiProviderAccount $record): array
+	{
+	}
+
+
+	/**
+	 * @return array<string, string>
+	 */
+	private static function availableReasoningEffortOptions(
+		?AiProviderAccount $record,
+		?string $selectedModel = null,
+	): array
+	{
+	}
+
+
+	/**
+	 * @return array<string, string>
+	 */
+	private static function normalizedStringMap(mixed $configured): array
+	{
+	}
+
+
+	/**
+	 * @param  array<string, string>  $allOptions
+	 * @return array<string, string>
+	 */
+	private static function filterOptionsByPlan(array $allOptions, ?string $planType): array
+	{
+	}
+
+
+	private static function normalizedPlanType(?string $planType): string
+	{
+	}
+
+
+	/**
+	 * @param  array<string, string>  $options
+	 * @param  array<int, mixed>  $keys
+	 * @return array<string, string>
+	 */
+	private static function filterOptionsByKeys(array $options, array $keys): array
+	{
+	}
+
+
+	/**
+	 * @return array<int, string>
+	 */
+	private static function supportedReasoningEffortKeysForModel(?string $model): array
+	{
+	}
+}
+
+
+```
+###  Path: `/app/Filament/Resources/AiProviderAccounts/Tables/AiProviderAccountsTable.php`
+
+```php
+namespace App\Filament\Resources\AiProviderAccounts\Tables;
+
+use Filament\Actions\Action as Action;
+use Filament\Actions\EditAction as EditAction;
+use Filament\Notifications\Notification as Notification;
+use Filament\Tables\Columns\TextColumn as TextColumn;
+use Filament\Tables\Table as Table;
+use Modules\Intelligence\Domain\Exceptions\AiProviderException as AiProviderException;
+use Modules\Intelligence\Infrastructure\Codex\CodexAccountStatusSynchronizer as CodexAccountStatusSynchronizer;
+use Modules\Intelligence\Infrastructure\Codex\CodexLoginManager as CodexLoginManager;
+use Modules\Intelligence\Infrastructure\Persistence\Models\AiProviderAccount as AiProviderAccount;
+use Throwable as Throwable;
+
+final class AiProviderAccountsTable
+{
+	public static function configure(Table $table): Table
+	{
+	}
+
+
+	private static function notifyError(Throwable $e): void
+	{
+	}
+}
+
+
+```
 ###  Path: `/app/Filament/Resources/Sources/Pages/CreateSource.php`
 
 ```php
@@ -291,6 +642,31 @@ use Filament\Tables\Table as Table;
 class SourcesTable
 {
 	public static function configure(Table $table): Table
+	{
+	}
+}
+
+
+```
+###  Path: `/app/Filament/Widgets/AiProviderStatusWidget.php`
+
+```php
+namespace App\Filament\Widgets;
+
+use App\Filament\Resources\AiProviderAccounts\AiProviderAccountResource as AiProviderAccountResource;
+use Filament\Widgets\Widget as Widget;
+use Modules\Intelligence\Infrastructure\Persistence\Models\AiProviderAccount as AiProviderAccount;
+
+final class AiProviderStatusWidget extends Widget
+{
+	protected string $view = 'filament.widgets.ai-provider-status-widget';
+	protected int|string|array $columnSpan = 'full';
+
+
+	/**
+	 * @return array<string, mixed>
+	 */
+	protected function getViewData(): array
 	{
 	}
 }
@@ -1300,6 +1676,7 @@ use Illuminate\Database\Eloquent\Model as Model;
  * @property int $id
  * @property string|null $image_url
  * @property array<int|string, mixed>|null $media
+ * @property array<string, mixed>|null $source_metadata
  */
 final class NewsItem extends Model
 {
@@ -2865,11 +3242,15 @@ final readonly class EloquentSourcePublicReader implements SourcePublicReader
 namespace Modules\Intelligence\Application\Listeners;
 
 use Illuminate\Contracts\Queue\ShouldQueue as ShouldQueue;
+use Illuminate\Queue\InteractsWithQueue as InteractsWithQueue;
 use Modules\Intelligence\Application\Pipeline\NewsProcessingPipeline as NewsProcessingPipeline;
+use Modules\Intelligence\Application\Queue\Middleware\ProviderConcurrencyMiddleware as ProviderConcurrencyMiddleware;
 use Modules\Shared\Domain\Events\RawNewsCreated as RawNewsCreated;
 
 final class ProcessRawNewsListener implements ShouldQueue
 {
+	use InteractsWithQueue;
+
 	/** Попытки выполнения */
 	public int $tries = 5;
 
@@ -2888,6 +3269,14 @@ final class ProcessRawNewsListener implements ShouldQueue
 
 
 	public function viaQueue(): string
+	{
+	}
+
+
+	/**
+	 * @return array<int, object>
+	 */
+	public function middleware(): array
 	{
 	}
 
@@ -2966,12 +3355,56 @@ final class SkipMessageException extends RuntimeException
 ```php
 namespace Modules\Intelligence\Application\Pipeline\Steps;
 
+use Modules\Intelligence\Domain\Contracts\TitleGenerator as TitleGenerator;
 use Modules\Shared\Domain\DTO\EnrichedNewsData as EnrichedNewsData;
 use Modules\Shared\Domain\DTO\RawNewsData as RawNewsData;
 
-final class AntiClickbaitStep implements PipelineStep
+final readonly class AntiClickbaitStep implements PipelineStep
 {
+	public function __construct(
+		private TitleGenerator $titleGenerator,
+	) {
+	}
+
+
 	public function process(RawNewsData|EnrichedNewsData $input): RawNewsData|EnrichedNewsData
+	{
+	}
+}
+
+
+```
+###  Path: `/src/Modules/Intelligence/Application/Pipeline/Steps/ChatGptCodexEnrichmentStep.php`
+
+```php
+namespace Modules\Intelligence\Application\Pipeline\Steps;
+
+use Illuminate\Support\Facades\Log as Log;
+use Modules\Intelligence\Application\Services\ActiveAiProviderResolver as ActiveAiProviderResolver;
+use Modules\Intelligence\Domain\Contracts\AiProviderStatusManager as AiProviderStatusManager;
+use Modules\Intelligence\Domain\Contracts\NewsAnalyzer as NewsAnalyzer;
+use Modules\Intelligence\Domain\Exceptions\AiProviderException as AiProviderException;
+use Modules\Intelligence\Domain\Exceptions\AiProviderRateLimitException as AiProviderRateLimitException;
+use Modules\Intelligence\Domain\Exceptions\AiProviderUnauthorizedException as AiProviderUnauthorizedException;
+use Modules\Shared\Domain\DTO\EnrichedNewsData as EnrichedNewsData;
+use Modules\Shared\Domain\DTO\RawNewsData as RawNewsData;
+
+final readonly class ChatGptCodexEnrichmentStep implements PipelineStep
+{
+	public function __construct(
+		private NewsAnalyzer $analyzer,
+		private ActiveAiProviderResolver $resolver,
+		private AiProviderStatusManager $statusSynchronizer,
+	) {
+	}
+
+
+	public function process(RawNewsData|EnrichedNewsData $input): RawNewsData|EnrichedNewsData
+	{
+	}
+
+
+	private function logFallback(RawNewsData $input, AiProviderException $e): void
 	{
 	}
 }
@@ -3159,6 +3592,206 @@ final readonly class TranslateStep implements PipelineStep
 
 
 ```
+###  Path: `/src/Modules/Intelligence/Application/Queue/Middleware/ProviderConcurrencyMiddleware.php`
+
+```php
+namespace Modules\Intelligence\Application\Queue\Middleware;
+
+use Closure as Closure;
+use Illuminate\Cache\Repository as Repository;
+use Illuminate\Contracts\Cache\Factory as CacheFactory;
+use Illuminate\Contracts\Cache\Lock as Lock;
+use Illuminate\Contracts\Cache\LockProvider as LockProvider;
+use Modules\Intelligence\Application\Services\ActiveAiProviderResolver as ActiveAiProviderResolver;
+use Modules\Intelligence\Domain\DTO\AiProviderProfile as AiProviderProfile;
+use RuntimeException as RuntimeException;
+
+final class ProviderConcurrencyMiddleware
+{
+	public function __construct(
+		private readonly CacheFactory $cache,
+		private readonly ActiveAiProviderResolver $resolver,
+	) {
+	}
+
+
+	public function handle(object $job, Closure $next): void
+	{
+	}
+
+
+	private function incrementIfAvailable(AiProviderProfile $account): bool
+	{
+	}
+
+
+	private function decrement(AiProviderProfile $account): void
+	{
+	}
+
+
+	private function releaseJob(object $job): void
+	{
+	}
+
+
+	private function slotKey(AiProviderProfile $account): string
+	{
+	}
+
+
+	private function guardKey(AiProviderProfile $account): string
+	{
+	}
+
+
+	private function cacheStore(): Repository
+	{
+	}
+
+
+	private function guardLock(Repository $store, AiProviderProfile $account): Lock
+	{
+	}
+}
+
+
+```
+###  Path: `/src/Modules/Intelligence/Application/Services/ActiveAiProviderResolver.php`
+
+```php
+namespace Modules\Intelligence\Application\Services;
+
+use Modules\Intelligence\Domain\Contracts\AiProviderAccountRepository as AiProviderAccountRepository;
+use Modules\Intelligence\Domain\DTO\AiProviderProfile as AiProviderProfile;
+
+final class ActiveAiProviderResolver
+{
+	public function __construct(
+		private readonly AiProviderAccountRepository $accounts,
+	) {
+	}
+
+
+	public function resolveChatGptCodex(): ?AiProviderProfile
+	{
+	}
+}
+
+
+```
+###  Path: `/src/Modules/Intelligence/Application/Services/RunAiSandboxAction.php`
+
+```php
+namespace Modules\Intelligence\Application\Services;
+
+use Carbon\CarbonImmutable as CarbonImmutable;
+use Modules\Intelligence\Domain\Contracts\AiProviderStatusManager as AiProviderStatusManager;
+use Modules\Intelligence\Domain\Contracts\NewsAnalyzer as NewsAnalyzer;
+use Modules\Intelligence\Domain\DTO\AiProviderProfile as AiProviderProfile;
+use Modules\Intelligence\Domain\DTO\NewsAnalysisResult as NewsAnalysisResult;
+use Modules\Intelligence\Domain\Exceptions\AiProviderException as AiProviderException;
+use Modules\Intelligence\Domain\Exceptions\AiProviderRateLimitException as AiProviderRateLimitException;
+use Modules\Intelligence\Domain\Exceptions\AiProviderUnauthorizedException as AiProviderUnauthorizedException;
+use Modules\Shared\Domain\DTO\RawNewsData as RawNewsData;
+
+final readonly class RunAiSandboxAction
+{
+	public function __construct(
+		private NewsAnalyzer $analyzer,
+		private AiProviderStatusManager $statusManager,
+	) {
+	}
+
+
+	public function run(
+		AiProviderProfile $account,
+		string $title,
+		string $content,
+		string $language,
+		string $link,
+	): NewsAnalysisResult
+	{
+	}
+}
+
+
+```
+###  Path: `/src/Modules/Intelligence/Application/Services/SyncAiProviderStatsAction.php`
+
+```php
+namespace Modules\Intelligence\Application\Services;
+
+use Modules\Intelligence\Domain\Contracts\AiProviderAccountRepository as AiProviderAccountRepository;
+use Modules\Intelligence\Domain\Contracts\AiProviderStatusManager as AiProviderStatusManager;
+use Modules\Intelligence\Domain\DTO\AiProviderProfile as AiProviderProfile;
+use Throwable as Throwable;
+
+final readonly class SyncAiProviderStatsAction
+{
+	public function __construct(
+		private AiProviderAccountRepository $accounts,
+		private AiProviderStatusManager $statusManager,
+	) {
+	}
+
+
+	/**
+	 * @return array{checked:int,updated:int,failed:int}
+	 */
+	public function run(string $provider = AiProviderProfile::PROVIDER_CHATGPT_CODEX): array
+	{
+	}
+}
+
+
+```
+###  Path: `/src/Modules/Intelligence/Domain/Contracts/AiProviderAccountRepository.php`
+
+```php
+namespace Modules\Intelligence\Domain\Contracts;
+
+use Modules\Intelligence\Domain\DTO\AiProviderProfile as AiProviderProfile;
+
+interface AiProviderAccountRepository
+{
+	public function findFirstEnabledByProvider(string $provider): ?AiProviderProfile;
+
+
+	/**
+	 * @return array<int, AiProviderProfile>
+	 */
+	public function findEnabledByProvider(string $provider): array;
+}
+
+
+```
+###  Path: `/src/Modules/Intelligence/Domain/Contracts/AiProviderStatusManager.php`
+
+```php
+namespace Modules\Intelligence\Domain\Contracts;
+
+use Modules\Intelligence\Domain\DTO\AiProviderProfile as AiProviderProfile;
+
+interface AiProviderStatusManager
+{
+	public function sync(AiProviderProfile $account): void;
+
+
+	/**
+	 * @param  array<string, mixed>|null  $snapshot
+	 */
+	public function markUsageLimited(AiProviderProfile $account, ?array $snapshot = null, ?string $message = null): void;
+
+
+	public function markNotAuthenticated(AiProviderProfile $account): void;
+
+
+	public function markError(AiProviderProfile $account, string $message): void;
+}
+
+
+```
 ###  Path: `/src/Modules/Intelligence/Domain/Contracts/Classifier.php`
 
 ```php
@@ -3184,6 +3817,22 @@ use Modules\Shared\Domain\DTO\EnrichedNewsData as EnrichedNewsData;
 interface EnrichedPublisher
 {
 	public function publish(EnrichedNewsData $enriched): void;
+}
+
+
+```
+###  Path: `/src/Modules/Intelligence/Domain/Contracts/NewsAnalyzer.php`
+
+```php
+namespace Modules\Intelligence\Domain\Contracts;
+
+use Modules\Intelligence\Domain\DTO\AiProviderProfile as AiProviderProfile;
+use Modules\Intelligence\Domain\DTO\NewsAnalysisResult as NewsAnalysisResult;
+use Modules\Shared\Domain\DTO\RawNewsData as RawNewsData;
+
+interface NewsAnalyzer
+{
+	public function analyze(RawNewsData $raw, AiProviderProfile $account): NewsAnalysisResult;
 }
 
 
@@ -3220,6 +3869,621 @@ namespace Modules\Intelligence\Domain\Contracts;
 interface Translator
 {
 	public function translate(string $text, string $targetLanguage, string $sourceLanguage): string;
+}
+
+
+```
+###  Path: `/src/Modules/Intelligence/Domain/DTO/AiProviderProfile.php`
+
+```php
+namespace Modules\Intelligence\Domain\DTO;
+
+final readonly class AiProviderProfile
+{
+	public const PROVIDER_CHATGPT_CODEX = 'chatgpt_codex';
+	public const STATUS_NOT_AUTHENTICATED = 'not_authenticated';
+	public const STATUS_PENDING = 'pending';
+	public const STATUS_AUTHENTICATED = 'authenticated';
+	public const STATUS_RATE_LIMITED = 'rate_limited';
+	public const STATUS_ERROR = 'error';
+
+	/**
+	 * @param  array<string, mixed>|null  $rateLimitSnapshot
+	 * @param  array<string, mixed>|null  $meta
+	 */
+	public function __construct(
+		public ?int $id,
+		public string $slug,
+		public string $provider,
+		public string $displayName,
+		public bool $enabled,
+		public string $codexHomeSubpath,
+		public string $defaultModel,
+		public int $maxParallelJobs,
+		public string $authStatus,
+		public ?string $authMode = null,
+		public ?string $loginId = null,
+		public ?string $authUrl = null,
+		public ?string $accountEmail = null,
+		public ?string $planType = null,
+		public ?string $defaultReasoningEffort = null,
+		public ?array $rateLimitSnapshot = null,
+		public ?array $meta = null,
+	) {
+	}
+
+
+	public function isAuthenticated(): bool
+	{
+	}
+
+
+	public function isPending(): bool
+	{
+	}
+}
+
+
+```
+###  Path: `/src/Modules/Intelligence/Domain/DTO/NewsAnalysisResult.php`
+
+```php
+namespace Modules\Intelligence\Domain\DTO;
+
+final readonly class NewsAnalysisResult
+{
+	/**
+	 * @param  array<int, string>  $tags
+	 * @param  array<string, mixed>  $analysisMetadata
+	 */
+	public function __construct(
+		public string $translatedContent,
+		public ?string $generatedTitle,
+		public string $category,
+		public array $tags,
+		public int $sentiment,
+		public array $analysisMetadata,
+	) {
+	}
+}
+
+
+```
+###  Path: `/src/Modules/Intelligence/Domain/Exceptions/AiProviderException.php`
+
+```php
+namespace Modules\Intelligence\Domain\Exceptions;
+
+use Throwable as Throwable;
+
+interface AiProviderException extends Throwable
+{
+}
+
+
+```
+###  Path: `/src/Modules/Intelligence/Domain/Exceptions/AiProviderRateLimitException.php`
+
+```php
+namespace Modules\Intelligence\Domain\Exceptions;
+
+interface AiProviderRateLimitException extends AiProviderException
+{
+}
+
+
+```
+###  Path: `/src/Modules/Intelligence/Domain/Exceptions/AiProviderUnauthorizedException.php`
+
+```php
+namespace Modules\Intelligence\Domain\Exceptions;
+
+interface AiProviderUnauthorizedException extends AiProviderException
+{
+}
+
+
+```
+###  Path: `/src/Modules/Intelligence/Infrastructure/Codex/CodexAccountStatusSynchronizer.php`
+
+```php
+namespace Modules\Intelligence\Infrastructure\Codex;
+
+use Modules\Intelligence\Domain\Contracts\AiProviderStatusManager as AiProviderStatusManager;
+use Modules\Intelligence\Domain\DTO\AiProviderProfile as AiProviderProfile;
+use Modules\Intelligence\Domain\Exceptions\AiProviderUnauthorizedException as AiProviderUnauthorizedException;
+use Modules\Intelligence\Infrastructure\Persistence\Models\AiProviderAccount as AiProviderAccount;
+
+final readonly class CodexAccountStatusSynchronizer implements AiProviderStatusManager
+{
+	public function __construct(
+		private CodexAppServerClient $client,
+		private CodexAuthProcessManager $authProcesses,
+	) {
+	}
+
+
+	public function sync(AiProviderProfile|AiProviderAccount $account): void
+	{
+	}
+
+
+	public function markPending(AiProviderProfile|AiProviderAccount $account, string $loginId, string $authUrl): void
+	{
+	}
+
+
+	/**
+	 * @param  array<string, mixed>|null  $snapshot
+	 */
+	public function markUsageLimited(
+		AiProviderProfile|AiProviderAccount $account,
+		?array $snapshot = null,
+		?string $message = null,
+	): void
+	{
+	}
+
+
+	public function markError(AiProviderProfile|AiProviderAccount $account, string $message): void
+	{
+	}
+
+
+	public function markNotAuthenticated(AiProviderProfile|AiProviderAccount $account): void
+	{
+	}
+
+
+	private function resolveModel(AiProviderProfile|AiProviderAccount $account): AiProviderAccount
+	{
+	}
+
+
+	private function hasActivePendingLoginProcess(AiProviderAccount $account): bool
+	{
+	}
+
+
+	/**
+	 * @return array<string, mixed>|null
+	 */
+	private function withoutPendingLoginProcess(AiProviderAccount $account): ?array
+	{
+	}
+
+
+	private function clearPendingLoginProcess(AiProviderAccount $account): void
+	{
+	}
+}
+
+
+```
+###  Path: `/src/Modules/Intelligence/Infrastructure/Codex/CodexAppServerClient.php`
+
+```php
+namespace Modules\Intelligence\Infrastructure\Codex;
+
+use Modules\Intelligence\Domain\DTO\AiProviderProfile as AiProviderProfile;
+
+final readonly class CodexAppServerClient
+{
+	public function __construct(
+		private CodexProcessRunnerContract $runner,
+	) {
+	}
+
+
+	/**
+	 * @return array<string, mixed>
+	 */
+	public function startLogin(AiProviderProfile $account): array
+	{
+	}
+
+
+	/**
+	 * @return array<string, mixed>
+	 */
+	public function cancelLogin(AiProviderProfile $account): array
+	{
+	}
+
+
+	/**
+	 * @return array<string, mixed>
+	 */
+	public function readAccount(AiProviderProfile $account): array
+	{
+	}
+
+
+	/**
+	 * @return array<string, mixed>
+	 */
+	public function readRateLimits(AiProviderProfile $account): array
+	{
+	}
+
+
+	public function logout(AiProviderProfile $account): void
+	{
+	}
+
+
+	/**
+	 * @param  array<string, mixed>|null  $params
+	 * @return array<string, mixed>
+	 */
+	private function request(AiProviderProfile $account, string $method, ?array $params = null): array
+	{
+	}
+
+
+	private function resolveCodexHome(AiProviderProfile $account): string
+	{
+	}
+
+
+	private function throwForError(string $method, string $output, string $errorOutput): never
+	{
+	}
+
+
+	/**
+	 * @param  array<string, mixed>  $error
+	 */
+	private function throwForPayloadError(string $method, array $error): never
+	{
+	}
+}
+
+
+```
+###  Path: `/src/Modules/Intelligence/Infrastructure/Codex/CodexAuthProcessManager.php`
+
+```php
+namespace Modules\Intelligence\Infrastructure\Codex;
+
+interface CodexAuthProcessManager
+{
+	public function startDeviceAuth(string $binary, string $codexHome, string $outputPath): int;
+
+
+	public function isRunning(int $pid): bool;
+
+
+	public function terminate(int $pid): void;
+}
+
+
+```
+###  Path: `/src/Modules/Intelligence/Infrastructure/Codex/CodexException.php`
+
+```php
+namespace Modules\Intelligence\Infrastructure\Codex;
+
+use Modules\Intelligence\Domain\Exceptions\AiProviderException as AiProviderExceptionContract;
+use RuntimeException as RuntimeException;
+
+final class CodexException extends RuntimeException implements AiProviderExceptionContract
+{
+}
+
+
+```
+###  Path: `/src/Modules/Intelligence/Infrastructure/Codex/CodexExecNewsAnalyzer.php`
+
+```php
+namespace Modules\Intelligence\Infrastructure\Codex;
+
+use JsonException as JsonException;
+use Modules\Intelligence\Domain\Contracts\NewsAnalyzer as NewsAnalyzer;
+use Modules\Intelligence\Domain\DTO\AiProviderProfile as AiProviderProfile;
+use Modules\Intelligence\Domain\DTO\NewsAnalysisResult as NewsAnalysisResult;
+use Modules\Shared\Domain\DTO\RawNewsData as RawNewsData;
+
+final readonly class CodexExecNewsAnalyzer implements NewsAnalyzer
+{
+	public function __construct(
+		private CodexProcessRunnerContract $runner,
+	) {
+	}
+
+
+	public function analyze(RawNewsData $raw, AiProviderProfile $account): NewsAnalysisResult
+	{
+	}
+
+
+	private function ensureScratchDir(): string
+	{
+	}
+
+
+	private function resolveCodexHome(AiProviderProfile $account): string
+	{
+	}
+
+
+	/**
+	 * @return array<string, mixed>
+	 */
+	private function schema(): array
+	{
+	}
+
+
+	private function prompt(RawNewsData $raw): string
+	{
+	}
+
+
+	private function writeTempFile(string $prefix, string $contents): string
+	{
+	}
+
+
+	private function throwForCommandFailure(string $output, string $errorOutput): never
+	{
+	}
+
+
+	private function resolveReasoningEffort(AiProviderProfile $account): ?string
+	{
+	}
+
+
+	/**
+	 * @return list<string>
+	 */
+	private function buildCommand(
+		string $model,
+		?string $reasoningEffort,
+		string $scratchDir,
+		string $schemaPath,
+		string $outputPath,
+	): array
+	{
+	}
+}
+
+
+```
+###  Path: `/src/Modules/Intelligence/Infrastructure/Codex/CodexLoginManager.php`
+
+```php
+namespace Modules\Intelligence\Infrastructure\Codex;
+
+use Modules\Intelligence\Infrastructure\Persistence\Models\AiProviderAccount as AiProviderAccount;
+
+final readonly class CodexLoginManager
+{
+	public function __construct(
+		private CodexAppServerClient $client,
+		private CodexAccountStatusSynchronizer $statusSynchronizer,
+		private CodexAuthProcessManager $authProcesses,
+	) {
+	}
+
+
+	public function startLogin(AiProviderAccount $account): void
+	{
+	}
+
+
+	public function cancelLogin(AiProviderAccount $account): void
+	{
+	}
+
+
+	public function logout(AiProviderAccount $account): void
+	{
+	}
+
+
+	private function resolveCodexHome(AiProviderAccount $account): string
+	{
+	}
+
+
+	private function allocateOutputPath(AiProviderAccount $account): string
+	{
+	}
+
+
+	/**
+	 * @return array{0:string,1:string}
+	 */
+	private function waitForDeviceAuthPrompt(int $pid, string $outputPath): array
+	{
+	}
+
+
+	private function extractAuthUrl(string $output): ?string
+	{
+	}
+
+
+	private function extractDeviceCode(string $output): ?string
+	{
+	}
+
+
+	private function normalizedOutput(string $outputPath): string
+	{
+	}
+
+
+	private function stopPendingLoginProcess(AiProviderAccount $account): void
+	{
+	}
+}
+
+
+```
+###  Path: `/src/Modules/Intelligence/Infrastructure/Codex/CodexProcessRunner.php`
+
+```php
+namespace Modules\Intelligence\Infrastructure\Codex;
+
+use JsonException as JsonException;
+use Symfony\Component\Process\InputStream as InputStream;
+use Symfony\Component\Process\Process as Process;
+
+final class CodexProcessRunner implements CodexProcessRunnerContract
+{
+	/**
+	 * @param  list<string>  $command
+	 * @param  array<string, string>  $env
+	 * @return array{exit_code:int, output:string, error_output:string}
+	 */
+	public function run(
+		array $command,
+		?string $cwd = null,
+		array $env = [],
+		?int $timeoutSeconds = null,
+		?string $input = null,
+	): array
+	{
+	}
+
+
+	/**
+	 * @param  list<string>  $command
+	 * @param  list<array<string, mixed>>  $messages
+	 * @param  array<string, string>  $env
+	 * @return array{exit_code:int, output:string, error_output:string, decoded:list<array<string, mixed>>}
+	 */
+	public function runJsonSession(
+		array $command,
+		array $messages,
+		?string $cwd = null,
+		array $env = [],
+		int $timeoutSeconds = 15,
+	): array
+	{
+	}
+
+
+	/**
+	 * @param  array<string, mixed>  $message
+	 */
+	private function encodeMessage(array $message): string
+	{
+	}
+
+
+	/**
+	 * @return list<array<string, mixed>>
+	 */
+	private function decodeOutputLines(string $output): array
+	{
+	}
+
+
+	private function waitForResponseId(
+		Process $process,
+		string &$output,
+		string &$errorOutput,
+		int $messageId,
+		float $deadline,
+	): void
+	{
+	}
+}
+
+
+```
+###  Path: `/src/Modules/Intelligence/Infrastructure/Codex/CodexProcessRunnerContract.php`
+
+```php
+namespace Modules\Intelligence\Infrastructure\Codex;
+
+interface CodexProcessRunnerContract
+{
+	/**
+	 * @param  list<string>  $command
+	 * @param  array<string, string>  $env
+	 * @return array{exit_code:int, output:string, error_output:string}
+	 */
+	public function run(
+		array $command,
+		?string $cwd = null,
+		array $env = [],
+		?int $timeoutSeconds = null,
+		?string $input = null,
+	): array;
+
+
+	/**
+	 * @param  list<string>  $command
+	 * @param  list<array<string, mixed>>  $messages
+	 * @param  array<string, string>  $env
+	 * @return array{exit_code:int, output:string, error_output:string, decoded:list<array<string, mixed>>}
+	 */
+	public function runJsonSession(
+		array $command,
+		array $messages,
+		?string $cwd = null,
+		array $env = [],
+		int $timeoutSeconds = 15,
+	): array;
+}
+
+
+```
+###  Path: `/src/Modules/Intelligence/Infrastructure/Codex/CodexUnauthorizedException.php`
+
+```php
+namespace Modules\Intelligence\Infrastructure\Codex;
+
+use Modules\Intelligence\Domain\Exceptions\AiProviderUnauthorizedException as AiProviderUnauthorizedExceptionContract;
+use RuntimeException as RuntimeException;
+
+final class CodexUnauthorizedException extends RuntimeException implements AiProviderUnauthorizedExceptionContract
+{
+}
+
+
+```
+###  Path: `/src/Modules/Intelligence/Infrastructure/Codex/CodexUsageLimitExceededException.php`
+
+```php
+namespace Modules\Intelligence\Infrastructure\Codex;
+
+use Modules\Intelligence\Domain\Exceptions\AiProviderRateLimitException as AiProviderRateLimitExceptionContract;
+use RuntimeException as RuntimeException;
+
+final class CodexUsageLimitExceededException extends RuntimeException implements AiProviderRateLimitExceptionContract
+{
+}
+
+
+```
+###  Path: `/src/Modules/Intelligence/Infrastructure/Codex/ShellCodexAuthProcessManager.php`
+
+```php
+namespace Modules\Intelligence\Infrastructure\Codex;
+
+use Symfony\Component\Process\Process as Process;
+
+final class ShellCodexAuthProcessManager implements CodexAuthProcessManager
+{
+	public function startDeviceAuth(string $binary, string $codexHome, string $outputPath): int
+	{
+	}
+
+
+	public function isRunning(int $pid): bool
+	{
+	}
+
+
+	public function terminate(int $pid): void
+	{
+	}
 }
 
 
@@ -3365,6 +4629,194 @@ final readonly class EnrichedPublisher implements EnrichedPublisherContract
 
 
 ```
+###  Path: `/src/Modules/Intelligence/Infrastructure/Persistence/EloquentAiProviderAccountRepository.php`
+
+```php
+namespace Modules\Intelligence\Infrastructure\Persistence;
+
+use Modules\Intelligence\Domain\Contracts\AiProviderAccountRepository as AiProviderAccountRepository;
+use Modules\Intelligence\Domain\DTO\AiProviderProfile as AiProviderProfile;
+use Modules\Intelligence\Infrastructure\Persistence\Models\AiProviderAccount as AiProviderAccount;
+
+final class EloquentAiProviderAccountRepository implements AiProviderAccountRepository
+{
+	public function findFirstEnabledByProvider(string $provider): ?AiProviderProfile
+	{
+	}
+
+
+	/**
+	 * @return array<int, AiProviderProfile>
+	 */
+	public function findEnabledByProvider(string $provider): array
+	{
+	}
+}
+
+
+```
+###  Path: `/src/Modules/Intelligence/Infrastructure/Persistence/Models/AiProviderAccount.php`
+
+```php
+namespace Modules\Intelligence\Infrastructure\Persistence\Models;
+
+use Carbon\CarbonImmutable as CarbonImmutable;
+use Illuminate\Database\Eloquent\Model as Model;
+use Modules\Intelligence\Domain\DTO\AiProviderProfile as AiProviderProfile;
+
+/**
+ * @property int $id
+ * @property string $slug
+ * @property string $provider
+ * @property string $display_name
+ * @property bool $is_enabled
+ * @property string $codex_home_subpath
+ * @property string $default_model
+ * @property string|null $default_reasoning_effort
+ * @property int $max_parallel_jobs
+ * @property string $auth_status
+ * @property string|null $auth_mode
+ * @property string|null $login_id
+ * @property string|null $auth_url
+ * @property string|null $account_email
+ * @property string|null $plan_type
+ * @property array<string, mixed>|null $rate_limit_snapshot
+ * @property CarbonImmutable|null $last_status_checked_at
+ * @property CarbonImmutable|null $last_authenticated_at
+ * @property CarbonImmutable|null $last_error_at
+ * @property string|null $last_error_message
+ * @property array<string, mixed>|null $meta
+ */
+final class AiProviderAccount extends Model
+{
+	public const PROVIDER_CHATGPT_CODEX = AiProviderProfile::PROVIDER_CHATGPT_CODEX;
+	public const STATUS_NOT_AUTHENTICATED = AiProviderProfile::STATUS_NOT_AUTHENTICATED;
+	public const STATUS_PENDING = AiProviderProfile::STATUS_PENDING;
+	public const STATUS_AUTHENTICATED = AiProviderProfile::STATUS_AUTHENTICATED;
+	public const STATUS_RATE_LIMITED = AiProviderProfile::STATUS_RATE_LIMITED;
+	public const STATUS_ERROR = AiProviderProfile::STATUS_ERROR;
+
+	protected $table = 'ai_provider_accounts';
+
+	protected $fillable = [
+		'slug',
+		'provider',
+		'display_name',
+		'is_enabled',
+		'codex_home_subpath',
+		'default_model',
+		'default_reasoning_effort',
+		'max_parallel_jobs',
+		'auth_status',
+		'auth_mode',
+		'login_id',
+		'auth_url',
+		'account_email',
+		'plan_type',
+		'rate_limit_snapshot',
+		'last_status_checked_at',
+		'last_authenticated_at',
+		'last_error_at',
+		'last_error_message',
+		'meta',
+	];
+
+
+	/**
+	 * @return array<string, string>
+	 */
+	protected function casts(): array
+	{
+	}
+
+
+	public function isAuthenticated(): bool
+	{
+	}
+
+
+	public function isPending(): bool
+	{
+	}
+
+
+	public function statusLabel(): string
+	{
+	}
+
+
+	public function statusColor(): string
+	{
+	}
+
+
+	public function rateLimitUsedPercent(): ?int
+	{
+	}
+
+
+	public function rateLimitResetAt(): ?CarbonImmutable
+	{
+	}
+
+
+	public function weeklyRateLimitUsedPercent(): ?int
+	{
+	}
+
+
+	public function weeklyRateLimitResetAt(): ?CarbonImmutable
+	{
+	}
+
+
+	public function toProfile(): AiProviderProfile
+	{
+	}
+
+
+	/**
+	 * @return array<string, mixed>
+	 */
+	private function primaryRateLimitWindow(): array
+	{
+	}
+
+
+	/**
+	 * @return array<string, mixed>
+	 */
+	private function weeklyRateLimitWindow(): array
+	{
+	}
+
+
+	/**
+	 * @param  array<string, mixed>  $window
+	 */
+	private function windowUsedPercent(array $window): ?int
+	{
+	}
+
+
+	/**
+	 * @param  array<string, mixed>  $window
+	 */
+	private function windowResetAt(array $window): ?CarbonImmutable
+	{
+	}
+
+
+	/**
+	 * @return array<string, mixed>
+	 */
+	private function normalizedRateLimitSnapshot(): array
+	{
+	}
+}
+
+
+```
 ###  Path: `/src/Modules/Intelligence/IntelligenceServiceProvider.php`
 
 ```php
@@ -3373,6 +4825,7 @@ namespace Modules\Intelligence;
 use Illuminate\Support\ServiceProvider as ServiceProvider;
 use Modules\Intelligence\Application\Pipeline\NewsProcessingPipeline as NewsProcessingPipeline;
 use Modules\Intelligence\Application\Pipeline\Steps\AntiClickbaitStep as AntiClickbaitStep;
+use Modules\Intelligence\Application\Pipeline\Steps\ChatGptCodexEnrichmentStep as ChatGptCodexEnrichmentStep;
 use Modules\Intelligence\Application\Pipeline\Steps\ClassifyStep as ClassifyStep;
 use Modules\Intelligence\Application\Pipeline\Steps\DeduplicateStep as DeduplicateStep;
 use Modules\Intelligence\Application\Pipeline\Steps\FinalizeStep as FinalizeStep;
@@ -3381,16 +4834,28 @@ use Modules\Intelligence\Application\Pipeline\Steps\LanguageDetectStep as Langua
 use Modules\Intelligence\Application\Pipeline\Steps\ModerationStep as ModerationStep;
 use Modules\Intelligence\Application\Pipeline\Steps\SentimentStep as SentimentStep;
 use Modules\Intelligence\Application\Pipeline\Steps\TranslateStep as TranslateStep;
+use Modules\Intelligence\Domain\Contracts\AiProviderAccountRepository as AiProviderAccountRepository;
+use Modules\Intelligence\Domain\Contracts\AiProviderStatusManager as AiProviderStatusManager;
 use Modules\Intelligence\Domain\Contracts\Classifier as Classifier;
 use Modules\Intelligence\Domain\Contracts\EnrichedPublisher as EnrichedPublisherContract;
+use Modules\Intelligence\Domain\Contracts\NewsAnalyzer as NewsAnalyzer;
 use Modules\Intelligence\Domain\Contracts\SentimentAnalyzer as SentimentAnalyzer;
 use Modules\Intelligence\Domain\Contracts\TitleGenerator as TitleGenerator;
 use Modules\Intelligence\Domain\Contracts\Translator as Translator;
+use Modules\Intelligence\Infrastructure\Codex\CodexAccountStatusSynchronizer as CodexAccountStatusSynchronizer;
+use Modules\Intelligence\Infrastructure\Codex\CodexAppServerClient as CodexAppServerClient;
+use Modules\Intelligence\Infrastructure\Codex\CodexAuthProcessManager as CodexAuthProcessManager;
+use Modules\Intelligence\Infrastructure\Codex\CodexExecNewsAnalyzer as CodexExecNewsAnalyzer;
+use Modules\Intelligence\Infrastructure\Codex\CodexLoginManager as CodexLoginManager;
+use Modules\Intelligence\Infrastructure\Codex\CodexProcessRunner as CodexProcessRunner;
+use Modules\Intelligence\Infrastructure\Codex\CodexProcessRunnerContract as CodexProcessRunnerContract;
+use Modules\Intelligence\Infrastructure\Codex\ShellCodexAuthProcessManager as ShellCodexAuthProcessManager;
 use Modules\Intelligence\Infrastructure\LLM\HeuristicTranslator as HeuristicTranslator;
 use Modules\Intelligence\Infrastructure\LLM\KeywordClassifier as KeywordClassifier;
 use Modules\Intelligence\Infrastructure\LLM\KeywordSentimentAnalyzer as KeywordSentimentAnalyzer;
 use Modules\Intelligence\Infrastructure\LLM\ObjectivelyTitleGenerator as ObjectivelyTitleGenerator;
 use Modules\Intelligence\Infrastructure\Messaging\EnrichedPublisher as EnrichedPublisher;
+use Modules\Intelligence\Infrastructure\Persistence\EloquentAiProviderAccountRepository as EloquentAiProviderAccountRepository;
 use Modules\Shared\Domain\Contracts\NewsStore as NewsStore;
 use Override as Override;
 
@@ -3537,6 +5002,7 @@ final readonly class EnrichedNewsData
 {
 	/**
 	 * @param  array<int, string>  $tags
+	 * @param  array<string, mixed>  $analysisMetadata
 	 */
 	public function __construct(
 		public int $rawId,
@@ -3549,6 +5015,7 @@ final readonly class EnrichedNewsData
 		public NewsStatus $status,
 		public ?string $moderationReason,
 		public string $fingerprint,
+		public array $analysisMetadata = [],
 	) {
 	}
 
@@ -3566,7 +5033,8 @@ final readonly class EnrichedNewsData
 	 *     importance?: bool,
 	 *     status?: NewsStatus,
 	 *     moderationReason?: ?string,
-	 *     fingerprint?: string
+	 *     fingerprint?: string,
+	 *     analysisMetadata?: array<string, mixed>
 	 * } $overrides
 	 */
 	public function with(array $overrides): self
@@ -3726,6 +5194,6 @@ final readonly class SourceFetchSucceeded
 ```
 ---
 **File Statistics**
-- **Size**: 86.95 KB
-- **Lines**: 3726
+- **Size**: 121.68 KB
+- **Lines**: 5200
 File: `../docs/PROJECT_INTERFACE.md`

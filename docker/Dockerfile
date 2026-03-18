@@ -5,6 +5,8 @@ FROM alpine:3.23.3 AS base
 
 WORKDIR /app
 
+ARG CODEX_CLI_VERSION=0.112.0
+
 # Ensure www-data user exists
 RUN set -x ; \
     addgroup -g 82 -S www-data ; \
@@ -41,6 +43,8 @@ RUN --mount=type=cache,target=/var/cache/apk \
     ca-certificates \
     icu-data-full \
     curl \
+    nodejs \
+    npm \
     && ln -s /usr/bin/php85 /usr/bin/php
 
 # Configure Opcache (common settings)
@@ -48,7 +52,12 @@ ENV PHP_OPCACHE_ENABLE="1" \
     PHP_OPCACHE_MAX_ACCELERATED_FILES="10000" \
     PHP_OPCACHE_MEMORY_CONSUMPTION="192" \
     PHP_OPCACHE_MAX_WASTED_PERCENTAGE="10" \
-    PATH="/tmp/roadrunner-bin:${PATH}"
+    PATH="/tmp/roadrunner-bin:${PATH}" \
+    HOME="/home/www-data"
+
+RUN npm install -g "@openai/codex@${CODEX_CLI_VERSION}" \
+    && mkdir -p "${HOME}/.codex/providers" \
+    && chown -R www-data:www-data "${HOME}"
 
 
 # Install Composer
@@ -73,8 +82,6 @@ ENV PHP_OPCACHE_VALIDATE_TIMESTAMPS="1"
 ARG WITH_XDEBUG=0
 RUN --mount=type=cache,target=/var/cache/apk \
     apk update && apk add \
-    nodejs \
-    npm \
     git \
     unzip \
     php85-pecl-pcov \

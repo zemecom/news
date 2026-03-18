@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property int $id
  * @property string|null $image_url
  * @property array<int|string, mixed>|null $media
+ * @property array<string, mixed>|null $source_metadata
  */
 final class NewsItem extends Model
 {

@@ -172,6 +172,9 @@ final class PipelineTest extends TestCase
                     status: NewsStatus::PUBLISHED,
                     moderationReason: null,
                     fingerprint: $input->fingerprint,
+                    analysisMetadata: [
+                        'provider' => 'chatgpt_codex',
+                    ],
                 );
             }
         };

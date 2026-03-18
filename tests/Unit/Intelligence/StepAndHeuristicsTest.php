@@ -5,18 +5,25 @@ declare(strict_types=1);
 namespace Tests\Unit\Intelligence;
 
 use Carbon\CarbonImmutable;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Modules\Intelligence\Application\Pipeline\Steps\ChatGptCodexEnrichmentStep;
 use Modules\Intelligence\Application\Pipeline\Steps\ClassifyStep;
 use Modules\Intelligence\Application\Pipeline\Steps\FinalizeStep;
 use Modules\Intelligence\Application\Pipeline\Steps\ImportanceStep;
 use Modules\Intelligence\Application\Pipeline\Steps\SentimentStep;
 use Modules\Intelligence\Application\Pipeline\Steps\TranslateStep;
+use Modules\Intelligence\Application\Services\ActiveAiProviderResolver;
+use Modules\Intelligence\Domain\Contracts\AiProviderStatusManager;
 use Modules\Intelligence\Domain\Contracts\Classifier;
+use Modules\Intelligence\Domain\Contracts\NewsAnalyzer;
 use Modules\Intelligence\Domain\Contracts\SentimentAnalyzer;
 use Modules\Intelligence\Domain\Contracts\Translator;
+use Modules\Intelligence\Domain\DTO\NewsAnalysisResult;
 use Modules\Intelligence\Infrastructure\LLM\HeuristicTranslator;
 use Modules\Intelligence\Infrastructure\LLM\KeywordClassifier;
 use Modules\Intelligence\Infrastructure\LLM\KeywordSentimentAnalyzer;
 use Modules\Intelligence\Infrastructure\LLM\ObjectivelyTitleGenerator;
+use Modules\Intelligence\Infrastructure\Persistence\Models\AiProviderAccount;
 use Modules\Shared\Domain\DTO\EnrichedNewsData;
 use Modules\Shared\Domain\DTO\RawNewsData;
 use Modules\Shared\Domain\Enum\NewsStatus;
@@ -24,6 +31,8 @@ use Tests\TestCase;
 
 final class StepAndHeuristicsTest extends TestCase
 {
+    use RefreshDatabase;
+
     public function test_translate_step_translates_non_russian_input_and_preserves_originals(): void
     {
         $translator = $this->createMock(Translator::class);
@@ -45,6 +54,64 @@ final class StepAndHeuristicsTest extends TestCase
         $this->assertSame('Original content', $result->metadata['original_content']);
         $this->assertSame('en', $result->metadata['original_language']);
         $this->assertSame('ai', $result->metadata['topic']);
+    }
+
+    public function test_chatgpt_codex_step_populates_metadata_and_translation(): void
+    {
+        config()->set('intelligence.provider', 'chatgpt_codex');
+
+        AiProviderAccount::query()->create([
+            'slug' => 'chatgpt-default',
+            'provider' => AiProviderAccount::PROVIDER_CHATGPT_CODEX,
+            'display_name' => 'ChatGPT Codex',
+            'is_enabled' => true,
+            'codex_home_subpath' => 'chatgpt-default',
+            'default_model' => 'gpt-5.4-mini',
+            'max_parallel_jobs' => 1,
+            'auth_status' => AiProviderAccount::STATUS_AUTHENTICATED,
+        ]);
+
+        $analyzer = $this->createMock(NewsAnalyzer::class);
+        $analyzer->expects($this->once())
+            ->method('analyze')
+            ->willReturn(new NewsAnalysisResult(
+                translatedContent: 'Переведённый текст',
+                generatedTitle: 'Нейтральный заголовок',
+                category: 'IT',
+                tags: ['ai', 'laravel'],
+                sentiment: 5,
+                analysisMetadata: [
+                    'provider' => 'chatgpt_codex',
+                    'model' => 'gpt-5.4-mini',
+                ],
+            ));
+
+        $synchronizer = $this->createMock(AiProviderStatusManager::class);
+        $synchronizer->expects($this->never())->method('markError');
+        $synchronizer->expects($this->never())->method('markUsageLimited');
+        $synchronizer->expects($this->never())->method('markNotAuthenticated');
+
+        $step = new ChatGptCodexEnrichmentStep(
+            analyzer: $analyzer,
+            resolver: app(ActiveAiProviderResolver::class),
+            statusSynchronizer: $synchronizer,
+        );
+
+        /** @var RawNewsData $result */
+        $result = $step->process($this->rawNews([
+            'content' => 'Original content',
+            'language' => 'en',
+        ]));
+
+        $this->assertSame('Переведённый текст', $result->content);
+        $this->assertSame('ru', $result->language);
+        $this->assertSame('IT', $result->metadata['category']);
+        $this->assertSame(['ai', 'laravel'], $result->metadata['tags']);
+        $this->assertSame(5, $result->metadata['sentiment']);
+        $this->assertSame('Нейтральный заголовок', $result->metadata['title_generated']);
+        $this->assertSame('Original content', $result->metadata['original_content']);
+        $this->assertSame('en', $result->metadata['original_language']);
+        $this->assertSame('chatgpt_codex', $result->metadata['analysis']['provider']);
     }
 
     public function test_translate_step_skips_russian_input(): void
@@ -145,17 +212,23 @@ final class StepAndHeuristicsTest extends TestCase
                 'category' => 'IT',
                 'tags' => ['it', 'laravel'],
                 'importance' => true,
+                'title_generated' => 'Нейтральный заголовок',
+                'analysis' => [
+                    'provider' => 'chatgpt_codex',
+                ],
             ],
         ]));
 
         $this->assertInstanceOf(EnrichedNewsData::class, $result);
         $this->assertSame(21, $result->rawId);
+        $this->assertSame('Нейтральный заголовок', $result->titleGenerated);
         $this->assertSame('Переведённый текст', $result->contentTranslated);
         $this->assertSame(4, $result->sentiment);
         $this->assertSame('IT', $result->category);
         $this->assertSame(['it', 'laravel'], $result->tags);
         $this->assertTrue($result->importance);
         $this->assertSame(NewsStatus::PUBLISHED, $result->status);
+        $this->assertSame('chatgpt_codex', $result->analysisMetadata['provider']);
     }
 
     public function test_keyword_classifier_detects_keywords_and_defaults_to_empty_category(): void
@@ -191,6 +264,26 @@ final class StepAndHeuristicsTest extends TestCase
         $this->assertSame('Hello world', $clean);
         $this->assertSame('Regular title', $fallback);
         $this->assertSame('Новость без заголовка', $empty);
+    }
+
+    public function test_anti_clickbait_step_generates_title_only_when_missing(): void
+    {
+        $generator = $this->createMock(\Modules\Intelligence\Domain\Contracts\TitleGenerator::class);
+        $generator->expects($this->once())
+            ->method('generate')
+            ->with('Some content', 'Original title')
+            ->willReturn('Generated title');
+
+        $step = new \Modules\Intelligence\Application\Pipeline\Steps\AntiClickbaitStep($generator);
+
+        /** @var RawNewsData $result */
+        $result = $step->process($this->rawNews([
+            'content' => 'Some content',
+            'title' => 'Original title',
+            'metadata' => [],
+        ]));
+
+        $this->assertSame('Generated title', $result->metadata['title_generated']);
     }
 
     public function test_heuristic_translator_returns_original_text(): void

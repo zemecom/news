@@ -102,6 +102,16 @@ cp .env.example .env
 | Переменная | Что значит |
 | --- | --- |
 | `LLM_PROVIDER` | какой провайдер считать основным |
+| `LLM_FALLBACK_PROVIDER` | какой провайдер использовать как fallback |
+| `LLM_CHATGPT_CODEX_MODEL` | модель для ChatGPT/Codex CLI |
+| `LLM_CHATGPT_CODEX_REASONING_EFFORT` | уровень reasoning effort для Codex; пусто = default модели |
+| `LLM_CHATGPT_CODEX_TIMEOUT_SECONDS` | timeout одного Codex exec вызова |
+| `LLM_CHATGPT_CODEX_APP_SERVER_TIMEOUT_SECONDS` | timeout одного Codex app-server запроса |
+| `LLM_CHATGPT_CODEX_CONCURRENCY_CACHE_STORE` | cache-store для concurrency lock/semaphore |
+| `LLM_CHATGPT_CODEX_RELEASE_DELAY_SECONDS` | задержка retry, если provider slot занят |
+| `CODEX_BINARY` | путь к бинарю `codex` внутри runtime |
+| `CODEX_HOME_BASE` | базовый путь хранения auth/runtime состояния Codex |
+| `LLM_CHATGPT_SCRATCH_DIR` | scratch-dir для non-interactive `codex exec` |
 | `OPENAI_API_KEY` | ключ OpenAI |
 | `ANTHROPIC_API_KEY` | ключ Anthropic |
 | `DEEPSEEK_API_KEY` | ключ DeepSeek |
@@ -109,6 +119,7 @@ cp .env.example .env
 | `TELEGRAM_WEBHOOK_SECRET` | секрет webhook |
 
 Сейчас Intelligence в основном эвристический, поэтому для базового знакомства эти ключи не обязательны.
+Для нового `chatgpt_codex` провайдера важнее не API-ключ, а корректный `codex` runtime и сохраненный auth state в `CODEX_HOME_BASE`.
 
 ## 4. Что безопасно не трогать в начале
 

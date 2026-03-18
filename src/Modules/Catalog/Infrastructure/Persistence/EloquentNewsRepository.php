@@ -60,17 +60,23 @@ final class EloquentNewsRepository implements NewsRepository
 
     public function storeEnriched(EnrichedNewsData $enriched): void
     {
-        NewsItem::query()
-            ->whereKey($enriched->rawId)
-            ->update([
-                'title_generated' => $enriched->titleGenerated,
-                'content_translated' => $enriched->contentTranslated,
-                'sentiment_score' => $enriched->sentiment,
-                'tags' => $enriched->tags,
-                'is_important' => $enriched->importance,
-                'status' => $enriched->status->value,
-                'moderation_reason' => $enriched->moderationReason,
-            ]);
+        /** @var NewsItem $item */
+        $item = NewsItem::query()->findOrFail($enriched->rawId);
+        /** @var array<string, mixed>|null $sourceMetadata */
+        $sourceMetadata = $item->source_metadata;
+
+        $item->update([
+            'title_generated' => $enriched->titleGenerated,
+            'content_translated' => $enriched->contentTranslated,
+            'sentiment_score' => $enriched->sentiment,
+            'tags' => $enriched->tags,
+            'is_important' => $enriched->importance,
+            'status' => $enriched->status->value,
+            'moderation_reason' => $enriched->moderationReason,
+            'source_metadata' => array_merge($sourceMetadata ?? [], [
+                'analysis' => $enriched->analysisMetadata,
+            ]),
+        ]);
     }
 
     public function getMediaUrls(int $id): ?array

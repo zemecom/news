@@ -17,6 +17,10 @@ final readonly class TranslateStep implements PipelineStep
             return $input;
         }
 
+        if (isset($input->metadata['analysis']['provider']) && $input->language === 'ru') {
+            return $input;
+        }
+
         if ($input->language === 'ru') {
             return $input;
         }

@@ -18,6 +18,10 @@ final readonly class SentimentStep implements PipelineStep
             return $input;
         }
 
+        if (array_key_exists('sentiment', $input->metadata)) {
+            return $input;
+        }
+
         $score = $this->sentiment->score($input->content);
 
         return $input->with([

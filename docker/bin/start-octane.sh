@@ -6,6 +6,9 @@ RUNTIME_RR_DIR="/tmp/roadrunner-bin"
 RUNTIME_RR_PATH="${RUNTIME_RR_DIR}/rr"
 
 mkdir -p "${RUNTIME_RR_DIR}"
+mkdir -p "${CODEX_HOME_BASE:-/home/www-data/.codex/providers}"
+
+sh docker/bin/sync-ai-provider-state.sh
 
 # Move project-local RoadRunner binary out of mounted project dir.
 if [ -f "${PROJECT_RR_PATH}" ]; then

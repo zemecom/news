@@ -13,3 +13,7 @@ Artisan::command('inspire', function () {
 Schedule::command('news:crawl')
     ->everyMinute()
     ->withoutOverlapping();
+
+Schedule::command('ai-providers:sync-stats')
+    ->everyFiveMinutes()
+    ->withoutOverlapping();
