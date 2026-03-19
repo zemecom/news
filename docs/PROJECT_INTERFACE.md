@@ -491,6 +491,130 @@ final class AiProviderAccountsTable
 
 
 ```
+###  Path: `/app/Filament/Resources/News/NewsResource.php`
+
+```php
+namespace App\Filament\Resources\News;
+
+use App\Filament\Resources\News\Pages\ListNews as ListNews;
+use App\Filament\Resources\News\Tables\NewsTable as NewsTable;
+use BackedEnum as BackedEnum;
+use Filament\Resources\Resource as Resource;
+use Filament\Schemas\Schema as Schema;
+use Filament\Support\Icons\Heroicon as Heroicon;
+use Filament\Tables\Table as Table;
+use Modules\Catalog\Infrastructure\Persistence\Models\NewsItem as NewsItem;
+use Override as Override;
+
+final class NewsResource extends Resource
+{
+	protected static ?string $model = NewsItem::class;
+	protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedNewspaper;
+	protected static ?string $navigationLabel = 'News';
+	protected static ?int $navigationSort = 5;
+
+
+	#[Override]
+	public static function form(Schema $schema): Schema
+	{
+	}
+
+
+	#[Override]
+	public static function table(Table $table): Table
+	{
+	}
+
+
+	#[Override]
+	public static function getPages(): array
+	{
+	}
+
+
+	#[Override]
+	public static function canCreate(): bool
+	{
+	}
+}
+
+
+```
+###  Path: `/app/Filament/Resources/News/Pages/ListNews.php`
+
+```php
+namespace App\Filament\Resources\News\Pages;
+
+use App\Filament\Resources\News\NewsResource as NewsResource;
+use Filament\Resources\Pages\ListRecords as ListRecords;
+use Filament\Support\Enums\Width as Width;
+use Override as Override;
+
+final class ListNews extends ListRecords
+{
+	protected static string $resource = NewsResource::class;
+
+
+	#[Override]
+	public function getMaxContentWidth(): Width
+	{
+	}
+}
+
+
+```
+###  Path: `/app/Filament/Resources/News/Tables/NewsTable.php`
+
+```php
+namespace App\Filament\Resources\News\Tables;
+
+use Filament\Actions\Action as Action;
+use Filament\Tables\Columns\IconColumn as IconColumn;
+use Filament\Tables\Columns\TextColumn as TextColumn;
+use Filament\Tables\Filters\SelectFilter as SelectFilter;
+use Filament\Tables\Filters\TernaryFilter as TernaryFilter;
+use Filament\Tables\Table as Table;
+use Illuminate\Database\Eloquent\Builder as Builder;
+use Modules\Catalog\Infrastructure\Persistence\Models\NewsItem as NewsItem;
+use Modules\Shared\Domain\Enum\NewsStatus as NewsStatus;
+
+final class NewsTable
+{
+	public static function configure(Table $table): Table
+	{
+	}
+
+
+	private static function statusColor(string $status): string
+	{
+	}
+
+
+	private static function sentimentColor(int $score): string
+	{
+	}
+
+
+	/**
+	 * @return list<mixed>
+	 */
+	private static function normalizeList(mixed $value): array
+	{
+	}
+
+
+	private static function stringMetadata(NewsItem $record, string ...$path): ?string
+	{
+	}
+
+
+	private static function prettyJson(mixed $value): string
+	{
+	}
+}
+
+
+```
 ###  Path: `/app/Filament/Resources/Sources/Pages/CreateSource.php`
 
 ```php
@@ -1710,6 +1834,14 @@ final class NewsItem extends Model
 		'published_at' => 'datetime',
 		'media' => 'array',
 	];
+
+
+	/**
+	 * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<Source, $this>
+	 */
+	public function source(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+	{
+	}
 
 
 	/**

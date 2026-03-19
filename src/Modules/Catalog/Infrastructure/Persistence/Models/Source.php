@@ -6,6 +6,9 @@ namespace Modules\Catalog\Infrastructure\Persistence\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @property string $name
+ */
 final class Source extends Model
 {
     protected $table = 'sources';

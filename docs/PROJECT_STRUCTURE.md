@@ -24,6 +24,12 @@ _SOURCE: Directory Structure_
     │   │   │   │   ├── AiProviderAccountForm.php
     │   │   │   ├── Tables/
     │   │   │   │   └── AiProviderAccountsTable.php
+    │   │   ├── News/
+    │   │   │   ├── NewsResource.php
+    │   │   │   ├── Pages/
+    │   │   │   │   ├── ListNews.php
+    │   │   │   ├── Tables/
+    │   │   │   │   └── NewsTable.php
     │   │   ├── Sources/
     │   │   │   └── Pages/
     │   │   │       ├── CreateSource.php

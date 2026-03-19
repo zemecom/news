@@ -173,6 +173,7 @@
         - `GET /api/admin/sources` (RBAC)
     - Для media enrichment в delivery-ридере используется собственный `NewsMediaResolver` (без прямой зависимости на `Catalog` contracts).
     - Web-лента на `/` с фильтрами и догрузкой (cursor-based).
+    - В Filament admin добавлен read-only resource `News`: таблица показывает опубликованные/обрабатываемые новости, source/title/sentiment/tags/lang и AI metadata (`provider/model/reasoning`), а row-action `Details` открывает slide-over с полным preview текста и raw JSON (`source_metadata`, `analysis`, `media`).
 
 ## 2.3 Очереди/события
 
@@ -268,7 +269,7 @@
 ## 3.4 Delivery (Web/Admin/Bot)
 
 - [ ] Web сейчас vanilla page; по ТЗ ожидается Blade+Livewire для UI-сценариев.
-- [ ] Filament admin: CRUD источников, ошибки, ручной запуск fetch.
+- [ ] Filament admin: CRUD источников и read-only браузер новостей уже есть; ошибки источников и дополнительные операционные экраны ещё не завершены.
 - [ ] Telegram Bot (Nutgram): `/settings`, `user_preferences`, push с фильтрацией по prefs.
 
 ## 3.5 Observability / Reliability

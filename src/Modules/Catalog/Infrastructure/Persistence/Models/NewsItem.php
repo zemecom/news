@@ -8,9 +8,15 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * @property int $id
+ * @property string $title_original
+ * @property string|null $title_generated
  * @property string|null $image_url
  * @property array<int|string, mixed>|null $media
+ * @property array<int, string>|null $tags
  * @property array<string, mixed>|null $source_metadata
+ * @property string $raw_fingerprint
+ * @property \Illuminate\Support\Carbon|null $published_at
+ * @property Source $source
  */
 final class NewsItem extends Model
 {
@@ -47,6 +53,14 @@ final class NewsItem extends Model
         'published_at' => 'datetime',
         'media' => 'array',
     ];
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<Source, $this>
+     */
+    public function source(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(Source::class, 'source_id');
+    }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany<NewsMediaAsset, $this>
