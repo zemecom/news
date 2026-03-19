@@ -9,6 +9,7 @@ mkdir -p "${RUNTIME_RR_DIR}"
 mkdir -p "${CODEX_HOME_BASE:-/home/www-data/.codex/providers}"
 
 sh docker/bin/sync-ai-provider-state.sh
+php artisan news:messaging:setup
 
 # Move project-local RoadRunner binary out of mounted project dir.
 if [ -f "${PROJECT_RR_PATH}" ]; then

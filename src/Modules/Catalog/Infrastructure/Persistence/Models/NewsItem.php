@@ -8,7 +8,9 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * @property int $id
+ * @property int $source_id
  * @property string $title_original
+ * @property string $content_original
  * @property string|null $title_generated
  * @property string|null $image_url
  * @property array<int|string, mixed>|null $media
@@ -16,7 +18,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property array<string, mixed>|null $source_metadata
  * @property string $raw_fingerprint
  * @property \Illuminate\Support\Carbon|null $published_at
- * @property Source $source
+ * @property Source|null $source
  */
 final class NewsItem extends Model
 {

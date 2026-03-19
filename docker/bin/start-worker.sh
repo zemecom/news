@@ -4,9 +4,16 @@ set -eu
 mkdir -p "${CODEX_HOME_BASE:-/home/www-data/.codex/providers}"
 
 sh docker/bin/sync-ai-provider-state.sh
+php artisan news:messaging:setup
+
+QUEUE_EXCHANGE="${RABBITMQ_QUEUE_EXCHANGE:-news.jobs}"
+QUEUE_EXCHANGE_TYPE="${RABBITMQ_QUEUE_EXCHANGE_TYPE:-direct}"
+
+php artisan rabbitmq:exchange-declare "${QUEUE_EXCHANGE}" rabbitmq --type="${QUEUE_EXCHANGE_TYPE}" --durable=1 --auto-delete=0 --quiet
 
 for queue in crawler_tasks intelligence_tasks media_tasks; do
     php artisan rabbitmq:queue-declare "${queue}" rabbitmq --durable=1 --auto-delete=0 --quiet
+    php artisan rabbitmq:queue-bind "${queue}" "${QUEUE_EXCHANGE}" rabbitmq --routing-key="${queue}" --quiet
 done
 
 exec php artisan queue:work \

@@ -41,7 +41,7 @@ final class ProcessRawNewsListener implements ShouldQueue
     public function middleware(): array
     {
         return [
-            app()->make(ProviderConcurrencyMiddleware::class),
+            new ProviderConcurrencyMiddleware,
         ];
     }
 

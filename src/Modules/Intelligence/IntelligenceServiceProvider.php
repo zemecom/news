@@ -50,6 +50,7 @@ final class IntelligenceServiceProvider extends ServiceProvider
             steps: $app->make('news.pipeline.steps.ordered'),
             publisher: $app->make(EnrichedPublisherContract::class),
             news: $app->make(NewsStore::class),
+            runtimeRecorder: $app->make(\Modules\Intelligence\Application\Services\NewsAnalysisRuntimeRecorder::class),
         ));
         $this->app->singleton(CodexProcessRunner::class);
         $this->app->singleton(CodexProcessRunnerContract::class, CodexProcessRunner::class);

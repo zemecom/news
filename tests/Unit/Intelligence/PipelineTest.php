@@ -15,6 +15,7 @@ use Modules\Intelligence\Application\Pipeline\Steps\ImportanceStep;
 use Modules\Intelligence\Application\Pipeline\Steps\PipelineStep;
 use Modules\Intelligence\Application\Pipeline\Steps\SentimentStep;
 use Modules\Intelligence\Application\Pipeline\Steps\TranslateStep;
+use Modules\Intelligence\Application\Services\NewsAnalysisRuntimeRecorder;
 use Modules\Intelligence\Domain\Contracts\Classifier;
 use Modules\Intelligence\Domain\Contracts\EnrichedPublisher;
 use Modules\Intelligence\Domain\Contracts\SentimentAnalyzer;
@@ -95,6 +96,7 @@ final class PipelineTest extends TestCase
             ],
             $publisher,
             $newsStore,
+            $this->runtimeRecorder(),
         );
 
         $pipeline->handle($this->rawNews());
@@ -127,6 +129,7 @@ final class PipelineTest extends TestCase
             ],
             $publisher,
             $newsStore,
+            $this->runtimeRecorder(),
         );
 
         $pipeline->handle($this->rawNews());
@@ -179,7 +182,7 @@ final class PipelineTest extends TestCase
             }
         };
 
-        $pipeline = new NewsProcessingPipeline([$step], $publisher, $newsStore);
+        $pipeline = new NewsProcessingPipeline([$step], $publisher, $newsStore, $this->runtimeRecorder());
         $listener = new ProcessRawNewsListener($pipeline);
 
         $this->assertSame('intelligence_tasks', $listener->viaQueue());
@@ -189,21 +192,79 @@ final class PipelineTest extends TestCase
         Event::assertDispatched(NewsEnriched::class, static fn (NewsEnriched $event): bool => $event->rawId === 77);
     }
 
-    private function rawNews(): RawNewsData
+    public function test_deduplicate_step_allows_reanalysis_when_raw_id_is_already_known(): void
+    {
+        $newsStore = $this->createMock(NewsStore::class);
+        $newsStore->expects($this->never())->method('existsByFingerprint');
+        $newsStore->expects($this->never())->method('storeRaw');
+
+        $step = new DeduplicateStep($newsStore);
+        /** @var RawNewsData $result */
+        $result = $step->process($this->rawNews([
+            'fingerprint' => 'fp-existing',
+            'rawId' => 99,
+        ]));
+
+        $this->assertSame(99, $result->rawId);
+        $this->assertSame('fp-existing', $result->fingerprint);
+    }
+
+    /**
+     * @param  array<string, mixed>  $overrides
+     */
+    private function rawNews(array $overrides = []): RawNewsData
     {
         return new RawNewsData(
-            sourceId: 1,
-            externalId: 'ext-1',
-            title: 'Original title',
-            link: 'https://example.com/news/1',
-            content: 'Original content about Laravel growth',
-            publishedAt: CarbonImmutable::parse('2026-03-17T10:00:00+00:00'),
-            language: 'en',
-            metadata: [],
-            imageUrl: null,
-            media: [],
-            fingerprint: 'fp-1',
-            rawId: null,
+            sourceId: $overrides['sourceId'] ?? 1,
+            externalId: $overrides['externalId'] ?? 'ext-1',
+            title: $overrides['title'] ?? 'Original title',
+            link: $overrides['link'] ?? 'https://example.com/news/1',
+            content: $overrides['content'] ?? 'Original content about Laravel growth',
+            publishedAt: $overrides['publishedAt'] ?? CarbonImmutable::parse('2026-03-17T10:00:00+00:00'),
+            language: $overrides['language'] ?? 'en',
+            metadata: $overrides['metadata'] ?? [],
+            imageUrl: $overrides['imageUrl'] ?? null,
+            media: $overrides['media'] ?? [],
+            fingerprint: $overrides['fingerprint'] ?? 'fp-1',
+            rawId: $overrides['rawId'] ?? null,
         );
+    }
+
+    private function runtimeRecorder(): NewsAnalysisRuntimeRecorder
+    {
+        return new NewsAnalysisRuntimeRecorder(new class implements NewsStore
+        {
+            /**
+             * @var array<string, mixed>|null
+             */
+            private ?array $runtime = null;
+
+            public function existsByFingerprint(string $fingerprint): bool
+            {
+                return false;
+            }
+
+            public function storeRaw(RawNewsData $raw): int
+            {
+                return 0;
+            }
+
+            public function storeEnriched(EnrichedNewsData $enriched): void {}
+
+            public function findRawById(int $id): ?RawNewsData
+            {
+                return null;
+            }
+
+            public function getAnalysisRuntime(int $id): ?array
+            {
+                return $this->runtime;
+            }
+
+            public function putAnalysisRuntime(int $id, array $runtime): void
+            {
+                $this->runtime = $runtime;
+            }
+        });
     }
 }

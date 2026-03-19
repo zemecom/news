@@ -19,6 +19,10 @@ final readonly class DeduplicateStep implements PipelineStep
             return $input;
         }
 
+        if ($input->rawId !== null) {
+            return $input;
+        }
+
         if ($this->news->existsByFingerprint($input->fingerprint)) {
             throw new SkipMessageException('duplicate');
         }

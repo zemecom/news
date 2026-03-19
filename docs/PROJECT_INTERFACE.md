@@ -162,6 +162,78 @@ final class SyncAiProviderStatsCommand extends Command
 
 
 ```
+###  Path: `/app/Filament/Pages/AdminSettings.php`
+
+```php
+namespace App\Filament\Pages;
+
+use App\Services\AdminSettingsService as AdminSettingsService;
+use BackedEnum as BackedEnum;
+use Filament\Forms\Components\Placeholder as Placeholder;
+use Filament\Forms\Components\Select as Select;
+use Filament\Forms\Components\Toggle as Toggle;
+use Filament\Forms\Concerns\InteractsWithForms as InteractsWithForms;
+use Filament\Forms\Contracts\HasForms as HasForms;
+use Filament\Notifications\Notification as Notification;
+use Filament\Pages\Page as Page;
+use Filament\Schemas\Components\Section as Section;
+use Filament\Schemas\Components\Utilities\Get as Get;
+use Filament\Schemas\Schema as Schema;
+use Filament\Support\Enums\Width as Width;
+use Filament\Support\Icons\Heroicon as Heroicon;
+use LogicException as LogicException;
+use Override as Override;
+use UnitEnum as UnitEnum;
+
+final class AdminSettings extends Page implements HasForms
+{
+	use InteractsWithForms;
+
+	protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCog6Tooth;
+	protected static ?string $navigationLabel = 'Admin Settings';
+	protected static ?string $slug = 'settings';
+	protected static string|UnitEnum|null $navigationGroup = 'Settings';
+	protected static ?int $navigationSort = 1;
+	protected static ?string $title = 'Admin Settings';
+	protected string $view = 'filament.pages.admin-settings';
+
+	/** @var array<string, mixed> */
+	public array $data = [];
+
+
+	public function mount(AdminSettingsService $settings): void
+	{
+	}
+
+
+	public function form(Schema $schema): Schema
+	{
+	}
+
+
+	public function save(AdminSettingsService $settings): void
+	{
+	}
+
+
+	#[Override]
+	public function getMaxContentWidth(): Width
+	{
+	}
+
+
+	private function newsAutoRefreshSummary(bool $enabled, mixed $seconds): string
+	{
+	}
+
+
+	private function getFormSchema(): Schema
+	{
+	}
+}
+
+
+```
 ###  Path: `/app/Filament/Pages/AiSandbox.php`
 
 ```php
@@ -257,6 +329,67 @@ final class AiSandbox extends Page implements HasForms
 
 
 	private function getFormSchema(): Schema
+	{
+	}
+}
+
+
+```
+###  Path: `/app/Filament/Pages/Operations.php`
+
+```php
+namespace App\Filament\Pages;
+
+use App\Filament\Widgets\AiProviderStatusWidget as AiProviderStatusWidget;
+use App\Services\QueueOverviewService as QueueOverviewService;
+use BackedEnum as BackedEnum;
+use Filament\Pages\Page as Page;
+use Filament\Support\Enums\Width as Width;
+use Filament\Support\Icons\Heroicon as Heroicon;
+use Override as Override;
+use UnitEnum as UnitEnum;
+
+final class Operations extends Page
+{
+	protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedSignal;
+	protected static ?string $navigationLabel = 'Operations';
+	protected static string|UnitEnum|null $navigationGroup = 'Operations';
+	protected static ?int $navigationSort = 20;
+	protected static ?string $title = 'Operations';
+	protected string $view = 'filament.pages.operations';
+
+
+	#[Override]
+	public function getMaxContentWidth(): Width
+	{
+	}
+
+
+	/**
+	 * @return array<class-string<\Filament\Widgets\Widget>>
+	 */
+	#[Override]
+	protected function getHeaderWidgets(): array
+	{
+	}
+
+
+	#[Override]
+	public function getHeaderWidgetsColumns(): int
+	{
+	}
+
+
+	/**
+	 * @return array<string, mixed>
+	 */
+	#[Override]
+	protected function getViewData(): array
+	{
+	}
+
+
+	public function refreshOperationsPage(): void
 	{
 	}
 }
@@ -546,17 +679,63 @@ final class NewsResource extends Resource
 namespace App\Filament\Resources\News\Pages;
 
 use App\Filament\Resources\News\NewsResource as NewsResource;
+use App\Services\AdminSettingsService as AdminSettingsService;
+use Filament\Actions\Action as Action;
+use Filament\Forms\Components\Select as Select;
+use Filament\Notifications\Notification as Notification;
 use Filament\Resources\Pages\ListRecords as ListRecords;
 use Filament\Support\Enums\Width as Width;
+use Illuminate\Contracts\View\View as View;
+use Illuminate\Database\Eloquent\Builder as Builder;
+use Modules\Intelligence\Application\Services\EnqueueNewsAnalysisAction as EnqueueNewsAnalysisAction;
 use Override as Override;
 
 final class ListNews extends ListRecords
 {
 	protected static string $resource = NewsResource::class;
+	protected string $view = 'filament.resources.news.pages.list-news';
+	public string $newsAutoRefreshSelection = AdminSettingsService::NEWS_AUTO_REFRESH_DEFAULT;
+
+
+	public function mount(): void
+	{
+	}
+
+
+	#[Override]
+	protected function getHeaderActions(): array
+	{
+	}
+
+
+	#[Override]
+	public function getHeader(): View
+	{
+	}
 
 
 	#[Override]
 	public function getMaxContentWidth(): Width
+	{
+	}
+
+
+	public function setNewsAutoRefreshSelection(string $selection): void
+	{
+	}
+
+
+	public function newsAutoRefreshInterval(): ?string
+	{
+	}
+
+
+	private function enqueueFilteredNews(bool $onlyMissingAiMetadata): ?int
+	{
+	}
+
+
+	public function refreshNewsPage(): void
 	{
 	}
 }
@@ -569,13 +748,21 @@ final class ListNews extends ListRecords
 namespace App\Filament\Resources\News\Tables;
 
 use Filament\Actions\Action as Action;
+use Filament\Actions\BulkAction as BulkAction;
+use Filament\Notifications\Notification as Notification;
+use Filament\Support\Enums\FontWeight as FontWeight;
+use Filament\Support\Enums\IconPosition as IconPosition;
+use Filament\Support\Enums\Width as Width;
 use Filament\Tables\Columns\IconColumn as IconColumn;
 use Filament\Tables\Columns\TextColumn as TextColumn;
+use Filament\Tables\Enums\FiltersLayout as FiltersLayout;
 use Filament\Tables\Filters\SelectFilter as SelectFilter;
 use Filament\Tables\Filters\TernaryFilter as TernaryFilter;
 use Filament\Tables\Table as Table;
 use Illuminate\Database\Eloquent\Builder as Builder;
+use Illuminate\Database\Eloquent\Collection as Collection;
 use Modules\Catalog\Infrastructure\Persistence\Models\NewsItem as NewsItem;
+use Modules\Intelligence\Application\Services\EnqueueNewsAnalysisAction as EnqueueNewsAnalysisAction;
 use Modules\Shared\Domain\Enum\NewsStatus as NewsStatus;
 
 final class NewsTable
@@ -609,6 +796,77 @@ final class NewsTable
 
 
 	private static function prettyJson(mixed $value): string
+	{
+	}
+
+
+	private static function hasAiAnalysis(NewsItem $record): bool
+	{
+	}
+
+
+	/**
+	 * @return array<string, mixed>
+	 */
+	private static function analysisRuntime(NewsItem $record): array
+	{
+	}
+
+
+	/**
+	 * @return array<int, array<string, mixed>>
+	 */
+	private static function analysisTimeline(NewsItem $record): array
+	{
+	}
+
+
+	private static function analysisStatus(NewsItem $record): string
+	{
+	}
+
+
+	private static function analysisStatusLabel(NewsItem $record): string
+	{
+	}
+
+
+	private static function analysisStatusColor(string $status): string
+	{
+	}
+
+
+	private static function analysisStatusTooltip(NewsItem $record): string
+	{
+	}
+
+
+	private static function analysisSummary(NewsItem $record): string
+	{
+	}
+
+
+	private static function analysisActionLabel(NewsItem $record): string
+	{
+	}
+
+
+	private static function analysisActionColor(NewsItem $record): string
+	{
+	}
+
+
+	private static function analysisActionTooltip(NewsItem $record): string
+	{
+	}
+
+
+	private static function queueAnalysis(NewsItem $record): void
+	{
+	}
+
+
+	private static function analysisTooltip(NewsItem $record): string
 	{
 	}
 }
@@ -778,12 +1036,46 @@ class SourcesTable
 namespace App\Filament\Widgets;
 
 use App\Filament\Resources\AiProviderAccounts\AiProviderAccountResource as AiProviderAccountResource;
+use Filament\Notifications\Notification as Notification;
 use Filament\Widgets\Widget as Widget;
+use Modules\Intelligence\Application\Services\SyncAiProviderStatsAction as SyncAiProviderStatsAction;
 use Modules\Intelligence\Infrastructure\Persistence\Models\AiProviderAccount as AiProviderAccount;
+use Throwable as Throwable;
 
 final class AiProviderStatusWidget extends Widget
 {
+	protected static bool $isLazy = false;
 	protected string $view = 'filament.widgets.ai-provider-status-widget';
+	protected int|string|array $columnSpan = 'full';
+
+
+	public function refreshProviderStatistics(): void
+	{
+	}
+
+
+	/**
+	 * @return array<string, mixed>
+	 */
+	protected function getViewData(): array
+	{
+	}
+}
+
+
+```
+###  Path: `/app/Filament/Widgets/QueueOverviewWidget.php`
+
+```php
+namespace App\Filament\Widgets;
+
+use App\Services\QueueOverviewService as QueueOverviewService;
+use Filament\Widgets\Widget as Widget;
+
+final class QueueOverviewWidget extends Widget
+{
+	protected static bool $isLazy = false;
+	protected string $view = 'filament.widgets.queue-overview-widget';
 	protected int|string|array $columnSpan = 'full';
 
 
@@ -1069,6 +1361,36 @@ class CrawlerLog extends Component
 
 
 ```
+###  Path: `/app/Models/AdminSetting.php`
+
+```php
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model as Model;
+use Override as Override;
+
+/**
+ * @property int $id
+ * @property bool $news_auto_refresh_enabled
+ * @property int $news_auto_refresh_interval_seconds
+ */
+final class AdminSetting extends Model
+{
+	/** @var list<string> */
+	protected $fillable = ['id', 'news_auto_refresh_enabled', 'news_auto_refresh_interval_seconds'];
+
+
+	/**
+	 * @return array<string, string>
+	 */
+	#[Override]
+	protected function casts(): array
+	{
+	}
+}
+
+
+```
 ###  Path: `/app/Models/User.php`
 
 ```php
@@ -1162,14 +1484,17 @@ class AppServiceProvider extends ServiceProvider
 ```php
 namespace App\Providers\Filament;
 
+use Filament\Actions\Action as Action;
 use Filament\Http\Middleware\Authenticate as Authenticate;
 use Filament\Http\Middleware\AuthenticateSession as AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents as DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent as DispatchServingFilamentEvent;
+use Filament\Notifications\Notification as Notification;
 use Filament\Pages\Dashboard as Dashboard;
 use Filament\Panel as Panel;
 use Filament\PanelProvider as PanelProvider;
 use Filament\Support\Colors\Color as Color;
+use Filament\Support\Icons\Heroicon as Heroicon;
 use Filament\Widgets\AccountWidget as AccountWidget;
 use Filament\Widgets\FilamentInfoWidget as FilamentInfoWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse as AddQueuedCookiesToResponse;
@@ -1177,7 +1502,9 @@ use Illuminate\Cookie\Middleware\EncryptCookies as EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken as VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings as SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession as StartSession;
+use Illuminate\Support\Facades\Artisan as Artisan;
 use Illuminate\View\Middleware\ShareErrorsFromSession as ShareErrorsFromSession;
+use Throwable as Throwable;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -1251,6 +1578,99 @@ class TelescopeServiceProvider extends TelescopeApplicationServiceProvider
 
 
 ```
+###  Path: `/app/Services/AdminSettingsService.php`
+
+```php
+namespace App\Services;
+
+use App\Models\AdminSetting as AdminSetting;
+
+final class AdminSettingsService
+{
+	public const NEWS_AUTO_REFRESH_SESSION_KEY = 'admin.news.auto_refresh_selection';
+	public const NEWS_AUTO_REFRESH_DEFAULT = 'default';
+	public const NEWS_AUTO_REFRESH_OFF = 'off';
+	private const DEFAULT_NEWS_AUTO_REFRESH_SECONDS = 15;
+
+	/** @var array<int, string> */
+	private const NEWS_AUTO_REFRESH_INTERVALS = [
+		1 => '1 sec',
+		5 => '5 sec',
+		10 => '10 sec',
+		15 => '15 sec',
+		30 => '30 sec',
+		60 => '1 min',
+		120 => '2 min',
+	];
+
+	public function getRecord(): AdminSetting
+	{
+	}
+
+
+	/**
+	 * @return array<string, string>
+	 */
+	public function newsAutoRefreshSelectionOptions(): array
+	{
+	}
+
+
+	/**
+	 * @return array<int, string>
+	 */
+	public function newsAutoRefreshIntervalSecondsOptions(): array
+	{
+	}
+
+
+	public function normalizeNewsAutoRefreshSelection(mixed $selection): string
+	{
+	}
+
+
+	public function resolveNewsAutoRefreshInterval(mixed $selection): ?string
+	{
+	}
+
+
+	public function newsAutoRefreshSelectionLabel(mixed $selection): string
+	{
+	}
+
+
+	public function persistNewsAutoRefreshDefaults(bool $enabled, mixed $seconds): AdminSetting
+	{
+	}
+
+
+	public function configuredNewsAutoRefreshInterval(): ?string
+	{
+	}
+
+
+	public function defaultNewsAutoRefreshSeconds(): int
+	{
+	}
+
+
+	private function newsAutoRefreshDefaultSelectionLabel(): string
+	{
+	}
+
+
+	private function intervalLabel(string $interval): string
+	{
+	}
+
+
+	private function normalizeNewsAutoRefreshSeconds(mixed $seconds): ?int
+	{
+	}
+}
+
+
+```
 ###  Path: `/app/Services/HealthCheckService.php`
 
 ```php
@@ -1307,6 +1727,67 @@ final readonly class MessagingTopologyService
 
 
 	private function declareQueue(AMQPChannel $channel, string $name, bool $quorum): void
+	{
+	}
+}
+
+
+```
+###  Path: `/app/Services/QueueOverviewService.php`
+
+```php
+namespace App\Services;
+
+use Illuminate\Support\Facades\DB as DB;
+use PhpAmqpLib\Channel\AMQPChannel as AMQPChannel;
+use PhpAmqpLib\Connection\AMQPStreamConnection as AMQPStreamConnection;
+use Throwable as Throwable;
+
+final readonly class QueueOverviewService
+{
+	/** @var list<string> */
+	private const QUEUES = ['crawler_tasks', 'intelligence_tasks', 'media_tasks'];
+
+	public function __construct(
+		private AMQPStreamConnection $connection,
+	) {
+	}
+
+
+	/**
+	 * @return list<string>
+	 */
+	public function queueNames(): array
+	{
+	}
+
+
+	/**
+	 * @return array<int, array{
+	 *     queue:string,
+	 *     status:string,
+	 *     message_count:?int,
+	 *     consumer_count:?int,
+	 *     worker_active:bool,
+	 *     failed_count:int,
+	 *     last_failed_at:?string,
+	 *     error:?string
+	 * }>
+	 */
+	public function getQueueSummaries(): array
+	{
+	}
+
+
+	/**
+	 * @return array<int, array{
+	 *     queue:string,
+	 *     display_name:string,
+	 *     exception_summary:string,
+	 *     failed_at:string
+	 * }>
+	 */
+	public function getRecentFailedJobs(int $limit = 10): array
 	{
 	}
 }
@@ -1715,6 +2196,7 @@ final readonly class EloquentNewsMediaAssetRepository implements NewsMediaAssetR
 ```php
 namespace Modules\Catalog\Infrastructure\Persistence;
 
+use Carbon\CarbonImmutable as CarbonImmutable;
 use Modules\Catalog\Domain\Contracts\NewsRepository as NewsRepository;
 use Modules\Catalog\Infrastructure\Persistence\Models\NewsItem as NewsItem;
 use Modules\Shared\Domain\DTO\EnrichedNewsData as EnrichedNewsData;
@@ -1752,7 +2234,36 @@ final class EloquentNewsRepository implements NewsRepository
 	}
 
 
+	public function findRawById(int $id): ?RawNewsData
+	{
+	}
+
+
+	public function getAnalysisRuntime(int $id): ?array
+	{
+	}
+
+
+	public function putAnalysisRuntime(int $id, array $runtime): void
+	{
+	}
+
+
 	public function getMediaUrls(int $id): ?array
+	{
+	}
+
+
+	private function nullableString(mixed $value): ?string
+	{
+	}
+
+
+	/**
+	 * @param  array<int|string, mixed>|null  $media
+	 * @return array<int, array{url: string, type: ?string}>
+	 */
+	private function normalizeMedia(?array $media): array
 	{
 	}
 }
@@ -1798,9 +2309,17 @@ use Illuminate\Database\Eloquent\Model as Model;
 
 /**
  * @property int $id
+ * @property int $source_id
+ * @property string $title_original
+ * @property string $content_original
+ * @property string|null $title_generated
  * @property string|null $image_url
  * @property array<int|string, mixed>|null $media
+ * @property array<int, string>|null $tags
  * @property array<string, mixed>|null $source_metadata
+ * @property string $raw_fingerprint
+ * @property \Illuminate\Support\Carbon|null $published_at
+ * @property Source|null $source
  */
 final class NewsItem extends Model
 {
@@ -1918,6 +2437,12 @@ namespace Modules\Catalog\Infrastructure\Persistence\Models;
 
 use Illuminate\Database\Eloquent\Model as Model;
 
+/**
+ * @property int $id
+ * @property string $name
+ * @property string $url
+ * @property string|null $language_default
+ */
 final class Source extends Model
 {
 	protected $table = 'sources';
@@ -3426,11 +3951,13 @@ final class ProcessRawNewsListener implements ShouldQueue
 namespace Modules\Intelligence\Application\Pipeline;
 
 use Modules\Intelligence\Application\Pipeline\Steps\PipelineStep as PipelineStep;
+use Modules\Intelligence\Application\Services\NewsAnalysisRuntimeRecorder as NewsAnalysisRuntimeRecorder;
 use Modules\Intelligence\Domain\Contracts\EnrichedPublisher as EnrichedPublisher;
 use Modules\Shared\Domain\Contracts\NewsStore as NewsStore;
 use Modules\Shared\Domain\DTO\EnrichedNewsData as EnrichedNewsData;
 use Modules\Shared\Domain\DTO\RawNewsData as RawNewsData;
 use Modules\Shared\Domain\Events\NewsEnriched as NewsEnriched;
+use Throwable as Throwable;
 
 /**
  * Конвейер (Pipeline) обработки сырых новостей в модуле Intelligence (Слой: Application).
@@ -3451,11 +3978,27 @@ final readonly class NewsProcessingPipeline
 		private array $steps,
 		private EnrichedPublisher $publisher,
 		private NewsStore $news,
+		private NewsAnalysisRuntimeRecorder $runtimeRecorder,
 	) {
 	}
 
 
 	public function handle(RawNewsData $raw): void
+	{
+	}
+
+
+	private function extractNewsItemId(RawNewsData|EnrichedNewsData $context): ?int
+	{
+	}
+
+
+	private function stepKey(PipelineStep $step): string
+	{
+	}
+
+
+	private function stepLabel(PipelineStep $step): string
 	{
 	}
 }
@@ -3513,8 +4056,10 @@ namespace Modules\Intelligence\Application\Pipeline\Steps;
 
 use Illuminate\Support\Facades\Log as Log;
 use Modules\Intelligence\Application\Services\ActiveAiProviderResolver as ActiveAiProviderResolver;
+use Modules\Intelligence\Application\Services\NewsAnalysisRuntimeRecorder as NewsAnalysisRuntimeRecorder;
 use Modules\Intelligence\Domain\Contracts\AiProviderStatusManager as AiProviderStatusManager;
 use Modules\Intelligence\Domain\Contracts\NewsAnalyzer as NewsAnalyzer;
+use Modules\Intelligence\Domain\DTO\AiProviderProfile as AiProviderProfile;
 use Modules\Intelligence\Domain\Exceptions\AiProviderException as AiProviderException;
 use Modules\Intelligence\Domain\Exceptions\AiProviderRateLimitException as AiProviderRateLimitException;
 use Modules\Intelligence\Domain\Exceptions\AiProviderUnauthorizedException as AiProviderUnauthorizedException;
@@ -3527,6 +4072,7 @@ final readonly class ChatGptCodexEnrichmentStep implements PipelineStep
 		private NewsAnalyzer $analyzer,
 		private ActiveAiProviderResolver $resolver,
 		private AiProviderStatusManager $statusSynchronizer,
+		private NewsAnalysisRuntimeRecorder $runtimeRecorder,
 	) {
 	}
 
@@ -3537,6 +4083,16 @@ final readonly class ChatGptCodexEnrichmentStep implements PipelineStep
 
 
 	private function logFallback(RawNewsData $input, AiProviderException $e): void
+	{
+	}
+
+
+	private function markFallback(
+		RawNewsData $input,
+		string $reason,
+		?string $message,
+		?AiProviderProfile $account = null,
+	): void
 	{
 	}
 }
@@ -3740,13 +4296,6 @@ use RuntimeException as RuntimeException;
 
 final class ProviderConcurrencyMiddleware
 {
-	public function __construct(
-		private readonly CacheFactory $cache,
-		private readonly ActiveAiProviderResolver $resolver,
-	) {
-	}
-
-
 	public function handle(object $job, Closure $next): void
 	{
 	}
@@ -3782,6 +4331,11 @@ final class ProviderConcurrencyMiddleware
 	}
 
 
+	private function resolver(): ActiveAiProviderResolver
+	{
+	}
+
+
 	private function guardLock(Repository $store, AiProviderProfile $account): Lock
 	{
 	}
@@ -3806,6 +4360,141 @@ final class ActiveAiProviderResolver
 
 
 	public function resolveChatGptCodex(): ?AiProviderProfile
+	{
+	}
+}
+
+
+```
+###  Path: `/src/Modules/Intelligence/Application/Services/EnqueueNewsAnalysisAction.php`
+
+```php
+namespace Modules\Intelligence\Application\Services;
+
+use Illuminate\Contracts\Events\Dispatcher as Dispatcher;
+use Modules\Shared\Domain\Contracts\NewsStore as NewsStore;
+use Modules\Shared\Domain\Events\RawNewsCreated as RawNewsCreated;
+
+final readonly class EnqueueNewsAnalysisAction
+{
+	public function __construct(
+		private NewsStore $news,
+		private NewsAnalysisRuntimeRecorder $runtimeRecorder,
+		private Dispatcher $events,
+	) {
+	}
+
+
+	public function enqueue(int $newsItemId): bool
+	{
+	}
+
+
+	/**
+	 * @param  iterable<int>  $newsItemIds
+	 */
+	public function enqueueMany(iterable $newsItemIds): int
+	{
+	}
+}
+
+
+```
+###  Path: `/src/Modules/Intelligence/Application/Services/NewsAnalysisRuntimeRecorder.php`
+
+```php
+namespace Modules\Intelligence\Application\Services;
+
+use Modules\Intelligence\Domain\DTO\AiProviderProfile as AiProviderProfile;
+use Modules\Shared\Domain\Contracts\NewsStore as NewsStore;
+
+final readonly class NewsAnalysisRuntimeRecorder
+{
+	public function __construct(
+		private NewsStore $news,
+	) {
+	}
+
+
+	/**
+	 * @return array<string, mixed>
+	 */
+	public function queue(int $newsItemId): array
+	{
+	}
+
+
+	public function markRunning(int $newsItemId, ?AiProviderProfile $provider = null): void
+	{
+	}
+
+
+	public function recordStepStarted(int $newsItemId, string $stepKey, string $label): void
+	{
+	}
+
+
+	public function recordStepCompleted(int $newsItemId, string $stepKey, string $label, ?string $message = null): void
+	{
+	}
+
+
+	public function recordStepFailed(int $newsItemId, string $stepKey, string $label, string $message): void
+	{
+	}
+
+
+	public function markFallback(
+		int $newsItemId,
+		string $reason,
+		?string $message = null,
+		?AiProviderProfile $provider = null,
+	): void
+	{
+	}
+
+
+	public function markAiSuccess(int $newsItemId, AiProviderProfile $provider): void
+	{
+	}
+
+
+	public function markCompleted(int $newsItemId): void
+	{
+	}
+
+
+	public function markFailed(int $newsItemId, string $message): void
+	{
+	}
+
+
+	/**
+	 * @param  array<string, mixed>  $runtime
+	 * @return array<string, mixed>
+	 */
+	private function applyProviderContext(array $runtime, ?AiProviderProfile $provider): array
+	{
+	}
+
+
+	/**
+	 * @return array{key:string,label:string,status:string,at:string,message:?string}
+	 */
+	private function event(string $key, string $label, string $status, ?string $message = null): array
+	{
+	}
+
+
+	/**
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function normalizeTimeline(mixed $timeline): array
+	{
+	}
+
+
+	private function timestamp(): string
 	{
 	}
 }
@@ -5119,6 +5808,21 @@ interface NewsStore
 
 
 	public function storeEnriched(EnrichedNewsData $enriched): void;
+
+
+	public function findRawById(int $id): ?RawNewsData;
+
+
+	/**
+	 * @return array<string, mixed>|null
+	 */
+	public function getAnalysisRuntime(int $id): ?array;
+
+
+	/**
+	 * @param  array<string, mixed>  $runtime
+	 */
+	public function putAnalysisRuntime(int $id, array $runtime): void;
 }
 
 
@@ -5326,6 +6030,6 @@ final readonly class SourceFetchSucceeded
 ```
 ---
 **File Statistics**
-- **Size**: 121.68 KB
-- **Lines**: 5200
+- **Size**: 138.62 KB
+- **Lines**: 6036
 File: `../docs/PROJECT_INTERFACE.md`

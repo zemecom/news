@@ -6,6 +6,8 @@ namespace Tests\Unit\Intelligence;
 
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Modules\Catalog\Infrastructure\Persistence\Models\NewsItem;
+use Modules\Catalog\Infrastructure\Persistence\Models\Source;
 use Modules\Intelligence\Application\Pipeline\Steps\ChatGptCodexEnrichmentStep;
 use Modules\Intelligence\Application\Pipeline\Steps\ClassifyStep;
 use Modules\Intelligence\Application\Pipeline\Steps\FinalizeStep;
@@ -13,12 +15,15 @@ use Modules\Intelligence\Application\Pipeline\Steps\ImportanceStep;
 use Modules\Intelligence\Application\Pipeline\Steps\SentimentStep;
 use Modules\Intelligence\Application\Pipeline\Steps\TranslateStep;
 use Modules\Intelligence\Application\Services\ActiveAiProviderResolver;
+use Modules\Intelligence\Application\Services\NewsAnalysisRuntimeRecorder;
 use Modules\Intelligence\Domain\Contracts\AiProviderStatusManager;
 use Modules\Intelligence\Domain\Contracts\Classifier;
 use Modules\Intelligence\Domain\Contracts\NewsAnalyzer;
 use Modules\Intelligence\Domain\Contracts\SentimentAnalyzer;
 use Modules\Intelligence\Domain\Contracts\Translator;
 use Modules\Intelligence\Domain\DTO\NewsAnalysisResult;
+use Modules\Intelligence\Domain\Exceptions\AiProviderRateLimitException;
+use Modules\Intelligence\Domain\Exceptions\AiProviderUnauthorizedException;
 use Modules\Intelligence\Infrastructure\LLM\HeuristicTranslator;
 use Modules\Intelligence\Infrastructure\LLM\KeywordClassifier;
 use Modules\Intelligence\Infrastructure\LLM\KeywordSentimentAnalyzer;
@@ -27,6 +32,7 @@ use Modules\Intelligence\Infrastructure\Persistence\Models\AiProviderAccount;
 use Modules\Shared\Domain\DTO\EnrichedNewsData;
 use Modules\Shared\Domain\DTO\RawNewsData;
 use Modules\Shared\Domain\Enum\NewsStatus;
+use RuntimeException;
 use Tests\TestCase;
 
 final class StepAndHeuristicsTest extends TestCase
@@ -95,6 +101,7 @@ final class StepAndHeuristicsTest extends TestCase
             analyzer: $analyzer,
             resolver: app(ActiveAiProviderResolver::class),
             statusSynchronizer: $synchronizer,
+            runtimeRecorder: $this->noopRuntimeRecorder(),
         );
 
         /** @var RawNewsData $result */
@@ -112,6 +119,113 @@ final class StepAndHeuristicsTest extends TestCase
         $this->assertSame('Original content', $result->metadata['original_content']);
         $this->assertSame('en', $result->metadata['original_language']);
         $this->assertSame('chatgpt_codex', $result->metadata['analysis']['provider']);
+    }
+
+    public function test_chatgpt_codex_step_marks_rate_limited_fallback_in_runtime_metadata(): void
+    {
+        config()->set('intelligence.provider', 'chatgpt_codex');
+
+        $account = AiProviderAccount::query()->create([
+            'slug' => 'chatgpt-default',
+            'provider' => AiProviderAccount::PROVIDER_CHATGPT_CODEX,
+            'display_name' => 'ChatGPT Codex',
+            'is_enabled' => true,
+            'codex_home_subpath' => 'chatgpt-default',
+            'default_model' => 'gpt-5.4-mini',
+            'default_reasoning_effort' => 'high',
+            'max_parallel_jobs' => 1,
+            'auth_status' => AiProviderAccount::STATUS_AUTHENTICATED,
+        ]);
+
+        $item = $this->createPersistedNewsItem();
+        $runtimeRecorder = app(NewsAnalysisRuntimeRecorder::class);
+        $runtimeRecorder->queue((int) $item->getKey());
+        $runtimeRecorder->markRunning((int) $item->getKey(), $account->toProfile());
+
+        $analyzer = $this->createMock(NewsAnalyzer::class);
+        $analyzer->expects($this->once())
+            ->method('analyze')
+            ->willThrowException(new class('Weekly limit reached') extends RuntimeException implements AiProviderRateLimitException {});
+
+        $synchronizer = $this->createMock(AiProviderStatusManager::class);
+        $synchronizer->expects($this->once())->method('markUsageLimited');
+        $synchronizer->expects($this->never())->method('markError');
+        $synchronizer->expects($this->never())->method('markNotAuthenticated');
+
+        $step = new ChatGptCodexEnrichmentStep(
+            analyzer: $analyzer,
+            resolver: app(ActiveAiProviderResolver::class),
+            statusSynchronizer: $synchronizer,
+            runtimeRecorder: $runtimeRecorder,
+        );
+
+        /** @var RawNewsData $result */
+        $result = $step->process($this->rawNews([
+            'rawId' => (int) $item->getKey(),
+            'fingerprint' => $item->raw_fingerprint,
+        ]));
+
+        $this->assertSame((int) $item->getKey(), $result->rawId);
+
+        $item->refresh();
+        $runtime = $item->source_metadata['analysis_runtime'] ?? null;
+
+        $this->assertIsArray($runtime);
+        $this->assertSame('fallback', $runtime['status']);
+        $this->assertSame('rate_limited', $runtime['fallback_reason']);
+        $this->assertSame('Weekly limit reached', $runtime['last_error']);
+    }
+
+    public function test_chatgpt_codex_step_marks_unauthorized_fallback_in_runtime_metadata(): void
+    {
+        config()->set('intelligence.provider', 'chatgpt_codex');
+
+        $account = AiProviderAccount::query()->create([
+            'slug' => 'chatgpt-default',
+            'provider' => AiProviderAccount::PROVIDER_CHATGPT_CODEX,
+            'display_name' => 'ChatGPT Codex',
+            'is_enabled' => true,
+            'codex_home_subpath' => 'chatgpt-default',
+            'default_model' => 'gpt-5.4-mini',
+            'default_reasoning_effort' => 'high',
+            'max_parallel_jobs' => 1,
+            'auth_status' => AiProviderAccount::STATUS_AUTHENTICATED,
+        ]);
+
+        $item = $this->createPersistedNewsItem();
+        $runtimeRecorder = app(NewsAnalysisRuntimeRecorder::class);
+        $runtimeRecorder->queue((int) $item->getKey());
+        $runtimeRecorder->markRunning((int) $item->getKey(), $account->toProfile());
+
+        $analyzer = $this->createMock(NewsAnalyzer::class);
+        $analyzer->expects($this->once())
+            ->method('analyze')
+            ->willThrowException(new class('Login expired') extends RuntimeException implements AiProviderUnauthorizedException {});
+
+        $synchronizer = $this->createMock(AiProviderStatusManager::class);
+        $synchronizer->expects($this->once())->method('markNotAuthenticated');
+        $synchronizer->expects($this->never())->method('markError');
+        $synchronizer->expects($this->never())->method('markUsageLimited');
+
+        $step = new ChatGptCodexEnrichmentStep(
+            analyzer: $analyzer,
+            resolver: app(ActiveAiProviderResolver::class),
+            statusSynchronizer: $synchronizer,
+            runtimeRecorder: $runtimeRecorder,
+        );
+
+        $step->process($this->rawNews([
+            'rawId' => (int) $item->getKey(),
+            'fingerprint' => $item->raw_fingerprint,
+        ]));
+
+        $item->refresh();
+        $runtime = $item->source_metadata['analysis_runtime'] ?? null;
+
+        $this->assertIsArray($runtime);
+        $this->assertSame('fallback', $runtime['status']);
+        $this->assertSame('unauthorized', $runtime['fallback_reason']);
+        $this->assertSame('Login expired', $runtime['last_error']);
     }
 
     public function test_translate_step_skips_russian_input(): void
@@ -312,5 +426,38 @@ final class StepAndHeuristicsTest extends TestCase
             fingerprint: $overrides['fingerprint'] ?? 'fp-1',
             rawId: $overrides['rawId'] ?? null,
         );
+    }
+
+    private function noopRuntimeRecorder(): NewsAnalysisRuntimeRecorder
+    {
+        return new NewsAnalysisRuntimeRecorder(app(\Modules\Shared\Domain\Contracts\NewsStore::class));
+    }
+
+    private function createPersistedNewsItem(): NewsItem
+    {
+        $source = Source::query()->create([
+            'name' => 'Tech Feed',
+            'url' => 'https://example.com/rss.xml',
+            'type' => 'rss',
+            'language_default' => 'en',
+            'is_active' => true,
+            'error_streak' => 0,
+        ]);
+
+        /** @var NewsItem $item */
+        $item = NewsItem::query()->create([
+            'source_id' => $source->getKey(),
+            'title_original' => 'Original title',
+            'content_original' => 'Original content',
+            'status' => NewsStatus::PROCESSING->value,
+            'raw_fingerprint' => 'fp-step-runtime',
+            'source_metadata' => [
+                'link' => 'https://example.com/news/1',
+                'language' => 'en',
+                'external_id' => 'ext-1',
+            ],
+        ]);
+
+        return $item;
     }
 }

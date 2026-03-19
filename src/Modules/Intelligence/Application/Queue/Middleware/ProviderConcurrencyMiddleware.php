@@ -15,11 +15,6 @@ use RuntimeException;
 
 final class ProviderConcurrencyMiddleware
 {
-    public function __construct(
-        private readonly CacheFactory $cache,
-        private readonly ActiveAiProviderResolver $resolver,
-    ) {}
-
     public function handle(object $job, Closure $next): void
     {
         if ((string) config('intelligence.provider', 'chatgpt_codex') !== 'chatgpt_codex') {
@@ -28,7 +23,7 @@ final class ProviderConcurrencyMiddleware
             return;
         }
 
-        $account = $this->resolver->resolveChatGptCodex();
+        $account = $this->resolver()->resolveChatGptCodex();
         if ($account === null || ! $account->enabled) {
             $next($job);
 
@@ -111,10 +106,21 @@ final class ProviderConcurrencyMiddleware
 
     private function cacheStore(): Repository
     {
+        /** @var CacheFactory $cache */
+        $cache = app(CacheFactory::class);
+
         /** @var Repository $store */
-        $store = $this->cache->store((string) config('intelligence.chatgpt_codex.concurrency_cache_store', 'redis'));
+        $store = $cache->store((string) config('intelligence.chatgpt_codex.concurrency_cache_store', 'redis'));
 
         return $store;
+    }
+
+    private function resolver(): ActiveAiProviderResolver
+    {
+        /** @var ActiveAiProviderResolver $resolver */
+        $resolver = app(ActiveAiProviderResolver::class);
+
+        return $resolver;
     }
 
     private function guardLock(Repository $store, AiProviderProfile $account): Lock

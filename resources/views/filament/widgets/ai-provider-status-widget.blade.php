@@ -66,6 +66,16 @@
 
                     <div class="flex flex-wrap items-center gap-3">
                         <x-filament::button
+                            color="gray"
+                            icon="heroicon-o-arrow-path"
+                            wire:click="refreshProviderStatistics"
+                            wire:loading.attr="disabled"
+                            wire:target="refreshProviderStatistics"
+                        >
+                            Refresh Provider Stats
+                        </x-filament::button>
+
+                        <x-filament::button
                             tag="a"
                             color="gray"
                             icon="heroicon-o-cog-6-tooth"

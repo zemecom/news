@@ -149,6 +149,9 @@
     - Для надёжности login-flow в админке переведён на background `codex login --device-auth`: это убирает проблему с временным localhost callback (`localhost:1455`) при короткоживущем web-request. Статус и лимиты по-прежнему читаются через `codex app-server`, а анализ новостей выполняется через `codex exec`.
     - Добавлен concurrency guard для LLM-провайдера через cache/Redis lock+slot semaphore; при занятом слоте job переоткладывается, а при `usageLimitExceeded` pipeline уходит в эвристический fallback.
     - Для снижения сцепления с `Catalog` pipeline использует общий контракт `Shared\Domain\Contracts\NewsStore`.
+    - Для сохранённых новостей введён runtime-trace AI-анализа в `news_items.source_metadata.analysis_runtime`: хранится `status`, `attempt`, `queued_at/started_at/finished_at`, `provider/model/reasoning_effort`, `fallback_reason`, `last_error` и `timeline` последней попытки.
+    - `NewsProcessingPipeline` теперь пишет runtime-trace по шагам (`timeline`) и фиксирует финальные состояния `completed/fallback/failed`; `ChatGptCodexEnrichmentStep` отдельно помечает AI success и fallback-причины (`rate_limited`, `unauthorized`, `provider_error`, `provider_unavailable`).
+    - Повторный анализ существующей новости стал официальным сценарием: `DeduplicateStep` пропускает duplicate-check для DTO с уже известным `rawId`, а `NewsStore` умеет реконструировать `RawNewsData` из сохранённой записи каталога.
     - После enrichment публикуется событие `Shared\Domain\Events\NewsEnriched`; постановка `PreloadNewsMediaJob` теперь происходит в `Catalog` через listener.
     - Обработка запускается через Laravel Queue (RabbitMQ driver): `php artisan queue:work --queue=crawler_tasks,intelligence_tasks,media_tasks`.
 
@@ -173,7 +176,12 @@
         - `GET /api/admin/sources` (RBAC)
     - Для media enrichment в delivery-ридере используется собственный `NewsMediaResolver` (без прямой зависимости на `Catalog` contracts).
     - Web-лента на `/` с фильтрами и догрузкой (cursor-based).
-    - В Filament admin добавлен read-only resource `News`: таблица показывает опубликованные/обрабатываемые новости, source/title/sentiment/tags/lang и AI metadata (`provider/model/reasoning`), а row-action `Details` открывает slide-over с полным preview текста и raw JSON (`source_metadata`, `analysis`, `media`).
+    - В Filament admin добавлен read-only resource `News`: таблица показывает опубликованные/обрабатываемые новости, source/title/sentiment/tags/lang, `AI Analysis` и отдельный `Analysis Status`, а row-action `Details` открывает slide-over с preview текста, runtime summary/timeline и raw JSON (`source_metadata`, `analysis`, `analysis_runtime`, `media`).
+    - На списке `News` добавлены ops-действия: `Reanalyze`, `Reanalyze selected`, page action `Enrich missing AI metadata`; все они ставят работу в `intelligence_tasks` через queued-listener `ProcessRawNewsListener` и перед запуском сбрасывают `analysis_runtime` в `queued`.
+    - Для быстрых выборок в `News` добавлены tabs `All / Without AI / Completed / Fallback / Failed / Rate limited`, а фильтры по-прежнему открыты постоянно над таблицей.
+    - Для списка `News` добавлено автообновление страницы списка новостей с переключателем интервала в header action; выбранный интервал хранится в сессии администратора, доступны интервалы от `1 sec`, а дефолт подтягивается из DB-backed admin settings.
+    - В Filament admin добавлена страница `/admin/operations`: она показывает `Queue Overview` по `crawler_tasks / intelligence_tasks / media_tasks`, AI readiness snapshot активного `chatgpt_codex` аккаунта и таблицу последних `failed_jobs`.
+    - В Filament admin добавлена страница `/admin/settings` с DB-backed настройками админки; в v1 там хранится дефолт автообновления для `News`.
 
 ## 2.3 Очереди/события
 
@@ -181,6 +189,8 @@
     - `crawler_tasks`,
     - `intelligence_tasks`,
     - `media_tasks`.
+- Для админского ops-экрана глубина и consumers очередей читаются напрямую из RabbitMQ через уже зарегистрированный `AMQPStreamConnection` и passive `queue_declare`, без RabbitMQ HTTP Management API.
+- Для ops/UI неисполненные ошибки по очередям читаются из таблицы `failed_jobs`; при текущем RabbitMQ polling-worker `consumer_count` показывает только broker-side consumers, поэтому в админке это трактуется как broker snapshot, а не как надёжный признак запущенного Laravel worker.
 - Межмодульные события (`SourceFetchSucceeded`, `SourceFetchFailed`, `NewsEnriched`) перенесены в `Shared\Domain\Events`.
 - Exchange: `news_flow` (topic) используется для доменных AMQP-событий после enrichment.
 - Routing keys: `enriched.ready`, `enriched.ready.important`, `enriched.rejected`.
@@ -199,6 +209,7 @@
 ## 2.5 Инфраструктура и локальное хранение данных
 
 - Docker Compose поднимает базовый локальный стек `app` (RoadRunner), `postgres`, `redis`, `rabbitmq`; отдельный `worker` (Laravel Queue worker для `crawler_tasks,intelligence_tasks,media_tasks`) вынесен в профиль `queue` и поднимается только при необходимости. Nginx удален за ненадобностью.
+- В БД добавлена singleton-таблица `admin_settings`; пока она хранит только дефолты админского UI для страницы `News` (`news_auto_refresh_enabled`, `news_auto_refresh_interval_seconds`), но задумана как общее хранилище admin-level preferences.
 - В `routes/console.php` определено расписание `news:crawl -> everyMinute()`, но в текущем `docker-compose.yml` нет выделенного scheduler-процесса с `schedule:run`/`schedule:work`; для локального и учебного сценария основным запуском сбора нужно считать ручной `news:crawl`.
 - Build target для Docker-образа вынесен в `DOCKER_BUILD_TARGET` (`local`/`production`) вместо жёсткой привязки к `APP_ENV`.
 - Для локальной отладки через Laravel Debugbar в Octane подключен `ResetDebugbarJsRenderer` на `RequestReceived`, чтобы Debugbar не переиспользовал устаревший base URL между запросами и не генерировал asset-ссылки на внутренний порт RoadRunner `:8000`.
@@ -215,6 +226,7 @@
     - `./docker/.data/rabbitmq:/var/lib/rabbitmq`.
 - Auth-state Codex CLI теперь тоже персистится на диск проекта и шарится между `app`/`worker`, чтобы вход в ChatGPT не терялся после рестарта контейнеров.
 - При старте `app` и `worker` контейнеров теперь автоматически создаётся `CODEX_HOME_BASE` и запускается `ai-providers:sync-stats`, чтобы статус провайдера и лимиты восстанавливались из сохранённого Codex auth-state сразу после рестарта контейнера без ручного refresh в админке.
+- При старте `app` и `worker` контейнеров теперь также автоматически запускается `news:messaging:setup`, чтобы exchange `news_flow` и delivery queues/bindings всегда существовали после рестарта RabbitMQ и AI pipeline не падал на `NOT_FOUND - no exchange 'news_flow'`.
 - Папка `docker/.data` добавлена в `.gitignore`.
 - Замечание из ревью по ext-zip/ext-xml закрыто:
     - runtime-слой Dockerfile собирает `zip` и `xml`.
@@ -236,7 +248,7 @@
     - В `Makefile` добавлен target `make worker-up`, который поднимает опциональный `worker` через профиль `queue` без ручного ввода `docker compose --profile queue up -d worker`.
     - В текущем `.env` Xdebug по умолчанию отключен (`WITH_XDEBUG=0`), чтобы обычная пересборка `app` не тянула отладочный слой без явного запроса разработчика.
     - Старт Octane вынесен в `docker/bin/start-octane.sh`: бинарь `rr` переносится из `/app/rr` в `/tmp/roadrunner-bin/rr` и удаляется из корня проекта; образ приложения добавляет `/tmp/roadrunner-bin` в `PATH`, чтобы `php artisan octane:reload` работал и вне стартового shell без записи в системные каталоги.
-    - Старт worker вынесен в `docker/bin/start-worker.sh`: перед `queue:work` автоматически декларируются очереди `crawler_tasks`, `intelligence_tasks`, `media_tasks` (устраняет `basic.get not_found` в RabbitMQ логах).
+    - Старт worker вынесен в `docker/bin/start-worker.sh`: перед `queue:work` автоматически декларируются очереди `crawler_tasks`, `intelligence_tasks`, `media_tasks` и создаются bind'ы к exchange `news.jobs`, чтобы queued-listeners (`ProcessRawNewsListener`) не терялись при публикации в exchange-backed Laravel RabbitMQ queue.
 - Для локальных медиа добавлен обязательный `storage:link` в setup-процессы.
 
 ---
@@ -269,7 +281,7 @@
 ## 3.4 Delivery (Web/Admin/Bot)
 
 - [ ] Web сейчас vanilla page; по ТЗ ожидается Blade+Livewire для UI-сценариев.
-- [ ] Filament admin: CRUD источников и read-only браузер новостей уже есть; ошибки источников и дополнительные операционные экраны ещё не завершены.
+- [ ] Filament admin: CRUD источников, read-only браузер новостей и ops-экран по очередям/AI уже есть; отдельные экраны ошибок источников и расширенное управление retry/worker-ами ещё не завершены.
 - [ ] Telegram Bot (Nutgram): `/settings`, `user_preferences`, push с фильтрацией по prefs.
 
 ## 3.5 Observability / Reliability
@@ -279,6 +291,7 @@
 - [ ] OTel трассировка по стадиям pipeline.
 - [ ] Структурный JSON-лог с консистентным контекстом (`module`, `sourceId`, `fingerprint`).
 - [ ] Health readiness c учетом threshold глубины очередей.
+- [ ] Live-обновление/управление worker retry из админки (сейчас только read-only snapshot очередей и failed jobs).
 
 ## 3.6 DevOps / K8s / CI
 

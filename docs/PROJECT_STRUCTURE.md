@@ -13,7 +13,9 @@ _SOURCE: Directory Structure_
     │   │   └── SyncAiProviderStatsCommand.php
     ├── Filament/
     │   ├── Pages/
+    │   │   ├── AdminSettings.php
     │   │   ├── AiSandbox.php
+    │   │   ├── Operations.php
     │   ├── Resources/
     │   │   ├── AiProviderAccounts/
     │   │   │   ├── AiProviderAccountResource.php
@@ -42,6 +44,7 @@ _SOURCE: Directory Structure_
     │   │   │       └── SourcesTable.php
     │   ├── Widgets/
     │   │   └── AiProviderStatusWidget.php
+    │   │   └── QueueOverviewWidget.php
     ├── Http/
     │   ├── Controllers/
     │   │   ├── Api/
@@ -61,6 +64,7 @@ _SOURCE: Directory Structure_
     ├── Livewire/
     │   ├── CrawlerLog.php
     ├── Models/
+    │   ├── AdminSetting.php
     │   ├── User.php
     ├── Providers/
     │   ├── AppServiceProvider.php
@@ -69,8 +73,10 @@ _SOURCE: Directory Structure_
     │   ├── ModulesServiceProvider.php
     │   ├── TelescopeServiceProvider.php
     ├── Services/
+    │   ├── AdminSettingsService.php
     │   ├── HealthCheckService.php
     │   ├── MessagingTopologyService.php
+    │   ├── QueueOverviewService.php
     ├── Support/
     │   └── Octane/
     │       └── ResetDebugbarJsRenderer.php
@@ -191,6 +197,8 @@ _SOURCE: Directory Structure_
             │   │   │   └── ProviderConcurrencyMiddleware.php
             │   ├── Services/
             │   │   └── ActiveAiProviderResolver.php
+            │   │   └── EnqueueNewsAnalysisAction.php
+            │   │   └── NewsAnalysisRuntimeRecorder.php
             │   │   └── RunAiSandboxAction.php
             │   │   └── SyncAiProviderStatsAction.php
             ├── Domain/
@@ -257,6 +265,6 @@ _SOURCE: Directory Structure_
 ```
 ---
 **File Statistics**
-- **Size**: 11.52 KB
-- **Lines**: 257
+- **Size**: 12.16 KB
+- **Lines**: 271
 File: `../docs/PROJECT_STRUCTURE.md`

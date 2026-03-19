@@ -7,7 +7,6 @@ namespace Tests\Unit\Intelligence;
 use Illuminate\Contracts\Cache\Factory as CacheFactory;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Modules\Intelligence\Application\Queue\Middleware\ProviderConcurrencyMiddleware;
-use Modules\Intelligence\Application\Services\ActiveAiProviderResolver;
 use Modules\Intelligence\Infrastructure\Persistence\Models\AiProviderAccount;
 use Tests\TestCase;
 
@@ -36,10 +35,7 @@ final class ProviderConcurrencyMiddlewareTest extends TestCase
             ->store('array')
             ->put('llm:provider:chatgpt-default:slots', 1, 600);
 
-        $middleware = new ProviderConcurrencyMiddleware(
-            app(CacheFactory::class),
-            app(ActiveAiProviderResolver::class),
-        );
+        $middleware = new ProviderConcurrencyMiddleware;
 
         $job = new class
         {
@@ -59,5 +55,12 @@ final class ProviderConcurrencyMiddlewareTest extends TestCase
 
         $this->assertFalse($called);
         $this->assertSame(7, $job->released);
+    }
+
+    public function test_middleware_is_serializable_for_queued_listener(): void
+    {
+        $serialized = serialize(new ProviderConcurrencyMiddleware);
+
+        $this->assertStringContainsString(ProviderConcurrencyMiddleware::class, $serialized);
     }
 }

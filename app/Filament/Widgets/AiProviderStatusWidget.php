@@ -5,14 +5,64 @@ declare(strict_types=1);
 namespace App\Filament\Widgets;
 
 use App\Filament\Resources\AiProviderAccounts\AiProviderAccountResource;
+use Filament\Notifications\Notification;
 use Filament\Widgets\Widget;
+use Modules\Intelligence\Application\Services\SyncAiProviderStatsAction;
 use Modules\Intelligence\Infrastructure\Persistence\Models\AiProviderAccount;
+use Throwable;
 
 final class AiProviderStatusWidget extends Widget
 {
+    protected static bool $isLazy = false;
+
     protected string $view = 'filament.widgets.ai-provider-status-widget';
 
     protected int|string|array $columnSpan = 'full';
+
+    public function refreshProviderStatistics(): void
+    {
+        try {
+            $summary = app(SyncAiProviderStatsAction::class)->run(AiProviderAccount::PROVIDER_CHATGPT_CODEX);
+        } catch (Throwable $e) {
+            Notification::make()
+                ->title('Provider statistics refresh failed')
+                ->body($e->getMessage())
+                ->danger()
+                ->send();
+
+            return;
+        }
+
+        $title = $summary['failed'] > 0
+            ? 'Provider statistics refreshed with warnings'
+            : 'Provider statistics refreshed';
+
+        $notification = Notification::make()
+            ->title($title)
+            ->body(sprintf(
+                'Проверено %d provider accounts, обновлено %d, ошибок %d.',
+                $summary['checked'],
+                $summary['updated'],
+                $summary['failed'],
+            ));
+
+        if ($summary['checked'] === 0) {
+            $notification
+                ->color('gray')
+                ->body('Для ChatGPT Codex не найдено активных provider accounts.')
+                ->send();
+
+            return;
+        }
+
+        if ($summary['failed'] > 0) {
+            $notification->warning()->send();
+
+            return;
+        }
+
+        $notification->success()->send();
+    }
 
     /**
      * @return array<string, mixed>

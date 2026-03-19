@@ -7,7 +7,10 @@ namespace Modules\Catalog\Infrastructure\Persistence\Models;
 use Illuminate\Database\Eloquent\Model;
 
 /**
+ * @property int $id
  * @property string $name
+ * @property string $url
+ * @property string|null $language_default
  */
 final class Source extends Model
 {

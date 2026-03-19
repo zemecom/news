@@ -14,4 +14,16 @@ interface NewsStore
     public function storeRaw(RawNewsData $raw): int;
 
     public function storeEnriched(EnrichedNewsData $enriched): void;
+
+    public function findRawById(int $id): ?RawNewsData;
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function getAnalysisRuntime(int $id): ?array;
+
+    /**
+     * @param  array<string, mixed>  $runtime
+     */
+    public function putAnalysisRuntime(int $id, array $runtime): void;
 }
