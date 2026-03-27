@@ -39,6 +39,8 @@
     - Coverage gate переведен на `pcov`: `make test-coverage` и `make ci-check` используют один tracked minimum из `.coverage-min`, а отчёты складываются в `artifacts/coverage/`.
     - Блокирующий GitHub CI оставлен детерминированным: acceptance suite с внешними RSS smoke-check сценариями вынесен из обычного `push`/`pull_request` job в отдельный manual/scheduled контур.
     - В марте 2026 `composer audit` в CI был стабилизирован точечным обновлением `saloonphp/saloon` до `4.0.0`, `league/commonmark` до `2.8.2` и `google/protobuf` до `4.33.6`.
+    - Health live endpoint не должен резолвить RabbitMQ; `HealthCheckService` подключается только в ready-обработчике, чтобы `/health/live` оставался лёгким и не зависел от инфраструктуры.
+    - Default `CODEX_HOME_BASE` переведён на `storage/app/.codex/providers`, чтобы Codex auth/runtime state был writable в GitHub Actions и локальных тестах без ручного override.
 
 ## 2.2 Архитектура модулей
 

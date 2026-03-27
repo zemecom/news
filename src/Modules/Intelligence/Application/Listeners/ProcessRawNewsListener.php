@@ -26,10 +26,6 @@ final class ProcessRawNewsListener implements ShouldQueue
      */
     public array $backoff = [5, 15, 60, 120, 300];
 
-    public function __construct(
-        private readonly NewsProcessingPipeline $pipeline,
-    ) {}
-
     public function viaQueue(): string
     {
         return 'intelligence_tasks';
@@ -45,8 +41,8 @@ final class ProcessRawNewsListener implements ShouldQueue
         ];
     }
 
-    public function handle(RawNewsCreated $event): void
+    public function handle(RawNewsCreated $event, NewsProcessingPipeline $pipeline): void
     {
-        $this->pipeline->handle($event->raw);
+        $pipeline->handle($event->raw);
     }
 }

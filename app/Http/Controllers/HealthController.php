@@ -5,11 +5,10 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Services\HealthCheckService;
+use Illuminate\Http\JsonResponse;
 
 final class HealthController extends Controller
 {
-    public function __construct(private readonly HealthCheckService $health) {}
-
     /**
      * @return array{status:string}
      */
@@ -18,9 +17,9 @@ final class HealthController extends Controller
         return ['status' => 'ok'];
     }
 
-    public function ready(): \Illuminate\Http\JsonResponse
+    public function ready(HealthCheckService $health): JsonResponse
     {
-        $checks = $this->health->check();
+        $checks = $health->check();
         $allOk = ! in_array('fail', $checks, true);
 
         return response()->json($checks, $allOk ? 200 : 503);

@@ -73,7 +73,7 @@ return [
         ],
         'timeout_seconds' => (int) env('LLM_CHATGPT_CODEX_TIMEOUT_SECONDS', 90),
         'scratch_dir' => env('LLM_CHATGPT_SCRATCH_DIR', '/tmp/codex-news-analysis'),
-        'home_base' => env('CODEX_HOME_BASE', '/home/www-data/.codex/providers'),
+        'home_base' => env('CODEX_HOME_BASE', storage_path('app/.codex/providers')),
         'app_server_timeout_seconds' => (int) env('LLM_CHATGPT_CODEX_APP_SERVER_TIMEOUT_SECONDS', 15),
         'concurrency_cache_store' => env('LLM_CHATGPT_CODEX_CONCURRENCY_CACHE_STORE', 'redis'),
         'release_delay_seconds' => (int) env('LLM_CHATGPT_CODEX_RELEASE_DELAY_SECONDS', 5),

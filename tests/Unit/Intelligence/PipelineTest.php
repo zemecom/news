@@ -183,11 +183,14 @@ final class PipelineTest extends TestCase
         };
 
         $pipeline = new NewsProcessingPipeline([$step], $publisher, $newsStore, $this->runtimeRecorder());
-        $listener = new ProcessRawNewsListener($pipeline);
+        $listener = new ProcessRawNewsListener;
 
         $this->assertSame('intelligence_tasks', $listener->viaQueue());
 
-        $listener->handle(new RawNewsCreated($this->rawNews()));
+        $this->app->instance(NewsProcessingPipeline::class, $pipeline);
+        $this->app->call([$listener, 'handle'], [
+            'event' => new RawNewsCreated($this->rawNews()),
+        ]);
 
         Event::assertDispatched(NewsEnriched::class, static fn (NewsEnriched $event): bool => $event->rawId === 77);
     }
