@@ -103,12 +103,12 @@
 
 | Если спрашивают | Смотри |
 | --- | --- |
-| как идёт поток новости | [10. Сквозные Runtime-Сценарии](10-end-to-end-flows.md) |
-| как устроена БД | [11. Модель Данных, Таблицы и Индексы](11-data-model-and-indexes.md) |
-| чем jobs отличаются от events | [12. События, Очереди и Messaging](12-events-queues-and-messaging.md) |
-| как решена безопасность | [13. Безопасность, Отказы и Failure Modes](13-security-and-failure-modes.md) |
-| что тестируется и как | [14. Тестирование и Quality Gates](14-testing-and-quality-gates.md) |
-| где слабые места проекта | [17. Текущие Ограничения и Архитектурные Компромиссы](17-known-limitations-and-tradeoffs.md) |
+| как идёт поток новости | [10. Сквозные Runtime-Сценарии](../architecture/10-end-to-end-flows.md) |
+| как устроена БД | [11. Модель Данных, Таблицы и Индексы](../architecture/11-data-model-and-indexes.md) |
+| чем jobs отличаются от events | [12. События, Очереди и Messaging](../architecture/12-events-queues-and-messaging.md) |
+| как решена безопасность | [13. Безопасность, Отказы и Failure Modes](../architecture/13-security-and-failure-modes.md) |
+| что тестируется и как | [14. Тестирование и Quality Gates](../architecture/14-testing-and-quality-gates.md) |
+| где слабые места проекта | [17. Текущие Ограничения и Архитектурные Компромиссы](../architecture/17-known-limitations-and-tradeoffs.md) |
 
 ## 10 фраз, которые стоит уметь произнести без запинки
 
@@ -126,4 +126,4 @@
 ## Связанные документы
 
 - [15. Банк Вопросов и Ответов для Собеседования](question-bank.md)
-- [17. Текущие Ограничения и Архитектурные Компромиссы](17-known-limitations-and-tradeoffs.md)
+- [17. Текущие Ограничения и Архитектурные Компромиссы](../architecture/17-known-limitations-and-tradeoffs.md)

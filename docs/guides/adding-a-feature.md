@@ -305,6 +305,6 @@ flowchart TD
 
 ## Связанные документы
 
-- [10. Сквозные Runtime-Сценарии](10-end-to-end-flows.md) — чтобы видеть реальные сценарии
-- [14. Тестирование и Quality Gates](14-testing-and-quality-gates.md) — какие тесты должны страховать новую фичу
-- [17. Текущие Ограничения и Архитектурные Компромиссы](17-known-limitations-and-tradeoffs.md) — какие компромиссы уже есть и как не усугубить их
+- [10. Сквозные Runtime-Сценарии](../architecture/10-end-to-end-flows.md) — чтобы видеть реальные сценарии
+- [14. Тестирование и Quality Gates](../architecture/14-testing-and-quality-gates.md) — какие тесты должны страховать новую фичу
+- [17. Текущие Ограничения и Архитектурные Компромиссы](../architecture/17-known-limitations-and-tradeoffs.md) — какие компромиссы уже есть и как не усугубить их

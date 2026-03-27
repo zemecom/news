@@ -271,6 +271,6 @@
 
 ## Связанные документы
 
-- [10. Сквозные Runtime-Сценарии](10-end-to-end-flows.md)
+- [10. Сквозные Runtime-Сценарии](../architecture/10-end-to-end-flows.md)
 - [16. Глоссарий и Быстрая Шпаргалка](glossary-and-cheatsheet.md)
-- [17. Текущие Ограничения и Архитектурные Компромиссы](17-known-limitations-and-tradeoffs.md)
+- [17. Текущие Ограничения и Архитектурные Компромиссы](../architecture/17-known-limitations-and-tradeoffs.md)
