@@ -25,7 +25,7 @@
     - Контейнер модулей подключается через `app/Providers/ModulesServiceProvider.php`.
     - **Высокопроизводительный сервер**: Laravel Octane + RoadRunner (заменяет классическую связку Nginx + PHP-FPM).
 - **Интеграции**
-    - Saloon используется для HTTP-клиентов (RSS/Telegram web endpoint).
+    - Saloon 4.x используется для HTTP-клиентов (RSS/Telegram web endpoint).
     - RabbitMQ:
         - как драйвер Laravel Queue (`vladimir-yuldashev/laravel-queue-rabbitmq`) для внутренних job-очередей,
         - как AMQP transport (`php-amqplib`) для exchange `news_flow` и событий доставки.
@@ -38,6 +38,7 @@
     - Автоматический запуск `make ci-check` через `pre-commit` hook перед коммитом изменений.
     - Coverage gate переведен на `pcov`: `make test-coverage` и `make ci-check` используют один tracked minimum из `.coverage-min`, а отчёты складываются в `artifacts/coverage/`.
     - Блокирующий GitHub CI оставлен детерминированным: acceptance suite с внешними RSS smoke-check сценариями вынесен из обычного `push`/`pull_request` job в отдельный manual/scheduled контур.
+    - В марте 2026 `composer audit` в CI был стабилизирован точечным обновлением `saloonphp/saloon` до `4.0.0`, `league/commonmark` до `2.8.2` и `google/protobuf` до `4.33.6`.
 
 ## 2.2 Архитектура модулей
 
