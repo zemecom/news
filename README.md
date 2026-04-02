@@ -129,7 +129,14 @@ make logs          # Просмотр логов контейнеров
 
 ## CI
 
-`.github/workflows/ci.yml`: на `push`/`pull_request` гоняет детерминированный quality gate (`validate`, `audit`, `lint`, `phpstan`, `psalm`, `coverage gate`, `arch`), а acceptance suite запускается отдельно по расписанию и вручную через `workflow_dispatch`.
+`.github/workflows/ci.yml`: на `push` в удалённую `main` и на `pull_request` в `main` гоняет детерминированный quality gate (`validate`, `audit`, `lint`, `phpstan`, `psalm`, `coverage gate`, `arch`), а acceptance suite запускается отдельно по расписанию и вручную через `workflow_dispatch`.
+
+## Git Workflow
+
+- Локальная рабочая ветка: `dev`.
+- Удалённая интеграционная ветка: `main`.
+- `dev` не пушится на remote по умолчанию; в удалённый репозиторий уходит только `main`.
+- CI привязан к удалённой `main`, поэтому локальная работа в `dev` не должна зависеть от наличия одноимённой ветки на remote.
 
 ## Документация
 

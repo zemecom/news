@@ -12,6 +12,7 @@
 - В `docs/architecture/` поддерживается расширенный набор учебной документации по проекту в interview-oriented формате: обзорные главы `00-08`, cross-cutting документы `10-17`, отдельные разборы runtime flow, схемы данных, messaging, security, testing и компромиссов.
 - Каталог `docs/` теперь разложен по назначению: `start/` для первого входа в проект, `guides/` для playbook-документов, `reference/` для API и конфигурации, `interview/` для вопросника и шпаргалки. Корневой `docs/README.md` служит точкой входа, а `PROJECT_MEMORY.md`, `PROJECT_STRUCTURE.md`, `PROJECT_INTERFACE.md` остаются в корне как канонические compatibility-файлы.
 - Для распространения документации в офлайн-формате добавлен PDF export workflow: `scripts/docs-pdf/build.sh` собирает три отдельных PDF через `pandoc + prince`, использует стили из `scripts/docs-pdf/` и складывает артефакты в `artifacts/docs/` (`onboarding-learning`, `architecture-runtime`, `reference`).
+- Git workflow зафиксирован в двухветочной схеме: локальная рабочая ветка `dev` без remote-tracking и единственная удалённая интеграционная ветка `main`; GitHub Actions `push`/`pull_request` контур ориентирован на `main`.
 
 ---
 
