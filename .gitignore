@@ -30,3 +30,5 @@ Thumbs.db
 docker-compose.override.yml
 rr
 /artifacts/docs/*.pdf
+.agent
+AGENTS.md
