@@ -4,6 +4,7 @@ set -eu
 PROJECT_RR_PATH="/app/rr"
 RUNTIME_RR_DIR="/tmp/roadrunner-bin"
 RUNTIME_RR_PATH="${RUNTIME_RR_DIR}/rr"
+RR_CONFIG_PATH=".rr.yaml"
 
 mkdir -p "${RUNTIME_RR_DIR}"
 mkdir -p "${CODEX_HOME_BASE:-/home/www-data/.codex/providers}"
@@ -30,9 +31,13 @@ fi
 
 export PATH="${RUNTIME_RR_DIR}:${PATH}"
 
+if [ "${RR_RELOAD_ENABLED:-0}" = "1" ]; then
+    RR_CONFIG_PATH=".rr.dev.yaml"
+fi
+
 exec php artisan octane:start \
     --server=roadrunner \
-    --rr-config=.rr.yaml \
+    --rr-config="${RR_CONFIG_PATH}" \
     --host=0.0.0.0 \
     --rpc-port=6001 \
     --port=8000 \

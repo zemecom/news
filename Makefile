@@ -37,7 +37,7 @@ rebuild:
 dev:
 	@# Run development servers concurrently (server, queue, logs, vite) inside Docker
 	$(DOCKER_APP) npx concurrently -c "#93c5fd,#c4b5fd,#fb7185,#fdba74" \
-		"sh docker/bin/start-octane.sh" \
+		"RR_RELOAD_ENABLED=1 sh docker/bin/start-octane.sh" \
 		"php artisan queue:listen --tries=1 --timeout=0" \
 		"php artisan pail --timeout=0" \
 		"npm run dev" \
@@ -207,7 +207,7 @@ queue:
 
 serve:
 	@# Serve the application inside Docker
-	$(DOCKER_APP) sh docker/bin/start-octane.sh
+	$(DOCKER_APP) env RR_RELOAD_ENABLED=1 sh docker/bin/start-octane.sh
 
 logs:
 	@# View output from containers

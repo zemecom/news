@@ -1,16 +1,1 @@
 version: "3"
-
-reload:
-  interval: 1s
-  patterns: [".php", ".env", ".yaml", ".yml"]
-  services:
-    http:
-      recursive: true
-      dirs:
-        - app
-        - bootstrap
-        - config
-        - database
-        - resources
-        - routes
-        - src/Modules
