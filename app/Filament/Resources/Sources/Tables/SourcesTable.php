@@ -11,7 +11,7 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
-class SourcesTable
+final class SourcesTable
 {
     public static function configure(Table $table): Table
     {

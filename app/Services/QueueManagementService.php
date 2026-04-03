@@ -12,7 +12,7 @@ use PhpAmqpLib\Connection\AMQPStreamConnection;
 use RuntimeException;
 use Throwable;
 
-final class QueueManagementService
+final readonly class QueueManagementService
 {
     public function __construct(
         private AMQPStreamConnection $connection,

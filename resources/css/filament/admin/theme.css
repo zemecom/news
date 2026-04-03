@@ -99,22 +99,27 @@
     }
 
     & .fi-ta-cell {
-        @apply py-2;
+        @apply py-1.5;
     }
 
     & .fi-ta-cell:has(.fi-ta-actions),
     & .fi-ta-cell:has(.fi-ta-record-checkbox),
     & .fi-ta-cell.fi-ta-selection-cell {
-        @apply py-2;
+        @apply py-1.5;
     }
 
     & .fi-ta-record-checkbox {
-        @apply my-2;
+        @apply my-1.5;
     }
 
     & .fi-ta-text,
     & .fi-ta-placeholder {
-        @apply leading-5;
+        @apply leading-tight;
+    }
+
+    & .fi-ta-text:not(.fi-inline) {
+        padding-inline: 0;
+        padding-block: 0;
     }
 
     & .fi-ta-cell-ai-analysis-action button {

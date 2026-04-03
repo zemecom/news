@@ -10,7 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
-class AutoLoginAdmin
+final class AutoLoginAdmin
 {
     /**
      * Handle an incoming request.

@@ -6,7 +6,7 @@ COMPOSER   = $(DOCKER_APP) composer
 ARTISAN    = $(DOCKER_APP) php artisan
 NPM        = $(DOCKER_APP) npm
 
-.PHONY: up down build rebuild dev npm-dev help logs docs-deps app worker worker-up
+.PHONY: up down build rebuild dev npm-dev npm-build-prod help logs docs-deps app worker worker-up
 .PHONY: setup-local setup-ci migrate messaging-setup
 .PHONY: test test-coverage test-arch test-all acceptance smoke-api ci-check agent-check
 .PHONY: analyze psalm psalm-taint lint lint-check rector rector-check validate audit
@@ -45,8 +45,12 @@ dev:
 		--kill-others
 
 npm-dev:
-	@# Run only frontend dev server inside Docker
+	@# Run only frontend Vite dev server inside Docker (unminified CSS/JS via public/hot)
 	$(NPM) run dev
+
+npm-build-prod:
+	@# Build minified production frontend assets inside Docker
+	$(NPM) run build:prod
 
 # --- Setup & Configuration ---
 

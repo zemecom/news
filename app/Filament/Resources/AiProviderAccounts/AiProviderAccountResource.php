@@ -17,7 +17,7 @@ use Modules\Intelligence\Infrastructure\Persistence\Models\AiProviderAccount;
 use Override;
 use UnitEnum;
 
-class AiProviderAccountResource extends Resource
+final class AiProviderAccountResource extends Resource
 {
     protected static ?string $model = AiProviderAccount::class;
 

@@ -7,9 +7,10 @@ namespace App\Filament\Resources\Sources\Pages;
 use App\Filament\Resources\Sources\SourceResource;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
+use Filament\Support\Enums\Width;
 use Override;
 
-class ListSources extends ListRecords
+final class ListSources extends ListRecords
 {
     protected static string $resource = SourceResource::class;
 
@@ -30,8 +31,8 @@ class ListSources extends ListRecords
     }
 
     #[Override]
-    public function getMaxContentWidth(): \Filament\Support\Enums\Width|string|null
+    public function getMaxContentWidth(): Width
     {
-        return \Filament\Support\Enums\Width::Full;
+        return Width::Full;
     }
 }

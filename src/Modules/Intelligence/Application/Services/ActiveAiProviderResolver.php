@@ -7,10 +7,10 @@ namespace Modules\Intelligence\Application\Services;
 use Modules\Intelligence\Domain\Contracts\AiProviderAccountRepository;
 use Modules\Intelligence\Domain\DTO\AiProviderProfile;
 
-final class ActiveAiProviderResolver
+final readonly class ActiveAiProviderResolver
 {
     public function __construct(
-        private readonly AiProviderAccountRepository $accounts,
+        private AiProviderAccountRepository $accounts,
     ) {}
 
     public function resolveChatGptCodex(): ?AiProviderProfile

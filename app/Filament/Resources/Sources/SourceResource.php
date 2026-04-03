@@ -17,7 +17,7 @@ use Filament\Tables\Table;
 use Modules\Catalog\Infrastructure\Persistence\Models\Source;
 use Override;
 
-class SourceResource extends Resource
+final class SourceResource extends Resource
 {
     protected static ?string $model = Source::class;
 
