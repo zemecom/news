@@ -212,7 +212,7 @@
 
 ## 2.5 Инфраструктура и локальное хранение данных
 
-- Docker Compose поднимает базовый локальный стек `app` (RoadRunner), `postgres`, `redis`, `rabbitmq`; отдельный `worker` (Laravel Queue worker для `crawler_tasks,intelligence_tasks,media_tasks`) вынесен в профиль `queue` и поднимается только при необходимости. Nginx удален за ненадобностью.
+- Docker Compose поднимает базовый локальный стек `app` (RoadRunner), `postgres`, `redis`, `rabbitmq`, `qdrant`; отдельный `worker` (Laravel Queue worker для `crawler_tasks,intelligence_tasks,media_tasks`) вынесен в профиль `queue` и поднимается только при необходимости. Nginx удален за ненадобностью.
 - В БД добавлена singleton-таблица `admin_settings`; пока она хранит только дефолты админского UI для страницы `News` (`news_auto_refresh_enabled`, `news_auto_refresh_interval_seconds`), но задумана как общее хранилище admin-level preferences.
 - В `routes/console.php` определено расписание `news:crawl -> everyMinute()`, но в текущем `docker-compose.yml` нет выделенного scheduler-процесса с `schedule:run`/`schedule:work`; для локального и учебного сценария основным запуском сбора нужно считать ручной `news:crawl`.
 - Build target для Docker-образа вынесен в `DOCKER_BUILD_TARGET` (`local`/`production`) вместо жёсткой привязки к `APP_ENV`.
@@ -228,6 +228,11 @@
 - Данные Redis и RabbitMQ также персистятся на диск проекта:
     - `./docker/.data/redis:/data`,
     - `./docker/.data/rabbitmq:/var/lib/rabbitmq`.
+- Для vector/search контура подключен отдельный Qdrant service в Docker:
+    - REST endpoint по умолчанию доступен как `http://qdrant:6333` внутри сети Compose и пробрасывается наружу через `QDRANT_BIND`;
+    - gRPC endpoint доступен на `6334` и пробрасывается через `QDRANT_GRPC_BIND`;
+    - данные персистятся в `./docker/.data/qdrant:/qdrant/storage`;
+    - в Laravel добавлен конфиг `config/qdrant.php` и singleton `App\Services\QdrantClient` для базовых операций с коллекциями, upsert и search points без отдельного пакета.
 - Auth-state Codex CLI теперь тоже персистится на диск проекта и шарится между `app`/`worker`, чтобы вход в ChatGPT не терялся после рестарта контейнеров.
 - При старте `app` и `worker` контейнеров теперь автоматически создаётся `CODEX_HOME_BASE` и запускается `ai-providers:sync-stats`, чтобы статус провайдера и лимиты восстанавливались из сохранённого Codex auth-state сразу после рестарта контейнера без ручного refresh в админке.
 - При старте `app` и `worker` контейнеров теперь также автоматически запускается `news:messaging:setup`, чтобы exchange `news_flow` и delivery queues/bindings всегда существовали после рестарта RabbitMQ и AI pipeline не падал на `NOT_FOUND - no exchange 'news_flow'`.

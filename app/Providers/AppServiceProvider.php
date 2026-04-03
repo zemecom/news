@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Services\QdrantClient;
+use GuzzleHttp\Client;
 use Illuminate\Support\ServiceProvider;
 use Override;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
@@ -31,6 +33,22 @@ class AppServiceProvider extends ServiceProvider
             read_write_timeout: 3.0,
             heartbeat: 30,
         ));
+
+        $this->app->singleton(QdrantClient::class, function (): QdrantClient {
+            $qdrantUrl = rtrim((string) config('qdrant.url', 'http://qdrant:6333'), '/');
+            $qdrantApiKey = (string) config('qdrant.api_key', '');
+            $qdrantTimeout = (float) config('qdrant.timeout', 3.0);
+
+            return new QdrantClient(
+                http: new Client([
+                    'base_uri' => $qdrantUrl.'/',
+                    'http_errors' => true,
+                ]),
+                baseUrl: $qdrantUrl,
+                apiKey: $qdrantApiKey !== '' ? $qdrantApiKey : null,
+                timeoutSeconds: $qdrantTimeout,
+            );
+        });
 
         if ($this->app->environment('local')) {
             $this->app->register(\App\Providers\TelescopeServiceProvider::class);

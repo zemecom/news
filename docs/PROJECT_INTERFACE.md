@@ -1449,6 +1449,8 @@ class User extends Authenticatable implements \Filament\Models\Contracts\Filamen
 ```php
 namespace App\Providers;
 
+use App\Services\QdrantClient as QdrantClient;
+use GuzzleHttp\Client as Client;
 use Illuminate\Support\ServiceProvider as ServiceProvider;
 use Override as Override;
 use PhpAmqpLib\Connection\AMQPStreamConnection as AMQPStreamConnection;
@@ -1722,6 +1724,126 @@ final readonly class MessagingTopologyService
 
 
 	private function declareQueue(AMQPChannel $channel, string $name, bool $quorum): void
+	{
+	}
+}
+
+
+```
+###  Path: `/app/Services/QdrantClient.php`
+
+```php
+namespace App\Services;
+
+use GuzzleHttp\ClientInterface as ClientInterface;
+use GuzzleHttp\Exception\GuzzleException as GuzzleException;
+use JsonException as JsonException;
+
+final readonly class QdrantClient
+{
+	public function __construct(
+		private ClientInterface $http,
+		private string $baseUrl,
+		private ?string $apiKey,
+		private float $timeoutSeconds,
+	) {
+	}
+
+
+	public function baseUrl(): string
+	{
+	}
+
+
+	public function apiKey(): ?string
+	{
+	}
+
+
+	public function timeoutSeconds(): float
+	{
+	}
+
+
+	/**
+	 * @throws GuzzleException
+	 */
+	public function isReady(): bool
+	{
+	}
+
+
+	/**
+	 * @return array<string, mixed>
+	 *
+	 * @throws GuzzleException
+	 * @throws JsonException
+	 */
+	public function collections(): array
+	{
+	}
+
+
+	/**
+	 * @param array<string, mixed> $payload
+	 * @return array<string, mixed>
+	 *
+	 * @throws GuzzleException
+	 * @throws JsonException
+	 */
+	public function createCollection(string $collectionName, array $payload): array
+	{
+	}
+
+
+	/**
+	 * @param list<array<string, mixed>> $points
+	 * @return array<string, mixed>
+	 *
+	 * @throws GuzzleException
+	 * @throws JsonException
+	 */
+	public function upsertPoints(string $collectionName, array $points, bool $wait = true): array
+	{
+	}
+
+
+	/**
+	 * @param list<float|int> $vector
+	 * @param array<string, mixed>|null $filter
+	 * @return array<string, mixed>
+	 *
+	 * @throws GuzzleException
+	 * @throws JsonException
+	 */
+	public function searchPoints(
+		string $collectionName,
+		array $vector,
+		?array $filter = null,
+		int $limit = 10,
+		bool $withPayload = true,
+		bool|array $withVectors = false,
+	): array
+	{
+	}
+
+
+	/**
+	 * @param array<string, mixed> $options
+	 * @return array<string, mixed>
+	 *
+	 * @throws GuzzleException
+	 * @throws JsonException
+	 */
+	public function request(string $method, string $uri, array $options = []): array
+	{
+	}
+
+
+	/**
+	 * @return array<string, string>
+	 */
+	private function headers(): array
 	{
 	}
 }
@@ -6019,6 +6141,6 @@ final readonly class SourceFetchSucceeded
 ```
 ---
 **File Statistics**
-- **Size**: 138.62 KB
-- **Lines**: 6036
+- **Size**: 138.54 KB
+- **Lines**: 6025
 File: `../docs/PROJECT_INTERFACE.md`

@@ -1,4 +1,4 @@
-SERVICES = app worker postgres redis rabbitmq
+SERVICES = app worker postgres redis rabbitmq qdrant
 
 # Executables variables
 DOCKER_APP = docker compose exec -T app

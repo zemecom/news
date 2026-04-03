@@ -76,6 +76,7 @@ _SOURCE: Directory Structure_
     │   ├── AdminSettingsService.php
     │   ├── HealthCheckService.php
     │   ├── MessagingTopologyService.php
+    │   ├── QdrantClient.php
     │   ├── QueueOverviewService.php
     ├── Support/
     │   └── Octane/
