@@ -9,9 +9,11 @@ use Filament\Actions\EditAction;
 use Filament\Notifications\Notification;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Modules\Intelligence\Application\Services\CancelAiProviderLoginAction;
+use Modules\Intelligence\Application\Services\LogoutAiProviderAction;
+use Modules\Intelligence\Application\Services\RefreshAiProviderStatusAction;
+use Modules\Intelligence\Application\Services\StartAiProviderLoginAction;
 use Modules\Intelligence\Domain\Exceptions\AiProviderException;
-use Modules\Intelligence\Infrastructure\Codex\CodexAccountStatusSynchronizer;
-use Modules\Intelligence\Infrastructure\Codex\CodexLoginManager;
 use Modules\Intelligence\Infrastructure\Persistence\Models\AiProviderAccount;
 use Throwable;
 
@@ -20,7 +22,7 @@ final class AiProviderAccountsTable
     public static function configure(Table $table): Table
     {
         return $table
-            ->poll('10s')
+            ->poll('3s')
             ->defaultPaginationPageOption(25)
             ->columns([
                 TextColumn::make('display_name')
@@ -91,7 +93,7 @@ final class AiProviderAccountsTable
                     ->visible(fn (AiProviderAccount $record): bool => ! $record->isAuthenticated())
                     ->action(function (AiProviderAccount $record): void {
                         try {
-                            app(CodexLoginManager::class)->startLogin($record);
+                            app(StartAiProviderLoginAction::class)->run($record->toProfile());
                         } catch (Throwable $e) {
                             self::notifyError($e);
 
@@ -120,7 +122,7 @@ final class AiProviderAccountsTable
                     ->icon('heroicon-o-arrow-path')
                     ->action(function (AiProviderAccount $record): void {
                         try {
-                            app(CodexAccountStatusSynchronizer::class)->sync($record);
+                            app(RefreshAiProviderStatusAction::class)->run($record->toProfile());
                         } catch (Throwable $e) {
                             self::notifyError($e);
 
@@ -139,7 +141,7 @@ final class AiProviderAccountsTable
                     ->visible(fn (AiProviderAccount $record): bool => $record->isPending())
                     ->action(function (AiProviderAccount $record): void {
                         try {
-                            app(CodexLoginManager::class)->cancelLogin($record);
+                            app(CancelAiProviderLoginAction::class)->run($record->toProfile());
                         } catch (Throwable $e) {
                             self::notifyError($e);
 
@@ -159,7 +161,7 @@ final class AiProviderAccountsTable
                     ->visible(fn (AiProviderAccount $record): bool => $record->isAuthenticated() || $record->auth_status === AiProviderAccount::STATUS_RATE_LIMITED)
                     ->action(function (AiProviderAccount $record): void {
                         try {
-                            app(CodexLoginManager::class)->logout($record);
+                            app(LogoutAiProviderAction::class)->run($record->toProfile());
                         } catch (Throwable $e) {
                             self::notifyError($e);
 

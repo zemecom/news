@@ -12,7 +12,7 @@ use Modules\Intelligence\Infrastructure\Persistence\Models\AiProviderAccount;
 final readonly class CodexAccountStatusSynchronizer implements AiProviderStatusManager
 {
     public function __construct(
-        private CodexAppServerClient $client,
+        private CodexAppServerClientContract $client,
         private CodexAuthProcessManager $authProcesses,
     ) {}
 

@@ -17,10 +17,11 @@
     $weeklyReset = $record?->weeklyRateLimitResetAt()?->setTimezone(config('app.timezone'))->format('d.m H:i');
 @endphp
 
-<x-filament-widgets::widget
-    wire:poll.10s
-    class="fi-ai-provider-status-widget"
->
+<x-filament-widgets::widget class="fi-ai-provider-status-widget">
+    @if ($isRefreshingProviderStats)
+        <div wire:poll.2s="syncProviderStatisticsState" class="hidden"></div>
+    @endif
+
     <x-filament::section>
         <div class="grid gap-6 xl:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.9fr)]">
             <div class="space-y-5">
@@ -129,20 +130,33 @@
                             <p class="text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">
                                 Used
                             </p>
-                            <p class="text-sm font-semibold text-gray-900 dark:text-white">
-                                {{ $primaryUsed !== null ? $primaryUsed.'%' : 'n/a' }}
-                            </p>
+
+                            @if ($isRefreshingProviderStats)
+                                <div class="h-4 w-12 animate-pulse rounded-full bg-gray-200 dark:bg-gray-700"></div>
+                            @else
+                                <p class="text-sm font-semibold text-gray-900 dark:text-white">
+                                    {{ $primaryUsed !== null ? $primaryUsed.'%' : 'n/a' }}
+                                </p>
+                            @endif
                         </div>
 
                         <div class="mt-3 h-2 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-800">
-                            <div
-                                class="h-full rounded-full bg-amber-500 transition-all duration-500 dark:bg-amber-400"
-                                style="width: {{ max(0, min($primaryUsed ?? 0, 100)) }}%;"
-                            ></div>
+                            @if ($isRefreshingProviderStats)
+                                <div class="h-full w-2/3 animate-pulse rounded-full bg-gray-300 dark:bg-gray-700"></div>
+                            @else
+                                <div
+                                    class="h-full rounded-full bg-amber-500 transition-all duration-500 dark:bg-amber-400"
+                                    style="width: {{ max(0, min($primaryUsed ?? 0, 100)) }}%;"
+                                ></div>
+                            @endif
                         </div>
 
                         <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                            5h окно{{ $primaryReset ? ' · reset '.$primaryReset : '' }}
+                            @if ($isRefreshingProviderStats)
+                                Updating usage data...
+                            @else
+                                5h окно{{ $primaryReset ? ' · reset '.$primaryReset : '' }}
+                            @endif
                         </p>
                     </div>
 
@@ -151,20 +165,33 @@
                             <p class="text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">
                                 Week
                             </p>
-                            <p class="text-sm font-semibold text-gray-900 dark:text-white">
-                                {{ $weeklyUsed !== null ? $weeklyUsed.'%' : 'n/a' }}
-                            </p>
+
+                            @if ($isRefreshingProviderStats)
+                                <div class="h-4 w-12 animate-pulse rounded-full bg-gray-200 dark:bg-gray-700"></div>
+                            @else
+                                <p class="text-sm font-semibold text-gray-900 dark:text-white">
+                                    {{ $weeklyUsed !== null ? $weeklyUsed.'%' : 'n/a' }}
+                                </p>
+                            @endif
                         </div>
 
                         <div class="mt-3 h-2 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-800">
-                            <div
-                                class="h-full rounded-full bg-sky-500 transition-all duration-500 dark:bg-sky-400"
-                                style="width: {{ max(0, min($weeklyUsed ?? 0, 100)) }}%;"
-                            ></div>
+                            @if ($isRefreshingProviderStats)
+                                <div class="h-full w-2/3 animate-pulse rounded-full bg-gray-300 dark:bg-gray-700"></div>
+                            @else
+                                <div
+                                    class="h-full rounded-full bg-sky-500 transition-all duration-500 dark:bg-sky-400"
+                                    style="width: {{ max(0, min($weeklyUsed ?? 0, 100)) }}%;"
+                                ></div>
+                            @endif
                         </div>
 
                         <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                            7d окно{{ $weeklyReset ? ' · reset '.$weeklyReset : '' }}
+                            @if ($isRefreshingProviderStats)
+                                Updating weekly data...
+                            @else
+                                7d окно{{ $weeklyReset ? ' · reset '.$weeklyReset : '' }}
+                            @endif
                         </p>
                     </div>
                 </div>

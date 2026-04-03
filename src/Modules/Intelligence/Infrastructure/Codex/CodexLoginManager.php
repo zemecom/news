@@ -4,18 +4,23 @@ declare(strict_types=1);
 
 namespace Modules\Intelligence\Infrastructure\Codex;
 
+use Modules\Intelligence\Domain\Contracts\AiProviderAuthManager;
+use Modules\Intelligence\Domain\Contracts\AiProviderStatusManager;
+use Modules\Intelligence\Domain\DTO\AiProviderProfile;
 use Modules\Intelligence\Infrastructure\Persistence\Models\AiProviderAccount;
 
-final readonly class CodexLoginManager
+final readonly class CodexLoginManager implements AiProviderAuthManager
 {
     public function __construct(
-        private CodexAppServerClient $client,
-        private CodexAccountStatusSynchronizer $statusSynchronizer,
+        private CodexAppServerClientContract $client,
+        private AiProviderStatusManager $statusSynchronizer,
         private CodexAuthProcessManager $authProcesses,
     ) {}
 
-    public function startLogin(AiProviderAccount $account): void
+    public function startLogin(AiProviderProfile|AiProviderAccount $account): void
     {
+        $account = $this->resolveModel($account);
+
         $this->stopPendingLoginProcess($account);
 
         $outputPath = $this->allocateOutputPath($account);
@@ -46,16 +51,20 @@ final readonly class CodexLoginManager
         ])->save();
     }
 
-    public function cancelLogin(AiProviderAccount $account): void
+    public function cancelLogin(AiProviderProfile|AiProviderAccount $account): void
     {
-        $this->statusSynchronizer->markNotAuthenticated($account);
+        $account = $this->resolveModel($account);
+
+        $this->statusSynchronizer->markNotAuthenticated($account->toProfile());
     }
 
-    public function logout(AiProviderAccount $account): void
+    public function logout(AiProviderProfile|AiProviderAccount $account): void
     {
+        $account = $this->resolveModel($account);
+
         $this->client->logout($account->toProfile());
 
-        $this->statusSynchronizer->markNotAuthenticated($account);
+        $this->statusSynchronizer->markNotAuthenticated($account->toProfile());
     }
 
     private function resolveCodexHome(AiProviderAccount $account): string
@@ -145,5 +154,28 @@ final readonly class CodexLoginManager
         if ($outputPath !== null && is_file($outputPath)) {
             @unlink($outputPath);
         }
+    }
+
+    private function resolveModel(AiProviderProfile|AiProviderAccount $account): AiProviderAccount
+    {
+        if ($account instanceof AiProviderAccount) {
+            return $account;
+        }
+
+        $query = AiProviderAccount::query();
+        $model = $account->id !== null ? $query->find($account->id) : null;
+
+        if (! $model instanceof AiProviderAccount) {
+            /** @var AiProviderAccount|null $model */
+            $model = AiProviderAccount::query()
+                ->where('slug', $account->slug)
+                ->first();
+        }
+
+        if (! $model instanceof AiProviderAccount) {
+            throw new CodexException(sprintf('AI provider account `%s` was not found for auth flow.', $account->slug));
+        }
+
+        return $model;
     }
 }

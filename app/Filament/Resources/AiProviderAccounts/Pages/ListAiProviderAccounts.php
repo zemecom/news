@@ -19,6 +19,14 @@ final class ListAiProviderAccounts extends ListRecords
     protected static string $resource = AiProviderAccountResource::class;
 
     #[Override]
+    public function mount(): void
+    {
+        app(\App\Filament\Support\AiProviderStatsAutoRefresher::class)->scheduleRefreshIfStale();
+
+        parent::mount();
+    }
+
+    #[Override]
     protected function getHeaderActions(): array
     {
         return [

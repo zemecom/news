@@ -6,7 +6,7 @@ namespace Modules\Intelligence\Infrastructure\Codex;
 
 use Modules\Intelligence\Domain\DTO\AiProviderProfile;
 
-final readonly class CodexAppServerClient
+final readonly class CodexAppServerClient implements CodexAppServerClientContract
 {
     public function __construct(
         private CodexProcessRunnerContract $runner,

@@ -12,6 +12,10 @@
             : null;
     @endphp
 
+    @if ($isRefreshingProviderStats)
+        <div wire:poll.2s="syncProviderStatsRefreshState" class="hidden"></div>
+    @endif
+
     <div class="grid gap-6 xl:grid-cols-[minmax(0,1.45fr)_minmax(340px,1fr)]">
         <div class="space-y-6">
             <form wire:submit="run" class="space-y-6">
@@ -40,8 +44,22 @@
                         <p><span class="font-medium">Plan:</span> {{ $selectedProvider->plan_type ?? 'n/a' }}</p>
                         <p><span class="font-medium">Model:</span> {{ $selectedProvider->default_model }}</p>
                         <p><span class="font-medium">Reasoning:</span> {{ $selectedProvider->default_reasoning_effort ?? 'model_default' }}</p>
-                        <p><span class="font-medium">5h used:</span> {{ $selectedProvider->rateLimitUsedPercent() !== null ? $selectedProvider->rateLimitUsedPercent() . '%' : 'n/a' }}</p>
-                        <p><span class="font-medium">Week used:</span> {{ $selectedProvider->weeklyRateLimitUsedPercent() !== null ? $selectedProvider->weeklyRateLimitUsedPercent() . '%' : 'n/a' }}</p>
+                        <p>
+                            <span class="font-medium">5h used:</span>
+                            @if ($isRefreshingProviderStats)
+                                <span class="inline-block h-4 w-12 animate-pulse rounded-full bg-gray-200 align-middle dark:bg-gray-700"></span>
+                            @else
+                                {{ $selectedProvider->rateLimitUsedPercent() !== null ? $selectedProvider->rateLimitUsedPercent() . '%' : 'n/a' }}
+                            @endif
+                        </p>
+                        <p>
+                            <span class="font-medium">Week used:</span>
+                            @if ($isRefreshingProviderStats)
+                                <span class="inline-block h-4 w-12 animate-pulse rounded-full bg-gray-200 align-middle dark:bg-gray-700"></span>
+                            @else
+                                {{ $selectedProvider->weeklyRateLimitUsedPercent() !== null ? $selectedProvider->weeklyRateLimitUsedPercent() . '%' : 'n/a' }}
+                            @endif
+                        </p>
                     @else
                         <p class="text-gray-500 dark:text-gray-400">Выбери провайдера, и здесь появится его текущая конфигурация.</p>
                     @endif

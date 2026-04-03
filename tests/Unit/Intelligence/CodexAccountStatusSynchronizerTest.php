@@ -6,9 +6,8 @@ namespace Tests\Unit\Intelligence;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Modules\Intelligence\Infrastructure\Codex\CodexAccountStatusSynchronizer;
-use Modules\Intelligence\Infrastructure\Codex\CodexAppServerClient;
+use Modules\Intelligence\Infrastructure\Codex\CodexAppServerClientContract;
 use Modules\Intelligence\Infrastructure\Codex\CodexAuthProcessManager;
-use Modules\Intelligence\Infrastructure\Codex\CodexProcessRunnerContract;
 use Modules\Intelligence\Infrastructure\Persistence\Models\AiProviderAccount;
 use Tests\TestCase;
 
@@ -37,17 +36,11 @@ final class CodexAccountStatusSynchronizerTest extends TestCase
             ],
         ]);
 
-        $runner = $this->createMock(CodexProcessRunnerContract::class);
-        $runner->expects($this->once())
-            ->method('runJsonSession')
-            ->willReturn([
-                'exit_code' => 1,
-                'output' => '',
-                'error_output' => 'unauthorized',
-                'decoded' => [],
-            ]);
-
-        $client = new CodexAppServerClient($runner);
+        $client = $this->createMock(CodexAppServerClientContract::class);
+        $client->expects($this->once())
+            ->method('readAccount')
+            ->willThrowException(new \Modules\Intelligence\Infrastructure\Codex\CodexUnauthorizedException('unauthorized'));
+        $client->expects($this->never())->method('readRateLimits');
         $authProcesses = $this->createMock(CodexAuthProcessManager::class);
         $authProcesses->expects($this->once())
             ->method('isRunning')

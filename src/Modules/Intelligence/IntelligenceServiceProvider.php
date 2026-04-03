@@ -17,6 +17,7 @@ use Modules\Intelligence\Application\Pipeline\Steps\ModerationStep;
 use Modules\Intelligence\Application\Pipeline\Steps\SentimentStep;
 use Modules\Intelligence\Application\Pipeline\Steps\TranslateStep;
 use Modules\Intelligence\Domain\Contracts\AiProviderAccountRepository;
+use Modules\Intelligence\Domain\Contracts\AiProviderAuthManager;
 use Modules\Intelligence\Domain\Contracts\AiProviderStatusManager;
 use Modules\Intelligence\Domain\Contracts\Classifier;
 use Modules\Intelligence\Domain\Contracts\EnrichedPublisher as EnrichedPublisherContract;
@@ -26,6 +27,7 @@ use Modules\Intelligence\Domain\Contracts\TitleGenerator;
 use Modules\Intelligence\Domain\Contracts\Translator;
 use Modules\Intelligence\Infrastructure\Codex\CodexAccountStatusSynchronizer;
 use Modules\Intelligence\Infrastructure\Codex\CodexAppServerClient;
+use Modules\Intelligence\Infrastructure\Codex\CodexAppServerClientContract;
 use Modules\Intelligence\Infrastructure\Codex\CodexAuthProcessManager;
 use Modules\Intelligence\Infrastructure\Codex\CodexExecNewsAnalyzer;
 use Modules\Intelligence\Infrastructure\Codex\CodexLoginManager;
@@ -56,9 +58,11 @@ final class IntelligenceServiceProvider extends ServiceProvider
         $this->app->singleton(CodexProcessRunnerContract::class, CodexProcessRunner::class);
         $this->app->singleton(CodexAuthProcessManager::class, ShellCodexAuthProcessManager::class);
         $this->app->singleton(CodexAppServerClient::class);
+        $this->app->singleton(CodexAppServerClientContract::class, CodexAppServerClient::class);
         $this->app->singleton(CodexAccountStatusSynchronizer::class);
         $this->app->singleton(CodexLoginManager::class);
         $this->app->singleton(AiProviderAccountRepository::class, EloquentAiProviderAccountRepository::class);
+        $this->app->singleton(AiProviderAuthManager::class, CodexLoginManager::class);
         $this->app->singleton(AiProviderStatusManager::class, CodexAccountStatusSynchronizer::class);
         $this->app->singleton(EnrichedPublisher::class, fn ($app) => new EnrichedPublisher(
             connection: $app->make(\PhpAmqpLib\Connection\AMQPStreamConnection::class),

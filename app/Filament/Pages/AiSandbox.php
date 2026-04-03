@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Pages;
 
+use App\Filament\Support\AiProviderStatsAutoRefresher;
 use BackedEnum;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
@@ -53,8 +54,12 @@ final class AiSandbox extends Page implements HasForms
 
     public ?string $errorMessage = null;
 
-    public function mount(ActiveAiProviderResolver $resolver): void
+    public bool $isRefreshingProviderStats = false;
+
+    public function mount(ActiveAiProviderResolver $resolver, AiProviderStatsAutoRefresher $autoRefresher): void
     {
+        $this->isRefreshingProviderStats = $autoRefresher->scheduleRefreshIfStale();
+
         $activeProvider = $resolver->resolveChatGptCodex();
 
         $this->getFormSchema()->fill([
@@ -64,6 +69,11 @@ final class AiSandbox extends Page implements HasForms
             'link' => 'https://example.com/news/sandbox',
             'content' => 'Компания OpenAI объявила о запуске новой компактной модели, которую можно использовать для быстрой аналитики и классификации материалов в редакционных системах.',
         ]);
+    }
+
+    public function syncProviderStatsRefreshState(AiProviderStatsAutoRefresher $autoRefresher): void
+    {
+        $this->isRefreshingProviderStats = $autoRefresher->isRefreshing();
     }
 
     public function form(Schema $schema): Schema

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Widgets;
 
 use App\Filament\Resources\AiProviderAccounts\AiProviderAccountResource;
+use App\Filament\Support\AiProviderStatsAutoRefresher;
 use Filament\Notifications\Notification;
 use Filament\Widgets\Widget;
 use Modules\Intelligence\Application\Services\SyncAiProviderStatsAction;
@@ -18,6 +19,18 @@ final class AiProviderStatusWidget extends Widget
     protected string $view = 'filament.widgets.ai-provider-status-widget';
 
     protected int|string|array $columnSpan = 'full';
+
+    public bool $isRefreshingProviderStats = false;
+
+    public function mount(AiProviderStatsAutoRefresher $autoRefresher): void
+    {
+        $this->isRefreshingProviderStats = $autoRefresher->scheduleRefreshIfStale();
+    }
+
+    public function syncProviderStatisticsState(AiProviderStatsAutoRefresher $autoRefresher): void
+    {
+        $this->isRefreshingProviderStats = $autoRefresher->isRefreshing();
+    }
 
     public function refreshProviderStatistics(): void
     {
@@ -60,6 +73,8 @@ final class AiProviderStatusWidget extends Widget
 
             return;
         }
+
+        $this->isRefreshingProviderStats = false;
 
         $notification->success()->send();
     }

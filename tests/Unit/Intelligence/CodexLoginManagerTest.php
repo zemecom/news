@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Tests\Unit\Intelligence;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Modules\Intelligence\Infrastructure\Codex\CodexAccountStatusSynchronizer;
-use Modules\Intelligence\Infrastructure\Codex\CodexAppServerClient;
+use Modules\Intelligence\Domain\Contracts\AiProviderStatusManager;
+use Modules\Intelligence\Domain\DTO\AiProviderProfile;
+use Modules\Intelligence\Infrastructure\Codex\CodexAppServerClientContract;
 use Modules\Intelligence\Infrastructure\Codex\CodexAuthProcessManager;
 use Modules\Intelligence\Infrastructure\Codex\CodexLoginManager;
-use Modules\Intelligence\Infrastructure\Codex\CodexProcessRunnerContract;
 use Modules\Intelligence\Infrastructure\Persistence\Models\AiProviderAccount;
 use Tests\TestCase;
 
@@ -23,9 +23,13 @@ final class CodexLoginManagerTest extends TestCase
             'auth_status' => AiProviderAccount::STATUS_NOT_AUTHENTICATED,
         ]);
 
-        $runner = $this->createMock(CodexProcessRunnerContract::class);
-        $client = new CodexAppServerClient($runner);
+        $client = $this->createMock(CodexAppServerClientContract::class);
         $authProcesses = $this->createMock(CodexAuthProcessManager::class);
+        $statusManager = $this->createMock(AiProviderStatusManager::class);
+        $statusManager->expects($this->never())->method('sync');
+        $statusManager->expects($this->never())->method('markUsageLimited');
+        $statusManager->expects($this->never())->method('markNotAuthenticated');
+        $statusManager->expects($this->never())->method('markError');
         $authProcesses->expects($this->once())
             ->method('startDeviceAuth')
             ->willReturnCallback(function (string $binary, string $codexHome, string $outputPath): int {
@@ -46,7 +50,7 @@ TEXT);
 
         $manager = new CodexLoginManager(
             $client,
-            new CodexAccountStatusSynchronizer($client, $authProcesses),
+            $statusManager,
             $authProcesses,
         );
 
@@ -81,29 +85,28 @@ TEXT);
             ],
         ]);
 
-        $runner = $this->createMock(CodexProcessRunnerContract::class);
-        $client = new CodexAppServerClient($runner);
+        $client = $this->createMock(CodexAppServerClientContract::class);
         $authProcesses = $this->createMock(CodexAuthProcessManager::class);
-        $authProcesses->expects($this->once())
-            ->method('terminate')
-            ->with(321);
+        $statusManager = $this->createMock(AiProviderStatusManager::class);
+        $authProcesses->expects($this->never())
+            ->method('terminate');
+        $statusManager->expects($this->once())
+            ->method('markNotAuthenticated')
+            ->with($this->callback(static function (AiProviderProfile $profile): bool {
+                return $profile->provider === AiProviderAccount::PROVIDER_CHATGPT_CODEX
+                    && $profile->slug === 'chatgpt-default';
+            }));
+        $statusManager->expects($this->never())->method('sync');
+        $statusManager->expects($this->never())->method('markUsageLimited');
+        $statusManager->expects($this->never())->method('markError');
 
         $manager = new CodexLoginManager(
             $client,
-            new CodexAccountStatusSynchronizer($client, $authProcesses),
+            $statusManager,
             $authProcesses,
         );
 
         $manager->cancelLogin($account);
-
-        $account->refresh();
-
-        $this->assertSame(AiProviderAccount::STATUS_NOT_AUTHENTICATED, $account->auth_status);
-        $this->assertNull($account->auth_mode);
-        $this->assertNull($account->auth_url);
-        $this->assertNull($account->login_id);
-        $this->assertNull($account->meta);
-        $this->assertFileDoesNotExist((string) $outputPath);
     }
 
     /**

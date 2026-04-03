@@ -40,7 +40,7 @@ final class Operations extends Page
     #[Override]
     public function getMaxContentWidth(): Width
     {
-        return Width::SevenExtraLarge;
+        return Width::ScreenTwoExtraLarge;
     }
 
     /**

@@ -49,6 +49,7 @@ final class AiProviderDashboardWidgetTest extends TestCase
                     'windowDurationMins' => 10_080,
                 ],
             ],
+            'last_status_checked_at' => now(),
         ]);
 
         Livewire::actingAs($admin)
@@ -85,6 +86,7 @@ final class AiProviderDashboardWidgetTest extends TestCase
             'auth_status' => AiProviderAccount::STATUS_AUTHENTICATED,
             'account_email' => 'admin@example.com',
             'plan_type' => 'plus',
+            'last_status_checked_at' => now(),
         ]);
 
         $statusManager = $this->createMock(AiProviderStatusManager::class);
@@ -103,5 +105,47 @@ final class AiProviderDashboardWidgetTest extends TestCase
         Livewire::actingAs($admin)
             ->test(AiProviderStatusWidget::class)
             ->call('refreshProviderStatistics');
+    }
+
+    public function test_widget_auto_refreshes_provider_stats_when_snapshot_is_stale(): void
+    {
+        $admin = User::query()->create([
+            'name' => 'Admin',
+            'email' => 'admin@example.com',
+            'password' => 'password',
+            'role' => 'admin',
+        ]);
+
+        AiProviderAccount::query()->create([
+            'slug' => 'chatgpt-default',
+            'provider' => AiProviderAccount::PROVIDER_CHATGPT_CODEX,
+            'display_name' => 'ChatGPT Codex',
+            'is_enabled' => true,
+            'codex_home_subpath' => 'chatgpt-default',
+            'default_model' => 'gpt-5.4-mini',
+            'default_reasoning_effort' => 'high',
+            'max_parallel_jobs' => 1,
+            'auth_status' => AiProviderAccount::STATUS_AUTHENTICATED,
+            'last_status_checked_at' => now()->subMinutes(6),
+        ]);
+
+        $statusManager = $this->createMock(AiProviderStatusManager::class);
+        $statusManager->expects($this->once())
+            ->method('sync')
+            ->with($this->callback(static function (AiProviderProfile $profile): bool {
+                return $profile->provider === AiProviderAccount::PROVIDER_CHATGPT_CODEX
+                    && $profile->slug === 'chatgpt-default';
+            }));
+        $statusManager->expects($this->never())->method('markUsageLimited');
+        $statusManager->expects($this->never())->method('markNotAuthenticated');
+        $statusManager->expects($this->never())->method('markError');
+
+        $this->app->instance(AiProviderStatusManager::class, $statusManager);
+
+        Livewire::actingAs($admin)
+            ->test(AiProviderStatusWidget::class)
+            ->assertSee('AI Provider')
+            ->assertSee('Updating usage data...')
+            ->assertSee('Updating weekly data...');
     }
 }
