@@ -11,7 +11,7 @@ AI‑агрегатор новостей в формате modular monolith на
 - Контракты: зависимости между слоями только через интерфейсы (Domain/Contracts)
 - Локальный HTTP-сервер: Laravel Octane + RoadRunner
 
-Правила размещения кода в `src` описаны в `docs/PROJECT_MEMORY.md`.
+Карта документации и маршруты чтения собраны в `docs/README.md`.
 
 ## Требования и установка
 
@@ -140,23 +140,14 @@ make logs          # Просмотр логов контейнеров
 
 ## Документация
 
-Документация теперь разложена по назначению:
+Основная точка входа в документацию: [docs/README.md](docs/README.md).
 
-1. `docs/README.md` — единая карта документации и маршруты чтения.
-2. `docs/start/` — практический onboarding и учебный путь для джуна.
-3. `docs/architecture/` — подробные архитектурные и runtime-разборы проекта.
-4. `docs/guides/` и `docs/reference/` — операционные playbook-документы, API и конфигурация.
-5. `docs/interview/` — interview pack и шпаргалки.
+Внутри `docs/` материалы разложены по назначению:
 
-Быстрые точки входа:
-
-- [docs/README.md](docs/README.md)
-- [docs/start/junior-onboarding.md](docs/start/junior-onboarding.md)
-- [docs/reference/api/news-api.md](docs/reference/api/news-api.md)
-- [docs/reference/config/env.md](docs/reference/config/env.md)
-- [docs/guides/runtime-operations.md](docs/guides/runtime-operations.md)
-- [docs/start/learning-path.md](docs/start/learning-path.md)
-- [docs/architecture/00-overview.md](docs/architecture/00-overview.md)
+1. `start/` — практический onboarding и учебный путь.
+2. `architecture/` — подробные архитектурные и runtime-разборы.
+3. `guides/` и `reference/` — операционные playbook-документы, API и конфигурация.
+4. `interview/` — interview pack и шпаргалки.
 
 ## Примечания
 

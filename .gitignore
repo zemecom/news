@@ -2,6 +2,7 @@
 *.txt
 *.cache
 .DS_Store
+.deptrac.cache
 .env
 .env.local
 .env.backup
@@ -23,6 +24,9 @@
 /storage/pail
 /artifacts/coverage/
 /docker/.data/
+/docker/.data/codex/
+/storage/app/.codex/
+/storage/logs/*.log
 /vendor
 Homestead.json
 Homestead.yaml
@@ -30,5 +34,13 @@ Thumbs.db
 docker-compose.override.yml
 rr
 /artifacts/docs/*.pdf
+.claude
+.continue
+.cursor
+.windsurf
+.roo
 .agent
 AGENTS.md
+docs/PROJECT_INTERFACE.md
+docs/PROJECT_MEMORY.md
+docs/PROJECT_STRUCTURE.md
