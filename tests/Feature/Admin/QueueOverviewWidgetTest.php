@@ -59,6 +59,6 @@ final class QueueOverviewWidgetTest extends TestCase
             ->assertSee('media_tasks')
             ->assertSee('Messages')
             ->assertSee('Consumers')
-            ->assertSee('Failed Jobs');
+            ->assertSee('Failed');
     }
 }

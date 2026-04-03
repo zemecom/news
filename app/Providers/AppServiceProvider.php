@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Services\Contracts\QueuePreviewClient;
 use App\Services\QdrantClient;
+use App\Services\RabbitMqManagementApiClient;
 use GuzzleHttp\Client;
 use Illuminate\Support\ServiceProvider;
 use Override;
@@ -33,6 +35,8 @@ class AppServiceProvider extends ServiceProvider
             read_write_timeout: 3.0,
             heartbeat: 30,
         ));
+
+        $this->app->singleton(QueuePreviewClient::class, RabbitMqManagementApiClient::class);
 
         $this->app->singleton(QdrantClient::class, function (): QdrantClient {
             $qdrantUrl = rtrim((string) config('qdrant.url', 'http://qdrant:6333'), '/');

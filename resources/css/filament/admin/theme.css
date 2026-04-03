@@ -130,3 +130,63 @@
         @apply brightness-110 shadow-md;
     }
 }
+
+.fi-body.fi-body-telescope {
+    --fi-telescope-topbar-height: 4rem;
+    --fi-telescope-toolbar-height: 3.5rem;
+
+    & .fi-main {
+        max-width: 100%;
+        height: 100%;
+        padding: 0;
+    }
+
+    & .fi-main-ctn {
+        min-height: calc(100dvh - 4rem);
+    }
+}
+
+.fi-telescope-page {
+    display: flex;
+    min-height: calc(100dvh - var(--fi-telescope-topbar-height));
+    flex-direction: column;
+}
+
+.fi-telescope-toolbar {
+    display: flex;
+    justify-content: flex-end;
+    padding: 0.75rem 1rem;
+}
+
+.fi-telescope-frame {
+    height: calc(100dvh - var(--fi-telescope-topbar-height) - var(--fi-telescope-toolbar-height));
+    min-height: calc(100dvh - var(--fi-telescope-topbar-height) - var(--fi-telescope-toolbar-height));
+    flex: 1 1 auto;
+    overflow: hidden;
+    border-top: 1px solid color-mix(in oklab, var(--gray-200) 100%, transparent);
+    background: white;
+}
+
+.dark .fi-telescope-frame {
+    border-top-color: color-mix(in oklab, var(--gray-800) 100%, transparent);
+}
+
+.fi-telescope-iframe {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    background: white;
+}
+
+@media (min-width: 768px) {
+    .fi-telescope-toolbar {
+        padding-inline: 1.5rem;
+    }
+}
+
+@media (min-width: 1024px) {
+    .fi-telescope-toolbar {
+        padding-inline: 2rem;
+    }
+}
