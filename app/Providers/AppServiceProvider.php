@@ -23,7 +23,7 @@ class AppServiceProvider extends ServiceProvider
         /** @var array<string, mixed> $host */
         $host = $rabbitmq['hosts'][0] ?? [];
 
-        $this->app->singleton(AMQPStreamConnection::class, fn () => new AMQPStreamConnection(
+        $this->app->scoped(AMQPStreamConnection::class, fn () => new AMQPStreamConnection(
             host: (string) ($host['host'] ?? 'rabbitmq'),
             port: (int) ($host['port'] ?? 5672),
             user: (string) ($host['user'] ?? 'guest'),

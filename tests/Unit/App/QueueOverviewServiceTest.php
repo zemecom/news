@@ -38,23 +38,31 @@ final class QueueOverviewServiceTest extends TestCase
             ],
         ]);
 
-        $channel = $this->createMock(AMQPChannel::class);
-        $channel->expects($this->exactly(3))
+        $crawlerChannel = $this->createMock(AMQPChannel::class);
+        $crawlerChannel->expects($this->once())
             ->method('queue_declare')
-            ->willReturnCallback(static function (string $queue): array {
-                return match ($queue) {
-                    'crawler_tasks' => [$queue, 4, 1],
-                    'intelligence_tasks' => [$queue, 9, 2],
-                    'media_tasks' => [$queue, 0, 0],
-                    default => [$queue, 0, 0],
-                };
-            });
-        $channel->expects($this->once())->method('close');
+            ->with('crawler_tasks', true, true, false, false)
+            ->willReturn(['crawler_tasks', 4, 1]);
+        $crawlerChannel->expects($this->once())->method('close');
+
+        $intelligenceChannel = $this->createMock(AMQPChannel::class);
+        $intelligenceChannel->expects($this->once())
+            ->method('queue_declare')
+            ->with('intelligence_tasks', true, true, false, false)
+            ->willReturn(['intelligence_tasks', 9, 2]);
+        $intelligenceChannel->expects($this->once())->method('close');
+
+        $mediaChannel = $this->createMock(AMQPChannel::class);
+        $mediaChannel->expects($this->once())
+            ->method('queue_declare')
+            ->with('media_tasks', true, true, false, false)
+            ->willReturn(['media_tasks', 0, 0]);
+        $mediaChannel->expects($this->once())->method('close');
 
         $connection = $this->createMock(AMQPStreamConnection::class);
-        $connection->expects($this->once())
+        $connection->expects($this->exactly(3))
             ->method('channel')
-            ->willReturn($channel);
+            ->willReturnOnConsecutiveCalls($crawlerChannel, $intelligenceChannel, $mediaChannel);
 
         $service = new QueueOverviewService($connection);
         $summaries = collect($service->getQueueSummaries())->keyBy('queue');
@@ -83,7 +91,7 @@ final class QueueOverviewServiceTest extends TestCase
     public function test_it_marks_queues_as_unavailable_when_rabbitmq_connection_fails(): void
     {
         $connection = $this->createMock(AMQPStreamConnection::class);
-        $connection->expects($this->once())
+        $connection->expects($this->exactly(3))
             ->method('channel')
             ->willThrowException(new RuntimeException('RabbitMQ is unavailable'));
 
@@ -95,5 +103,44 @@ final class QueueOverviewServiceTest extends TestCase
         $this->assertSame('RabbitMQ is unavailable', $summaries[0]['error']);
         $this->assertNull($summaries[0]['message_count']);
         $this->assertFalse($summaries[0]['worker_active']);
+    }
+
+    public function test_it_keeps_reading_other_queues_after_missing_queue_closes_the_first_channel(): void
+    {
+        $missingQueueChannel = $this->createMock(AMQPChannel::class);
+        $missingQueueChannel->expects($this->once())
+            ->method('queue_declare')
+            ->with('crawler_tasks', true, true, false, false)
+            ->willThrowException(new RuntimeException("NOT_FOUND - no queue 'crawler_tasks' in vhost '/'"));
+        $missingQueueChannel->expects($this->once())->method('close')
+            ->willThrowException(new RuntimeException('Channel connection is closed'));
+
+        $intelligenceChannel = $this->createMock(AMQPChannel::class);
+        $intelligenceChannel->expects($this->once())
+            ->method('queue_declare')
+            ->with('intelligence_tasks', true, true, false, false)
+            ->willReturn(['intelligence_tasks', 2, 1]);
+        $intelligenceChannel->expects($this->once())->method('close');
+
+        $mediaChannel = $this->createMock(AMQPChannel::class);
+        $mediaChannel->expects($this->once())
+            ->method('queue_declare')
+            ->with('media_tasks', true, true, false, false)
+            ->willReturn(['media_tasks', 0, 0]);
+        $mediaChannel->expects($this->once())->method('close');
+
+        $connection = $this->createMock(AMQPStreamConnection::class);
+        $connection->expects($this->exactly(3))
+            ->method('channel')
+            ->willReturnOnConsecutiveCalls($missingQueueChannel, $intelligenceChannel, $mediaChannel);
+
+        $service = new QueueOverviewService($connection);
+        $summaries = collect($service->getQueueSummaries())->keyBy('queue');
+
+        $this->assertSame('unavailable', $summaries['crawler_tasks']['status']);
+        $this->assertStringContainsString("NOT_FOUND - no queue 'crawler_tasks'", (string) $summaries['crawler_tasks']['error']);
+        $this->assertSame('ok', $summaries['intelligence_tasks']['status']);
+        $this->assertSame(2, $summaries['intelligence_tasks']['message_count']);
+        $this->assertSame('ok', $summaries['media_tasks']['status']);
     }
 }

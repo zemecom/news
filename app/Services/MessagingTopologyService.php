@@ -23,6 +23,38 @@ final readonly class MessagingTopologyService
 
     public function declareTopologyOn(AMQPChannel $channel): void
     {
+        $this->declareLaravelQueueTopologyOn($channel);
+        $this->declareDeliveryMessagingTopologyOn($channel);
+    }
+
+    private function declareLaravelQueueTopologyOn(AMQPChannel $channel): void
+    {
+        $exchangeName = (string) config('queue.connections.rabbitmq.options.queue.exchange', 'news.jobs');
+        $exchangeType = (string) config('queue.connections.rabbitmq.options.queue.exchange_type', 'direct');
+
+        $channel->exchange_declare(
+            exchange: $exchangeName,
+            type: $exchangeType,
+            passive: false,
+            durable: true,
+            auto_delete: false,
+        );
+
+        foreach (QueueOverviewService::QUEUES as $queueName) {
+            $channel->queue_declare(
+                queue: $queueName,
+                passive: false,
+                durable: true,
+                exclusive: false,
+                auto_delete: false,
+            );
+
+            $channel->queue_bind($queueName, $exchangeName, $queueName);
+        }
+    }
+
+    private function declareDeliveryMessagingTopologyOn(AMQPChannel $channel): void
+    {
         $exchangeName = (string) config('messaging.exchange.news_flow.name', 'news_flow');
         $exchangeType = (string) config('messaging.exchange.news_flow.type', 'topic');
 

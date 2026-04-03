@@ -14,7 +14,7 @@ final readonly class QueueOverviewService
     /**
      * @var list<string>
      */
-    private const array QUEUES = [
+    public const array QUEUES = [
         'crawler_tasks',
         'intelligence_tasks',
         'media_tasks',
@@ -59,43 +59,12 @@ final readonly class QueueOverviewService
             ->all();
 
         $summaries = [];
-        $channel = null;
-        $connectionError = null;
-
-        try {
-            $channel = $this->connection->channel();
-        } catch (Throwable $e) {
-            $connectionError = $e->getMessage();
-        }
 
         foreach (self::QUEUES as $queueName) {
             $stats = $failedStats[$queueName] ?? ['failed_count' => 0, 'last_failed_at' => null];
 
-            if (! $channel instanceof AMQPChannel) {
-                $summaries[] = [
-                    'queue' => $queueName,
-                    'status' => 'unavailable',
-                    'message_count' => null,
-                    'consumer_count' => null,
-                    'worker_active' => false,
-                    'failed_count' => (int) $stats['failed_count'],
-                    'last_failed_at' => $stats['last_failed_at'],
-                    'error' => $connectionError,
-                ];
-
-                continue;
-            }
-
             try {
-                $queueState = $channel->queue_declare(
-                    queue: $queueName,
-                    passive: true,
-                    durable: true,
-                    exclusive: false,
-                    auto_delete: false,
-                );
-                $messageCount = is_array($queueState) ? (int) ($queueState[1] ?? 0) : 0;
-                $consumerCount = is_array($queueState) ? (int) ($queueState[2] ?? 0) : 0;
+                [$messageCount, $consumerCount] = $this->readQueueState($queueName);
 
                 $summaries[] = [
                     'queue' => $queueName,
@@ -121,14 +90,40 @@ final readonly class QueueOverviewService
             }
         }
 
-        if ($channel instanceof AMQPChannel) {
-            try {
-                $channel->close();
-            } catch (Throwable) {
-            }
-        }
-
         return $summaries;
+    }
+
+    /**
+     * @return array{0:int,1:int}
+     */
+    private function readQueueState(string $queueName): array
+    {
+        $channel = $this->connection->channel();
+
+        try {
+            $queueState = $channel->queue_declare(
+                queue: $queueName,
+                passive: true,
+                durable: true,
+                exclusive: false,
+                auto_delete: false,
+            );
+
+            return [
+                is_array($queueState) ? (int) ($queueState[1] ?? 0) : 0,
+                is_array($queueState) ? (int) ($queueState[2] ?? 0) : 0,
+            ];
+        } finally {
+            $this->closeChannel($channel);
+        }
+    }
+
+    private function closeChannel(AMQPChannel $channel): void
+    {
+        try {
+            $channel->close();
+        } catch (Throwable) {
+        }
     }
 
     /**

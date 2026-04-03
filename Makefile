@@ -62,6 +62,7 @@ setup-local:
 	cp .env.example .env || true
 	$(ARTISAN) key:generate
 	$(ARTISAN) migrate
+	$(ARTISAN) news:messaging:setup
 	$(ARTISAN) storage:link || true
 	@echo "Setup complete! Run 'make dev' to start."
 
@@ -72,6 +73,7 @@ setup-ci:
 	cp .env.example .env || true
 	$(ARTISAN) key:generate
 	$(ARTISAN) migrate:fresh --seed --force
+	$(ARTISAN) news:messaging:setup
 	$(ARTISAN) storage:link || true
 
 migrate:
