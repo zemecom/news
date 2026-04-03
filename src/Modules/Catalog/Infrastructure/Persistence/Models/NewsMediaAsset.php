@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Modules\Catalog\Infrastructure\Persistence\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
@@ -20,7 +22,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property string|null $checksum_sha256
  * @property string $download_status
  * @property string|null $last_error
- * @property \Illuminate\Support\Carbon|null $downloaded_at
+ * @property Carbon|null $downloaded_at
  */
 final class NewsMediaAsset extends Model
 {
@@ -50,9 +52,9 @@ final class NewsMediaAsset extends Model
     ];
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<NewsItem, $this>
+     * @return BelongsTo<NewsItem, $this>
      */
-    public function newsItem(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function newsItem(): BelongsTo
     {
         return $this->belongsTo(NewsItem::class, 'news_item_id');
     }

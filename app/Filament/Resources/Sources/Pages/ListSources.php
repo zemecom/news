@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Resources\Sources\Pages;
 
 use App\Filament\Resources\Sources\SourceResource;
+use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Support\Enums\Width;
@@ -18,7 +19,7 @@ final class ListSources extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            \Filament\Actions\Action::make('parse_all')
+            Action::make('parse_all')
                 ->label('Run Crawler (All)')
                 ->icon('heroicon-o-play')
                 ->color('success')

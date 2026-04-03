@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use Carbon\Carbon;
 use Carbon\CarbonImmutable;
 use Illuminate\Console\Command;
+use Illuminate\Database\Eloquent\Collection;
 use Modules\Catalog\Infrastructure\Persistence\Models\NewsItem;
 use Modules\Catalog\Infrastructure\Persistence\Models\Source;
+use Modules\Crawler\Application\Actions\FeedFetcherAction;
+use Modules\Crawler\Application\Jobs\FetchSourceJob;
 use Modules\Shared\Application\Services\SourceRuntimeHealthPolicy;
 use Throwable;
 
@@ -34,7 +38,7 @@ final class NewsCrawlCommand extends Command
             $query->where('id', (int) $sourceId);
         }
 
-        /** @var \Illuminate\Database\Eloquent\Collection<int, Source> $sources */
+        /** @var Collection<int, Source> $sources */
         $sources = $query->get([
             'id',
             'url',
@@ -52,10 +56,10 @@ final class NewsCrawlCommand extends Command
         }
 
         $dateFromOption = $this->option('date-from');
-        $dateFrom = is_string($dateFromOption) ? \Carbon\Carbon::parse($dateFromOption) : null;
+        $dateFrom = is_string($dateFromOption) ? Carbon::parse($dateFromOption) : null;
 
         $dateToOption = $this->option('date-to');
-        $dateTo = is_string($dateToOption) ? \Carbon\Carbon::parse($dateToOption) : null;
+        $dateTo = is_string($dateToOption) ? Carbon::parse($dateToOption) : null;
 
         $limitOption = $this->option('limit');
         $limit = is_numeric($limitOption) ? (int) $limitOption : null;
@@ -84,8 +88,8 @@ final class NewsCrawlCommand extends Command
         $now = CarbonImmutable::now();
 
         if ($isSync) {
-            /** @var \Modules\Crawler\Application\Actions\FeedFetcherAction $fetcher */
-            $fetcher = app(\Modules\Crawler\Application\Actions\FeedFetcherAction::class);
+            /** @var FeedFetcherAction $fetcher */
+            $fetcher = app(FeedFetcherAction::class);
         }
 
         /** @var Source $source */
@@ -161,7 +165,7 @@ final class NewsCrawlCommand extends Command
                         }
                     }
 
-                    \Modules\Crawler\Application\Jobs\FetchSourceJob::dispatch(
+                    FetchSourceJob::dispatch(
                         source: [
                             'id' => $sourceId,
                             'url' => $sourceUrl,

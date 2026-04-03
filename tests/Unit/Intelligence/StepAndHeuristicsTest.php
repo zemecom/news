@@ -8,6 +8,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Modules\Catalog\Infrastructure\Persistence\Models\NewsItem;
 use Modules\Catalog\Infrastructure\Persistence\Models\Source;
+use Modules\Intelligence\Application\Pipeline\Steps\AntiClickbaitStep;
 use Modules\Intelligence\Application\Pipeline\Steps\ChatGptCodexEnrichmentStep;
 use Modules\Intelligence\Application\Pipeline\Steps\ClassifyStep;
 use Modules\Intelligence\Application\Pipeline\Steps\FinalizeStep;
@@ -20,6 +21,7 @@ use Modules\Intelligence\Domain\Contracts\AiProviderStatusManager;
 use Modules\Intelligence\Domain\Contracts\Classifier;
 use Modules\Intelligence\Domain\Contracts\NewsAnalyzer;
 use Modules\Intelligence\Domain\Contracts\SentimentAnalyzer;
+use Modules\Intelligence\Domain\Contracts\TitleGenerator;
 use Modules\Intelligence\Domain\Contracts\Translator;
 use Modules\Intelligence\Domain\DTO\NewsAnalysisResult;
 use Modules\Intelligence\Domain\Exceptions\AiProviderRateLimitException;
@@ -29,6 +31,7 @@ use Modules\Intelligence\Infrastructure\LLM\KeywordClassifier;
 use Modules\Intelligence\Infrastructure\LLM\KeywordSentimentAnalyzer;
 use Modules\Intelligence\Infrastructure\LLM\ObjectivelyTitleGenerator;
 use Modules\Intelligence\Infrastructure\Persistence\Models\AiProviderAccount;
+use Modules\Shared\Domain\Contracts\NewsStore;
 use Modules\Shared\Domain\DTO\EnrichedNewsData;
 use Modules\Shared\Domain\DTO\RawNewsData;
 use Modules\Shared\Domain\Enum\NewsStatus;
@@ -382,13 +385,13 @@ final class StepAndHeuristicsTest extends TestCase
 
     public function test_anti_clickbait_step_generates_title_only_when_missing(): void
     {
-        $generator = $this->createMock(\Modules\Intelligence\Domain\Contracts\TitleGenerator::class);
+        $generator = $this->createMock(TitleGenerator::class);
         $generator->expects($this->once())
             ->method('generate')
             ->with('Some content', 'Original title')
             ->willReturn('Generated title');
 
-        $step = new \Modules\Intelligence\Application\Pipeline\Steps\AntiClickbaitStep($generator);
+        $step = new AntiClickbaitStep($generator);
 
         /** @var RawNewsData $result */
         $result = $step->process($this->rawNews([
@@ -430,7 +433,7 @@ final class StepAndHeuristicsTest extends TestCase
 
     private function noopRuntimeRecorder(): NewsAnalysisRuntimeRecorder
     {
-        return new NewsAnalysisRuntimeRecorder(app(\Modules\Shared\Domain\Contracts\NewsStore::class));
+        return new NewsAnalysisRuntimeRecorder(app(NewsStore::class));
     }
 
     private function createPersistedNewsItem(): NewsItem

@@ -17,6 +17,7 @@ use Filament\Pages\Page;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
+use Filament\Support\Enums\Width;
 use LogicException;
 use Modules\Intelligence\Application\Services\ActiveAiProviderResolver;
 use Modules\Intelligence\Application\Services\RunAiSandboxAction;
@@ -217,9 +218,9 @@ final class AiSandbox extends Page implements HasForms
     }
 
     #[Override]
-    public function getMaxContentWidth(): \Filament\Support\Enums\Width
+    public function getMaxContentWidth(): Width
     {
-        return \Filament\Support\Enums\Width::Full;
+        return Width::Full;
     }
 
     /**

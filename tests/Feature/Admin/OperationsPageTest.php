@@ -14,7 +14,6 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use Livewire\Livewire;
 use Modules\Intelligence\Infrastructure\Persistence\Models\AiProviderAccount;
 use PhpAmqpLib\Channel\AMQPChannel;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
@@ -175,8 +174,7 @@ final class OperationsPageTest extends TestCase
         });
         $this->app->instance(QueueManagementService::class, $queueManagement);
 
-        Livewire::actingAs($admin)
-            ->test(Operations::class)
+        $this->livewireAs($admin, Operations::class)
             ->call('processOneQueueJob', 'crawler_tasks')
             ->call('purgeQueue', 'crawler_tasks')
             ->assertHasNoErrors();
@@ -200,8 +198,8 @@ final class OperationsPageTest extends TestCase
             ->zeroOrMoreTimes()
             ->andReturn('');
 
-        Livewire::actingAs($admin)
-            ->test(Topbar::class)
-            ->callAction('reload_roadrunner');
+        $this->livewireAs($admin, Topbar::class)
+            ->call('mountAction', 'reload_roadrunner')
+            ->call('callMountedAction');
     }
 }

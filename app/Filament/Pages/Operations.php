@@ -12,6 +12,7 @@ use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Support\Enums\Width;
 use Filament\Support\Icons\Heroicon;
+use Filament\Widgets\Widget;
 use Override;
 use Throwable;
 use UnitEnum;
@@ -44,7 +45,7 @@ final class Operations extends Page
     }
 
     /**
-     * @return array<class-string<\Filament\Widgets\Widget>>
+     * @return array<class-string<Widget>>
      */
     #[Override]
     protected function getHeaderWidgets(): array

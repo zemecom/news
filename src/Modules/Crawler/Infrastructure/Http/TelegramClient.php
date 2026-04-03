@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Modules\Crawler\Infrastructure\Http;
 
+use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
@@ -11,6 +12,7 @@ use Modules\Crawler\Domain\Contracts\TelegramClient as TelegramClientContract;
 use Modules\Crawler\Infrastructure\Security\SourceUrlPolicy;
 use Modules\Crawler\Infrastructure\Services\TelegramParserResolver;
 use Saloon\Enums\Method;
+use Saloon\Http\Request;
 use Saloon\Http\Response;
 
 final readonly class TelegramClient implements TelegramClientContract
@@ -21,7 +23,7 @@ final readonly class TelegramClient implements TelegramClientContract
         private SourceUrlPolicy $sourceUrlPolicy,
     ) {}
 
-    public function fetch(string $channel, ?\Carbon\Carbon $dateFrom = null, ?\Carbon\Carbon $dateTo = null, ?int $limit = null): Collection
+    public function fetch(string $channel, ?Carbon $dateFrom = null, ?Carbon $dateTo = null, ?int $limit = null): Collection
     {
         $channelName = $this->resolveChannelName($channel);
         $baseUrl = sprintf('https://t.me/s/%s', $channelName);
@@ -72,7 +74,7 @@ final readonly class TelegramClient implements TelegramClientContract
             foreach ($pageItems as $item) {
                 // Date filtering
                 if (isset($item['pubDate'])) {
-                    $pubDate = \Carbon\Carbon::parse($item['pubDate'])->setTimezone('UTC');
+                    $pubDate = Carbon::parse($item['pubDate'])->setTimezone('UTC');
                     $lastPageItemDate = $pubDate;
 
                     $from = $dateFrom ? $dateFrom->copy()->setTimezone('UTC') : null;
@@ -137,7 +139,7 @@ final readonly class TelegramClient implements TelegramClientContract
     private function request(string $url, bool $isAjax = false): Response
     {
         return $this->connector->send(
-            new class($url, $isAjax) extends \Saloon\Http\Request
+            new class($url, $isAjax) extends Request
             {
                 protected Method $method = Method::GET;
 

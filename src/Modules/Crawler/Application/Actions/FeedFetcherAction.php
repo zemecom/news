@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace Modules\Crawler\Application\Actions;
 
+use Carbon\Carbon;
+use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
 use Modules\Crawler\Application\Services\RawNewsFactory;
+use Modules\Crawler\Domain\Contracts\Deduplicator;
 use Modules\Crawler\Domain\Contracts\RawPublisher;
 use Modules\Crawler\Domain\Contracts\RssClient;
 use Modules\Crawler\Domain\Contracts\TelegramClient;
@@ -32,15 +35,15 @@ final readonly class FeedFetcherAction
         private TelegramClient $telegramClient,
         private RawPublisher $publisher,
         private RawNewsFactory $rawNewsFactory,
-        private \Modules\Crawler\Domain\Contracts\Deduplicator $deduplicator,
-        private \Illuminate\Contracts\Events\Dispatcher $events,
+        private Deduplicator $deduplicator,
+        private Dispatcher $events,
     ) {}
 
     /**
      * @param  array{id:int,url:string,type:string,language_default:string|null}  $source
      * @return array{total: int, new: int, duplicates: int}
      */
-    public function __invoke(array $source, ?\Carbon\Carbon $dateFrom = null, ?\Carbon\Carbon $dateTo = null, ?int $limit = null): array
+    public function __invoke(array $source, ?Carbon $dateFrom = null, ?Carbon $dateTo = null, ?int $limit = null): array
     {
         $logger = Log::channel('stderr');
         $logger->info(sprintf('[Fetcher] Starting action for source #%d (%s)', $source['id'], $source['url']));

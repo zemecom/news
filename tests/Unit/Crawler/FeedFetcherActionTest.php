@@ -4,17 +4,21 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Crawler;
 
+use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
 use Modules\Crawler\Application\Actions\FeedFetcherAction;
 use Modules\Crawler\Application\Services\IncomingContentSanitizer;
 use Modules\Crawler\Application\Services\RawNewsFactory;
+use Modules\Crawler\Domain\Contracts\Deduplicator;
 use Modules\Crawler\Domain\Contracts\RawPublisher;
 use Modules\Crawler\Domain\Contracts\RssClient;
 use Modules\Crawler\Domain\Contracts\TelegramClient;
 use Modules\Shared\Application\Services\FingerprintGenerator;
 use Modules\Shared\Domain\DTO\RawNewsData;
+use Modules\Shared\Domain\Events\SourceFetchFailed;
+use Modules\Shared\Domain\Events\SourceFetchSucceeded;
 use Tests\TestCase;
 
 final class FeedFetcherActionTest extends TestCase
@@ -67,13 +71,13 @@ final class FeedFetcherActionTest extends TestCase
                 return true;
             }));
 
-        $deduplicator = $this->createMock(\Modules\Crawler\Domain\Contracts\Deduplicator::class);
+        $deduplicator = $this->createMock(Deduplicator::class);
         $deduplicator->method('exists')->willReturn(false);
 
-        $events = $this->createMock(\Illuminate\Contracts\Events\Dispatcher::class);
+        $events = $this->createMock(Dispatcher::class);
         $events->expects($this->once())
             ->method('dispatch')
-            ->with($this->isInstanceOf(\Modules\Shared\Domain\Events\SourceFetchSucceeded::class));
+            ->with($this->isInstanceOf(SourceFetchSucceeded::class));
 
         $action = new FeedFetcherAction($rssClient, $telegramClient, $publisher, $rawNewsFactory, $deduplicator, $events);
         $action($source);
@@ -105,11 +109,11 @@ final class FeedFetcherActionTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Unsupported source type: custom');
 
-        $deduplicator = $this->createMock(\Modules\Crawler\Domain\Contracts\Deduplicator::class);
-        $events = $this->createMock(\Illuminate\Contracts\Events\Dispatcher::class);
+        $deduplicator = $this->createMock(Deduplicator::class);
+        $events = $this->createMock(Dispatcher::class);
         $events->expects($this->once())
             ->method('dispatch')
-            ->with($this->isInstanceOf(\Modules\Shared\Domain\Events\SourceFetchFailed::class));
+            ->with($this->isInstanceOf(SourceFetchFailed::class));
 
         $action = new FeedFetcherAction($rssClient, $telegramClient, $publisher, $rawNewsFactory, $deduplicator, $events);
         $action([

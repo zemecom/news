@@ -1,6 +1,12 @@
 <?php
 
 declare(strict_types=1);
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Query\Builder;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Redis;
 
 arch('controllers_do_not_use_models_directly', function () {
     expect('App\\Http\\Controllers')
@@ -9,7 +15,7 @@ arch('controllers_do_not_use_models_directly', function () {
 
 arch('disallow_http_facade', function () {
     expect('App')
-        ->not->toUse([\Illuminate\Support\Facades\Http::class]);
+        ->not->toUse([Http::class]);
 });
 
 arch('modules_respect_boundaries', function () {
@@ -53,11 +59,11 @@ arch('application_layer_does_not_depend_on_infrastructure', function () {
 arch('controllers_are_thin', function () {
     expect('App\\Http\\Controllers')
         ->not->toUse([
-            \Illuminate\Support\Facades\DB::class,
-            \Illuminate\Support\Facades\Cache::class,
-            \Illuminate\Support\Facades\Http::class,
-            \Illuminate\Support\Facades\Redis::class,
-            \Illuminate\Database\Eloquent\Model::class,
-            \Illuminate\Database\Query\Builder::class,
+            DB::class,
+            Cache::class,
+            Http::class,
+            Redis::class,
+            Model::class,
+            Builder::class,
         ]);
 });

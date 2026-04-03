@@ -10,7 +10,6 @@ use Illuminate\Events\CallQueuedListener;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Queue;
-use Livewire\Livewire;
 use Modules\Catalog\Infrastructure\Persistence\Models\NewsItem;
 use Modules\Catalog\Infrastructure\Persistence\Models\Source;
 use Modules\Intelligence\Application\Listeners\ProcessRawNewsListener;
@@ -28,10 +27,9 @@ final class NewsAdminActionsTest extends TestCase
         $admin = $this->createAdmin();
         $news = $this->createNewsItem('fp-record-action');
 
-        Livewire::actingAs($admin)
-            ->test(ListNews::class)
-            ->loadTable()
-            ->callTableColumnAction('ai_analysis_action', $news);
+        $this->livewireAs($admin, ListNews::class)
+            ->call('loadTable')
+            ->call('callTableColumnAction', 'ai_analysis_action', (string) $news->getKey());
 
         Queue::assertPushedOn(
             'intelligence_tasks',
@@ -54,10 +52,9 @@ final class NewsAdminActionsTest extends TestCase
         $admin = $this->createAdmin();
         $news = $this->createNewsItem('fp-record-serialization');
 
-        Livewire::actingAs($admin)
-            ->test(ListNews::class)
-            ->loadTable()
-            ->callTableColumnAction('ai_analysis_action', $news);
+        $this->livewireAs($admin, ListNews::class)
+            ->call('loadTable')
+            ->call('callTableColumnAction', 'ai_analysis_action', (string) $news->getKey());
 
         $this->assertDatabaseCount('jobs', 1);
 
@@ -75,9 +72,9 @@ final class NewsAdminActionsTest extends TestCase
         $first = $this->createNewsItem('fp-bulk-1');
         $second = $this->createNewsItem('fp-bulk-2');
 
-        Livewire::actingAs($admin)
-            ->test(ListNews::class)
-            ->loadTable()
+        $this->livewireAs($admin, ListNews::class)
+            ->call('loadTable')
+            /** @phpstan-ignore-next-line */
             ->callTableBulkAction('reanalyze_selected', [$first, $second]);
 
         Queue::assertPushedOn(
@@ -112,9 +109,9 @@ final class NewsAdminActionsTest extends TestCase
             ],
         ]);
 
-        Livewire::actingAs($admin)
-            ->test(ListNews::class)
-            ->loadTable()
+        $this->livewireAs($admin, ListNews::class)
+            ->call('loadTable')
+            /** @phpstan-ignore-next-line */
             ->callAction('enrich_missing_ai_metadata');
 
         Queue::assertPushedTimes(CallQueuedListener::class, 1);
@@ -149,9 +146,9 @@ final class NewsAdminActionsTest extends TestCase
             ],
         ]);
 
-        Livewire::actingAs($admin)
-            ->test(ListNews::class)
-            ->loadTable()
+        $this->livewireAs($admin, ListNews::class)
+            ->call('loadTable')
+            /** @phpstan-ignore-next-line */
             ->callAction('refresh_ai_metadata');
 
         Queue::assertPushedTimes(CallQueuedListener::class, 2);

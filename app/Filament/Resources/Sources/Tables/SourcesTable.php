@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources\Sources\Tables;
 
+use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 
 final class SourcesTable
 {
@@ -34,7 +36,7 @@ final class SourcesTable
                     }),
                 IconColumn::make('is_active')
                     ->boolean()
-                    ->action(function (\Illuminate\Database\Eloquent\Model $record, $column) {
+                    ->action(function (Model $record, $column) {
                         $name = $column->getName();
                         $record->update([$name => ! $record->$name]);
                     }),
@@ -66,7 +68,7 @@ final class SourcesTable
             ])
             ->actions([
                 EditAction::make(),
-                \Filament\Actions\Action::make('parse')
+                Action::make('parse')
                     ->label('Run')
                     ->icon('heroicon-o-play')
                     ->modalContent(fn ($record) => view('filament.components.crawler-modal', ['sourceId' => $record->id]))

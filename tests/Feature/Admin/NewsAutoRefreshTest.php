@@ -8,7 +8,6 @@ use App\Filament\Resources\News\Pages\ListNews;
 use App\Models\AdminSetting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Livewire\Livewire;
 use Modules\Catalog\Infrastructure\Persistence\Models\NewsItem;
 use Modules\Catalog\Infrastructure\Persistence\Models\Source;
 use Modules\Shared\Domain\Enum\NewsStatus;
@@ -33,9 +32,8 @@ final class NewsAutoRefreshTest extends TestCase
             'news_auto_refresh_interval_seconds' => 15,
         ]);
 
-        $component = Livewire::actingAs($admin)
-            ->test(ListNews::class)
-            ->loadTable();
+        $component = $this->livewireAs($admin, ListNews::class)
+            ->call('loadTable');
 
         $this->assertSame('default', $component->instance()->newsAutoRefreshSelection);
         $this->assertSame('15s', $component->instance()->newsAutoRefreshInterval());
@@ -57,9 +55,8 @@ final class NewsAutoRefreshTest extends TestCase
             'news_auto_refresh_interval_seconds' => 15,
         ]);
 
-        $component = Livewire::actingAs($admin)
-            ->test(ListNews::class)
-            ->loadTable()
+        $component = $this->livewireAs($admin, ListNews::class)
+            ->call('loadTable')
             ->call('setNewsAutoRefreshSelection', '1s')
             ->assertSet('newsAutoRefreshSelection', '1s');
 
@@ -83,9 +80,8 @@ final class NewsAutoRefreshTest extends TestCase
             'news_auto_refresh_interval_seconds' => 15,
         ]);
 
-        $component = Livewire::actingAs($admin)
-            ->test(ListNews::class)
-            ->loadTable()
+        $component = $this->livewireAs($admin, ListNews::class)
+            ->call('loadTable')
             ->call('setNewsAutoRefreshSelection', 'off')
             ->assertSet('newsAutoRefreshSelection', 'off');
 
@@ -131,9 +127,8 @@ final class NewsAutoRefreshTest extends TestCase
             'published_at' => now()->subMinute(),
         ]);
 
-        $component = Livewire::actingAs($admin)
-            ->test(ListNews::class)
-            ->loadTable()
+        $component = $this->livewireAs($admin, ListNews::class)
+            ->call('loadTable')
             ->assertSee('Not Analyzed')
             ->assertSeeHtml('wire:poll.1s="refreshNewsPage"');
 

@@ -25,6 +25,7 @@ use Laravel\Octane\Listeners\FlushUploadedFiles;
 use Laravel\Octane\Listeners\ReportException;
 use Laravel\Octane\Listeners\StopWorkerIfNecessary;
 use Laravel\Octane\Octane;
+use PhpAmqpLib\Connection\AMQPStreamConnection;
 
 return [
 
@@ -138,7 +139,7 @@ return [
     ],
 
     'flush' => [
-        \PhpAmqpLib\Connection\AMQPStreamConnection::class,
+        AMQPStreamConnection::class,
     ],
 
     /*

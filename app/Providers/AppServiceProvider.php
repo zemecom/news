@@ -55,7 +55,7 @@ class AppServiceProvider extends ServiceProvider
         });
 
         if ($this->app->environment('local')) {
-            $this->app->register(\App\Providers\TelescopeServiceProvider::class);
+            $this->app->register(TelescopeServiceProvider::class);
         }
     }
 

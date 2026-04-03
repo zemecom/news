@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Resources\AiProviderAccounts\Pages;
 
 use App\Filament\Resources\AiProviderAccounts\AiProviderAccountResource;
+use App\Filament\Support\AiProviderStatsAutoRefresher;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
@@ -21,7 +22,7 @@ final class ListAiProviderAccounts extends ListRecords
     #[Override]
     public function mount(): void
     {
-        app(\App\Filament\Support\AiProviderStatsAutoRefresher::class)->scheduleRefreshIfStale();
+        app(AiProviderStatsAutoRefresher::class)->scheduleRefreshIfStale();
 
         parent::mount();
     }

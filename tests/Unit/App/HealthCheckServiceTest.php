@@ -7,6 +7,7 @@ namespace Tests\Unit\App;
 use App\Services\HealthCheckService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redis;
+use PhpAmqpLib\Channel\AMQPChannel;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
 use RuntimeException;
 use stdClass;
@@ -31,7 +32,7 @@ final class HealthCheckServiceTest extends TestCase
             ->with('ping')
             ->andReturn('PONG');
 
-        $channel = $this->createMock(\PhpAmqpLib\Channel\AMQPChannel::class);
+        $channel = $this->createMock(AMQPChannel::class);
         $channel->expects($this->once())
             ->method('close');
 

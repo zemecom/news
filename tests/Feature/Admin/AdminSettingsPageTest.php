@@ -8,7 +8,6 @@ use App\Filament\Pages\AdminSettings;
 use App\Models\AdminSetting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Livewire\Livewire;
 use Tests\TestCase;
 
 final class AdminSettingsPageTest extends TestCase
@@ -30,8 +29,7 @@ final class AdminSettingsPageTest extends TestCase
             ->assertSee('Admin Settings')
             ->assertSee('News Table');
 
-        Livewire::actingAs($admin)
-            ->test(AdminSettings::class)
+        $this->livewireAs($admin, AdminSettings::class)
             ->set('data.news_auto_refresh_enabled', true)
             ->set('data.news_auto_refresh_interval_seconds', 30)
             ->call('save')

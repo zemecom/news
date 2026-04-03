@@ -7,6 +7,7 @@ namespace Modules\Crawler;
 use Illuminate\Support\ServiceProvider;
 use Modules\Crawler\Application\Actions\FeedFetcherAction;
 use Modules\Crawler\Application\Services\RawNewsFactory;
+use Modules\Crawler\Domain\Contracts\Deduplicator;
 use Modules\Crawler\Domain\Contracts\RawPublisher as RawPublisherContract;
 use Modules\Crawler\Domain\Contracts\RssClient as RssClientContract;
 use Modules\Crawler\Domain\Contracts\TelegramClient as TelegramClientContract;
@@ -14,6 +15,19 @@ use Modules\Crawler\Infrastructure\Http\RssClient;
 use Modules\Crawler\Infrastructure\Http\RssConnector;
 use Modules\Crawler\Infrastructure\Http\TelegramClient;
 use Modules\Crawler\Infrastructure\Messaging\RawPublisher;
+use Modules\Crawler\Infrastructure\Parsers\AlJazeeraRssParser;
+use Modules\Crawler\Infrastructure\Parsers\DefaultRssParser;
+use Modules\Crawler\Infrastructure\Parsers\HabrRssParser;
+use Modules\Crawler\Infrastructure\Parsers\HackerNewsRssParser;
+use Modules\Crawler\Infrastructure\Parsers\MedicalXpressRssParser;
+use Modules\Crawler\Infrastructure\Parsers\ScienceDailyRssParser;
+use Modules\Crawler\Infrastructure\Parsers\TechCrunchRssParser;
+use Modules\Crawler\Infrastructure\Parsers\Telegram\DefaultTelegramParser;
+use Modules\Crawler\Infrastructure\Parsers\Telegram\ToporLiveTelegramParser;
+use Modules\Crawler\Infrastructure\Parsers\TheVergeRssParser;
+use Modules\Crawler\Infrastructure\Services\DbDeduplicator;
+use Modules\Crawler\Infrastructure\Services\RssParserResolver;
+use Modules\Crawler\Infrastructure\Services\TelegramParserResolver;
 use Modules\Shared\Application\Services\FingerprintGenerator;
 use Override;
 
@@ -26,15 +40,15 @@ final class CrawlerServiceProvider extends ServiceProvider
         $this->app->singleton(RssConnector::class);
 
         // RSS Parsers
-        $this->app->singleton(\Modules\Crawler\Infrastructure\Parsers\DefaultRssParser::class);
+        $this->app->singleton(DefaultRssParser::class);
         $rssParsers = [
-            \Modules\Crawler\Infrastructure\Parsers\HabrRssParser::class,
-            \Modules\Crawler\Infrastructure\Parsers\HackerNewsRssParser::class,
-            \Modules\Crawler\Infrastructure\Parsers\TechCrunchRssParser::class,
-            \Modules\Crawler\Infrastructure\Parsers\TheVergeRssParser::class,
-            \Modules\Crawler\Infrastructure\Parsers\AlJazeeraRssParser::class,
-            \Modules\Crawler\Infrastructure\Parsers\ScienceDailyRssParser::class,
-            \Modules\Crawler\Infrastructure\Parsers\MedicalXpressRssParser::class,
+            HabrRssParser::class,
+            HackerNewsRssParser::class,
+            TechCrunchRssParser::class,
+            TheVergeRssParser::class,
+            AlJazeeraRssParser::class,
+            ScienceDailyRssParser::class,
+            MedicalXpressRssParser::class,
         ];
         foreach ($rssParsers as $parser) {
             $this->app->singleton($parser);
@@ -42,9 +56,9 @@ final class CrawlerServiceProvider extends ServiceProvider
         }
 
         // Telegram Parsers
-        $this->app->singleton(\Modules\Crawler\Infrastructure\Parsers\Telegram\DefaultTelegramParser::class);
+        $this->app->singleton(DefaultTelegramParser::class);
         $telegramParsers = [
-            \Modules\Crawler\Infrastructure\Parsers\Telegram\ToporLiveTelegramParser::class,
+            ToporLiveTelegramParser::class,
         ];
         foreach ($telegramParsers as $parser) {
             $this->app->singleton($parser);
@@ -52,14 +66,14 @@ final class CrawlerServiceProvider extends ServiceProvider
         }
 
         // Resolvers
-        $this->app->bind(\Modules\Crawler\Infrastructure\Services\RssParserResolver::class, fn ($app) => new \Modules\Crawler\Infrastructure\Services\RssParserResolver(
+        $this->app->bind(RssParserResolver::class, fn ($app) => new RssParserResolver(
             $app->tagged('crawler.parsers.rss'),
-            $app->make(\Modules\Crawler\Infrastructure\Parsers\DefaultRssParser::class)
+            $app->make(DefaultRssParser::class)
         ));
 
-        $this->app->bind(\Modules\Crawler\Infrastructure\Services\TelegramParserResolver::class, fn ($app) => new \Modules\Crawler\Infrastructure\Services\TelegramParserResolver(
+        $this->app->bind(TelegramParserResolver::class, fn ($app) => new TelegramParserResolver(
             $app->tagged('crawler.parsers.telegram'),
-            $app->make(\Modules\Crawler\Infrastructure\Parsers\Telegram\DefaultTelegramParser::class)
+            $app->make(DefaultTelegramParser::class)
         ));
 
         $this->app->singleton(RssClient::class);
@@ -70,7 +84,7 @@ final class CrawlerServiceProvider extends ServiceProvider
         $this->app->bind(TelegramClientContract::class, TelegramClient::class);
         $this->app->bind(RawPublisherContract::class, RawPublisher::class);
         $this->app->singleton(FingerprintGenerator::class);
-        $this->app->bind(\Modules\Crawler\Domain\Contracts\Deduplicator::class, \Modules\Crawler\Infrastructure\Services\DbDeduplicator::class);
+        $this->app->bind(Deduplicator::class, DbDeduplicator::class);
 
     }
 }

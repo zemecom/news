@@ -8,6 +8,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Modules\Intelligence\Infrastructure\Codex\CodexAccountStatusSynchronizer;
 use Modules\Intelligence\Infrastructure\Codex\CodexAppServerClientContract;
 use Modules\Intelligence\Infrastructure\Codex\CodexAuthProcessManager;
+use Modules\Intelligence\Infrastructure\Codex\CodexUnauthorizedException;
 use Modules\Intelligence\Infrastructure\Persistence\Models\AiProviderAccount;
 use Tests\TestCase;
 
@@ -39,7 +40,7 @@ final class CodexAccountStatusSynchronizerTest extends TestCase
         $client = $this->createMock(CodexAppServerClientContract::class);
         $client->expects($this->once())
             ->method('readAccount')
-            ->willThrowException(new \Modules\Intelligence\Infrastructure\Codex\CodexUnauthorizedException('unauthorized'));
+            ->willThrowException(new CodexUnauthorizedException('unauthorized'));
         $client->expects($this->never())->method('readRateLimits');
         $authProcesses = $this->createMock(CodexAuthProcessManager::class);
         $authProcesses->expects($this->once())

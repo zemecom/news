@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Modules\Catalog\Infrastructure\Persistence\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * @property int $id
@@ -37,8 +38,8 @@ final class Source extends Model
         'last_error_at' => 'datetime',
     ];
 
-    /** @return \Illuminate\Database\Eloquent\Relations\HasMany<NewsItem, $this> */
-    public function newsItems(): \Illuminate\Database\Eloquent\Relations\HasMany
+    /** @return HasMany<NewsItem, $this> */
+    public function newsItems(): HasMany
     {
         return $this->hasMany(NewsItem::class, 'source_id');
     }

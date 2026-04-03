@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Modules\Intelligence;
 
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
+use Modules\Intelligence\Application\Listeners\ProcessRawNewsListener;
 use Modules\Intelligence\Application\Pipeline\NewsProcessingPipeline;
 use Modules\Intelligence\Application\Pipeline\Steps\AntiClickbaitStep;
 use Modules\Intelligence\Application\Pipeline\Steps\ChatGptCodexEnrichmentStep;
@@ -16,6 +18,7 @@ use Modules\Intelligence\Application\Pipeline\Steps\LanguageDetectStep;
 use Modules\Intelligence\Application\Pipeline\Steps\ModerationStep;
 use Modules\Intelligence\Application\Pipeline\Steps\SentimentStep;
 use Modules\Intelligence\Application\Pipeline\Steps\TranslateStep;
+use Modules\Intelligence\Application\Services\NewsAnalysisRuntimeRecorder;
 use Modules\Intelligence\Domain\Contracts\AiProviderAccountRepository;
 use Modules\Intelligence\Domain\Contracts\AiProviderAuthManager;
 use Modules\Intelligence\Domain\Contracts\AiProviderStatusManager;
@@ -41,7 +44,9 @@ use Modules\Intelligence\Infrastructure\LLM\ObjectivelyTitleGenerator;
 use Modules\Intelligence\Infrastructure\Messaging\EnrichedPublisher;
 use Modules\Intelligence\Infrastructure\Persistence\EloquentAiProviderAccountRepository;
 use Modules\Shared\Domain\Contracts\NewsStore;
+use Modules\Shared\Domain\Events\RawNewsCreated;
 use Override;
+use PhpAmqpLib\Connection\AMQPStreamConnection;
 
 final class IntelligenceServiceProvider extends ServiceProvider
 {
@@ -52,7 +57,7 @@ final class IntelligenceServiceProvider extends ServiceProvider
             steps: $app->make('news.pipeline.steps.ordered'),
             publisher: $app->make(EnrichedPublisherContract::class),
             news: $app->make(NewsStore::class),
-            runtimeRecorder: $app->make(\Modules\Intelligence\Application\Services\NewsAnalysisRuntimeRecorder::class),
+            runtimeRecorder: $app->make(NewsAnalysisRuntimeRecorder::class),
         ));
         $this->app->singleton(CodexProcessRunner::class);
         $this->app->singleton(CodexProcessRunnerContract::class, CodexProcessRunner::class);
@@ -65,7 +70,7 @@ final class IntelligenceServiceProvider extends ServiceProvider
         $this->app->singleton(AiProviderAuthManager::class, CodexLoginManager::class);
         $this->app->singleton(AiProviderStatusManager::class, CodexAccountStatusSynchronizer::class);
         $this->app->singleton(EnrichedPublisher::class, fn ($app) => new EnrichedPublisher(
-            connection: $app->make(\PhpAmqpLib\Connection\AMQPStreamConnection::class),
+            connection: $app->make(AMQPStreamConnection::class),
             exchange: (string) config('messaging.exchange.news_flow.name', 'news_flow'),
             readyRoutingKey: (string) config('messaging.routing_keys.enriched_ready', 'enriched.ready'),
             importantRoutingKey: (string) config('messaging.routing_keys.enriched_ready_important', 'enriched.ready.important'),
@@ -107,9 +112,9 @@ final class IntelligenceServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        \Illuminate\Support\Facades\Event::listen(
-            \Modules\Shared\Domain\Events\RawNewsCreated::class,
-            \Modules\Intelligence\Application\Listeners\ProcessRawNewsListener::class
+        Event::listen(
+            RawNewsCreated::class,
+            ProcessRawNewsListener::class
         );
     }
 }

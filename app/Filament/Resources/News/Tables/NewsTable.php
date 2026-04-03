@@ -19,6 +19,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Modules\Catalog\Infrastructure\Persistence\Models\NewsItem;
+use Modules\Catalog\Infrastructure\Persistence\Models\Source;
 use Modules\Intelligence\Application\Services\EnqueueNewsAnalysisAction;
 use Modules\Shared\Domain\Enum\NewsStatus;
 
@@ -248,7 +249,7 @@ final class NewsTable
                     ->modalWidth('7xl')
                     ->modalHeading(fn (NewsItem $record): string => str($record->title_generated ?: $record->title_original)->limit(110)->toString())
                     ->modalDescription(function (NewsItem $record): string {
-                        $sourceName = $record->source instanceof \Modules\Catalog\Infrastructure\Persistence\Models\Source
+                        $sourceName = $record->source instanceof Source
                             ? $record->source->name
                             : 'n/a';
 

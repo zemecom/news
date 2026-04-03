@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace Modules\Intelligence\Application\Pipeline\Steps;
 
+use Modules\Intelligence\Domain\Contracts\Translator;
 use Modules\Shared\Domain\DTO\EnrichedNewsData;
 use Modules\Shared\Domain\DTO\RawNewsData;
 
 final readonly class TranslateStep implements PipelineStep
 {
-    public function __construct(private \Modules\Intelligence\Domain\Contracts\Translator $translator) {}
+    public function __construct(private Translator $translator) {}
 
     public function process(RawNewsData|EnrichedNewsData $input): RawNewsData|EnrichedNewsData
     {

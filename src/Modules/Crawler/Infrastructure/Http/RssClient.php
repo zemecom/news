@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Modules\Crawler\Infrastructure\Http;
 
+use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Modules\Crawler\Domain\Contracts\RssClient as RssClientContract;
 use Modules\Crawler\Infrastructure\Security\SourceUrlPolicy;
 use Modules\Crawler\Infrastructure\Services\RssParserResolver;
 use Saloon\Enums\Method;
+use Saloon\Http\Request;
 
 final readonly class RssClient implements RssClientContract
 {
@@ -21,11 +23,11 @@ final readonly class RssClient implements RssClientContract
     /**
      * @return Collection<int, array<string, mixed>>
      */
-    public function fetch(string $url, ?\Carbon\Carbon $dateFrom = null, ?\Carbon\Carbon $dateTo = null, ?int $limit = null): Collection
+    public function fetch(string $url, ?Carbon $dateFrom = null, ?Carbon $dateTo = null, ?int $limit = null): Collection
     {
         $this->sourceUrlPolicy->assertAllowedForRss($url);
         $response = $this->connector->send(
-            new class($url) extends \Saloon\Http\Request
+            new class($url) extends Request
             {
                 protected Method $method = Method::GET;
 
@@ -62,9 +64,9 @@ final readonly class RssClient implements RssClientContract
                     return true;
                 }
 
-                $pubDate = \Carbon\Carbon::parse($item['pubDate'])->setTimezone('UTC');
-                $from = $dateFrom instanceof \Carbon\Carbon ? $dateFrom->copy()->setTimezone('UTC') : null;
-                $to = $dateTo instanceof \Carbon\Carbon ? $dateTo->copy()->setTimezone('UTC') : null;
+                $pubDate = Carbon::parse($item['pubDate'])->setTimezone('UTC');
+                $from = $dateFrom instanceof Carbon ? $dateFrom->copy()->setTimezone('UTC') : null;
+                $to = $dateTo instanceof Carbon ? $dateTo->copy()->setTimezone('UTC') : null;
 
                 if ($from && $pubDate->lt($from)) {
                     return false;

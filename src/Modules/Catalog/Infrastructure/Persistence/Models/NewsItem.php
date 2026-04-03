@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Modules\Catalog\Infrastructure\Persistence\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
@@ -17,7 +20,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property array<int, string>|null $tags
  * @property array<string, mixed>|null $source_metadata
  * @property string $raw_fingerprint
- * @property \Illuminate\Support\Carbon|null $published_at
+ * @property Carbon|null $published_at
  * @property Source|null $source
  */
 final class NewsItem extends Model
@@ -57,17 +60,17 @@ final class NewsItem extends Model
     ];
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<Source, $this>
+     * @return BelongsTo<Source, $this>
      */
-    public function source(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function source(): BelongsTo
     {
         return $this->belongsTo(Source::class, 'source_id');
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<NewsMediaAsset, $this>
+     * @return HasMany<NewsMediaAsset, $this>
      */
-    public function mediaAssets(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function mediaAssets(): HasMany
     {
         return $this->hasMany(NewsMediaAsset::class, 'news_item_id');
     }

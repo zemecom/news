@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Crawler;
 
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 use Modules\Crawler\Infrastructure\Services\RssParserResolver;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -69,7 +70,7 @@ final class ParserIntegrationTest extends TestCase
             $this->assertIsString($firstItem['title']);
             $this->assertIsString($firstItem['link']);
 
-        } catch (\Illuminate\Http\Client\ConnectionException $e) {
+        } catch (ConnectionException $e) {
             $this->markTestSkipped("Connection failed or timed out for $name ($url): ".$e->getMessage());
         }
     }

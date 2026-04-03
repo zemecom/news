@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Modules\Catalog\Infrastructure\Persistence;
 
 use Illuminate\Database\DatabaseManager;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 use Modules\Catalog\Domain\Contracts\NewsMediaAssetRepository;
@@ -105,7 +107,7 @@ final readonly class EloquentNewsMediaAssetRepository implements NewsMediaAssetR
             ->where('news_item_id', $newsItemId)
             ->whereNotNull('source_url')
             ->whereRaw('LOWER(source_url) LIKE ?', ['http%'])
-            ->where(function (\Illuminate\Database\Eloquent\Builder $query): void {
+            ->where(function (Builder $query): void {
                 $query
                     ->whereNull('local_path')
                     ->orWhere('download_status', '!=', self::STATUS_DOWNLOADED);
@@ -308,7 +310,7 @@ final readonly class EloquentNewsMediaAssetRepository implements NewsMediaAssetR
         }
 
         $diskName = $this->normalizeString($asset->local_disk) ?? 'public';
-        /** @var \Illuminate\Filesystem\FilesystemAdapter $disk */
+        /** @var FilesystemAdapter $disk */
         $disk = Storage::disk($diskName);
 
         if (! $disk->exists($localPath)) {

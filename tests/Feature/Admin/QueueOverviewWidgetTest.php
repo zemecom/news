@@ -9,7 +9,6 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use Livewire\Livewire;
 use PhpAmqpLib\Channel\AMQPChannel;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
 use Tests\TestCase;
@@ -51,8 +50,7 @@ final class QueueOverviewWidgetTest extends TestCase
         $connection->method('channel')->willReturn($channel);
         $this->app->instance(AMQPStreamConnection::class, $connection);
 
-        Livewire::actingAs($admin)
-            ->test(QueueOverviewWidget::class)
+        $this->livewireAs($admin, QueueOverviewWidget::class)
             ->assertSee('Queue Overview')
             ->assertSee('crawler_tasks')
             ->assertSee('intelligence_tasks')

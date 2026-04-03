@@ -7,7 +7,6 @@ namespace Tests\Feature\Admin;
 use App\Filament\Widgets\AiProviderStatusWidget;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Livewire\Livewire;
 use Modules\Intelligence\Domain\Contracts\AiProviderStatusManager;
 use Modules\Intelligence\Domain\DTO\AiProviderProfile;
 use Modules\Intelligence\Infrastructure\Persistence\Models\AiProviderAccount;
@@ -52,8 +51,7 @@ final class AiProviderDashboardWidgetTest extends TestCase
             'last_status_checked_at' => now(),
         ]);
 
-        Livewire::actingAs($admin)
-            ->test(AiProviderStatusWidget::class)
+        $this->livewireAs($admin, AiProviderStatusWidget::class)
             ->assertSee('AI Provider')
             ->assertSee('ChatGPT Codex')
             ->assertSee('Authenticated')
@@ -102,8 +100,7 @@ final class AiProviderDashboardWidgetTest extends TestCase
 
         $this->app->instance(AiProviderStatusManager::class, $statusManager);
 
-        Livewire::actingAs($admin)
-            ->test(AiProviderStatusWidget::class)
+        $this->livewireAs($admin, AiProviderStatusWidget::class)
             ->call('refreshProviderStatistics');
     }
 
@@ -142,8 +139,7 @@ final class AiProviderDashboardWidgetTest extends TestCase
 
         $this->app->instance(AiProviderStatusManager::class, $statusManager);
 
-        Livewire::actingAs($admin)
-            ->test(AiProviderStatusWidget::class)
+        $this->livewireAs($admin, AiProviderStatusWidget::class)
             ->assertSee('AI Provider')
             ->assertSee('Updating usage data...')
             ->assertSee('Updating weekly data...');

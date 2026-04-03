@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Modules\Crawler\Application\Jobs;
 
+use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -20,8 +21,8 @@ final class FetchSourceJob implements ShouldQueue
      */
     public function __construct(
         public readonly array $source,
-        public readonly ?\Carbon\Carbon $dateFrom = null,
-        public readonly ?\Carbon\Carbon $dateTo = null,
+        public readonly ?Carbon $dateFrom = null,
+        public readonly ?Carbon $dateTo = null,
         public readonly ?int $limit = null,
     ) {
         $this->onQueue('crawler_tasks');

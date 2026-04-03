@@ -1,6 +1,17 @@
 <?php
 
 declare(strict_types=1);
+use App\Http\Controllers\Controller;
+use Filament\Resources\Pages\CreateRecord;
+use Filament\Resources\Pages\EditRecord;
+use Filament\Resources\Pages\ListRecords;
+use Filament\Resources\Pages\Page;
+use Illuminate\Console\Command;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\ServiceProvider;
+use Livewire\Component;
+use Modules\Crawler\Infrastructure\Parsers\DefaultRssParser;
+use Modules\Crawler\Infrastructure\Parsers\Telegram\DefaultTelegramParser;
 
 arch('code_style', function () {
     expect(['App', 'Modules'])
@@ -16,22 +27,22 @@ arch('final_classes', function () {
             // Framework specific classes that often require inheritance
             'App\Models',
             'Modules\*\Infrastructure\Persistence\Models',
-            \Modules\Crawler\Infrastructure\Parsers\DefaultRssParser::class,
-            \Modules\Crawler\Infrastructure\Parsers\Telegram\DefaultTelegramParser::class,
+            DefaultRssParser::class,
+            DefaultTelegramParser::class,
             'App\Providers',
             'Modules\*\Providers',
             'App\Console\Commands', // Commands might be extended
-            \Illuminate\Database\Eloquent\Model::class,
-            \Illuminate\Support\ServiceProvider::class,
-            \Illuminate\Console\Command::class,
-            \App\Http\Controllers\Controller::class,
-            \Livewire\Component::class,
-            \Filament\Resources\Resource::class,
-            \Filament\Resources\Pages\Page::class,
-            \Filament\Resources\Pages\ListRecords::class,
-            \Filament\Resources\Pages\CreateRecord::class,
-            \Filament\Resources\Pages\EditRecord::class,
-            \Filament\Resources\Pages\EditRecord::class,
+            Model::class,
+            ServiceProvider::class,
+            Command::class,
+            Controller::class,
+            Component::class,
+            Filament\Resources\Resource::class,
+            Page::class,
+            ListRecords::class,
+            CreateRecord::class,
+            EditRecord::class,
+            EditRecord::class,
             // Middleware
             'App\Http\Middleware',
             // Filament

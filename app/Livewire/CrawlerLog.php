@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Livewire;
 
 use Carbon\Carbon;
+use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Artisan;
 use Livewire\Component;
 use Modules\Catalog\Infrastructure\Persistence\Models\Source;
@@ -45,7 +46,7 @@ class CrawlerLog extends Component
             $dateTo = $this->parseDate($this->dateTo);
             $limit = is_int($this->limit) && $this->limit > 0 ? $this->limit : null;
 
-            if ($dateFrom instanceof \Carbon\Carbon && $dateTo instanceof \Carbon\Carbon && $dateFrom->gt($dateTo)) {
+            if ($dateFrom instanceof Carbon && $dateTo instanceof Carbon && $dateFrom->gt($dateTo)) {
                 [$dateFrom, $dateTo] = [$dateTo, $dateFrom];
                 $this->appendLog('date-from is greater than date-to; values were swapped automatically.');
             }
@@ -164,7 +165,7 @@ class CrawlerLog extends Component
         return Carbon::parse($value);
     }
 
-    public function render(): \Illuminate\Contracts\View\View
+    public function render(): View
     {
         return view('livewire.crawler-log', [
             'isStarted' => $this->isStarted,

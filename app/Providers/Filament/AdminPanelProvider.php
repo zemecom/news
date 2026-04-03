@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace App\Providers\Filament;
 
 use App\Filament\Pages\Dashboard;
+use App\Filament\Widgets\AiProviderStatusWidget;
+use App\Filament\Widgets\QueueOverviewWidget;
+use App\Http\Middleware\AutoLoginAdmin;
 use Filament\Actions\Action;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -79,8 +82,8 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
             ->widgets([
-                \App\Filament\Widgets\QueueOverviewWidget::class,
-                \App\Filament\Widgets\AiProviderStatusWidget::class,
+                QueueOverviewWidget::class,
+                AiProviderStatusWidget::class,
                 AccountWidget::class,
                 FilamentInfoWidget::class,
             ])
@@ -94,7 +97,7 @@ class AdminPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
-                \App\Http\Middleware\AutoLoginAdmin::class,
+                AutoLoginAdmin::class,
             ])
             ->authMiddleware([
                 Authenticate::class,

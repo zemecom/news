@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Modules\Delivery\Infrastructure\Persistence;
 
 use Illuminate\Database\DatabaseManager;
+use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Facades\Storage;
 use Modules\Delivery\Domain\Contracts\NewsMediaResolver;
 
@@ -107,7 +108,7 @@ final readonly class DbNewsMediaResolver implements NewsMediaResolver
             return null;
         }
 
-        /** @var \Illuminate\Filesystem\FilesystemAdapter $disk */
+        /** @var FilesystemAdapter $disk */
         $disk = Storage::disk($diskName);
         if (! $disk->exists($localPath)) {
             return null;
