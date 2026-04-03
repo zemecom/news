@@ -33,6 +33,6 @@ final class ListSources extends ListRecords
     #[Override]
     public function getMaxContentWidth(): Width
     {
-        return Width::Full;
+        return Width::SevenExtraLarge;
     }
 }
