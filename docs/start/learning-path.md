@@ -17,7 +17,7 @@
 
 ### Сделай
 
-1. Выполни сценарий из [junior-onboarding.md](junior-onboarding.md).
+1. Выполни сценарий из [Быстрого старта для новичка](junior-onboarding.md).
 2. Открой `GET /api/news`.
 3. Открой `GET /api/sources`.
 4. Открой `/`.
@@ -141,9 +141,9 @@
 
 ### Что читать рядом
 
-- [03-delivery.md](../architecture/03-delivery.md)
-- [adding-a-feature.md](../guides/adding-a-feature.md)
-- [news-api.md](../reference/api/news-api.md)
+- [Delivery: API и web-лента](../architecture/03-delivery.md)
+- [Как добавлять новую фичу в этот проект](../guides/09-adding-a-feature.md)
+- [News API: запросы и ответы](../reference/api/news-api.md)
 
 ## Шаг 7. Попробуй задачу среднего уровня в Crawler
 
@@ -202,9 +202,9 @@
 
 ### Что читать
 
-- [runtime-operations.md](../guides/runtime-operations.md)
-- [07-admin-and-debugging.md](../architecture/07-admin-and-debugging.md)
-- [08-infrastructure.md](../architecture/08-infrastructure.md)
+- [Runtime и операционные процессы](../guides/runtime-operations.md)
+- [Админка и инструменты отладки](../architecture/07-admin-and-debugging.md)
+- [Инфраструктура и runtime-контур](../architecture/08-infrastructure.md)
 
 ## Шаг 10. Только после этого лезь в большие изменения
 
@@ -225,14 +225,14 @@
 
 ## Хороший порядок чтения рядом с практикой
 
-1. [junior-onboarding.md](junior-onboarding.md)
-2. [news-api.md](../reference/api/news-api.md)
-3. [runtime-operations.md](../guides/runtime-operations.md)
-4. [00-overview.md](../architecture/00-overview.md)
-5. [03-delivery.md](../architecture/03-delivery.md)
-6. [04-crawler.md](../architecture/04-crawler.md)
-7. [05-intelligence.md](../architecture/05-intelligence.md)
-8. [adding-a-feature.md](../guides/adding-a-feature.md)
+1. [Быстрый старт для новичка](junior-onboarding.md)
+2. [News API: запросы и ответы](../reference/api/news-api.md)
+3. [Runtime и операционные процессы](../guides/runtime-operations.md)
+4. [Обзор документации и карта проекта](../architecture/00-overview.md)
+5. [Delivery: API и web-лента](../architecture/03-delivery.md)
+6. [Crawler: сбор и ingestion](../architecture/04-crawler.md)
+7. [Intelligence: AI-обогащение и pipeline](../architecture/05-intelligence.md)
+8. [Как добавлять новую фичу в этот проект](../guides/09-adding-a-feature.md)
 
 ## Что считать хорошим прогрессом
 

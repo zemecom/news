@@ -187,11 +187,11 @@ docker compose exec -T app php artisan octane:reload
 
 Если ты уже поднял проект и увидел данные, дальше лучше идти так:
 
-1. [news-api.md](../reference/api/news-api.md) — чтобы понимать shape API и query-параметры.
-2. [runtime-operations.md](../guides/runtime-operations.md) — чтобы понимать, кто что реально запускает.
-3. [env.md](../reference/config/env.md) — чтобы не ломать окружение случайными правками `.env`.
-4. [00-overview.md](../architecture/00-overview.md) — чтобы перейти от практики к архитектурной карте.
-5. [learning-path.md](learning-path.md) — чтобы учиться на проекте постепенно, а не хаотично.
+1. [News API: запросы и ответы](../reference/api/news-api.md) — чтобы понимать shape API и query-параметры.
+2. [Runtime и операционные процессы](../guides/runtime-operations.md) — чтобы понимать, кто что реально запускает.
+3. [Конфигурация окружения](../reference/config/env.md) — чтобы не ломать окружение случайными правками `.env`.
+4. [Обзор документации и карта проекта](../architecture/00-overview.md) — чтобы перейти от практики к архитектурной карте.
+5. [Учебный маршрут по проекту](learning-path.md) — чтобы учиться на проекте постепенно, а не хаотично.
 
 ## 8. Что важно понять про этот проект как про учебную базу
 

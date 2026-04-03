@@ -75,11 +75,11 @@ curl "http://localhost:8080/api/news?per_page=2"
 
 Начни не с больших архитектурных глав, а с практического маршрута:
 
-1. [docs/start/junior-onboarding.md](docs/start/junior-onboarding.md)
-2. [docs/reference/api/news-api.md](docs/reference/api/news-api.md)
-3. [docs/guides/runtime-operations.md](docs/guides/runtime-operations.md)
-4. [docs/reference/config/env.md](docs/reference/config/env.md)
-5. [docs/start/learning-path.md](docs/start/learning-path.md)
+1. [Быстрый старт для новичка](docs/start/junior-onboarding.md)
+2. [News API: запросы и ответы](docs/reference/api/news-api.md)
+3. [Runtime и операционные процессы](docs/guides/runtime-operations.md)
+4. [Конфигурация окружения](docs/reference/config/env.md)
+5. [Учебный маршрут по проекту](docs/start/learning-path.md)
 
 Если нужен уже глубокий архитектурный разбор модулей и runtime-потоков, переходи в `docs/architecture/`.
 
@@ -140,7 +140,7 @@ make logs          # Просмотр логов контейнеров
 
 ## Документация
 
-Основная точка входа в документацию: [docs/README.md](docs/README.md).
+Основная точка входа в документацию: [Навигация по документации](docs/README.md).
 
 Внутри `docs/` материалы разложены по назначению:
 

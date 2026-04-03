@@ -4,12 +4,12 @@
 
 ## Куда идти сначала
 
-- Если ты впервые в проекте: [start/junior-onboarding.md](start/junior-onboarding.md)
-- Если хочешь учиться на проекте пошагово: [start/learning-path.md](start/learning-path.md)
-- Если нужен API и примеры JSON: [reference/api/news-api.md](reference/api/news-api.md)
-- Если нужно понять runtime и процессы: [guides/runtime-operations.md](guides/runtime-operations.md)
-- Если нужно разобраться с архитектурой целиком: [architecture/00-overview.md](architecture/00-overview.md)
-- Если готовишься к собеседованию по проекту: [interview/question-bank.md](interview/question-bank.md)
+- Если ты впервые в проекте: [Быстрый старт для новичка](start/junior-onboarding.md)
+- Если хочешь учиться на проекте пошагово: [Учебный маршрут по проекту](start/learning-path.md)
+- Если нужен API и примеры JSON: [News API: запросы и ответы](reference/api/news-api.md)
+- Если нужно понять runtime и процессы: [Runtime и операционные процессы](guides/runtime-operations.md)
+- Если нужно разобраться с архитектурой целиком: [Обзор документации и карта проекта](architecture/00-overview.md)
+- Если готовишься к собеседованию по проекту: [Банк вопросов и ответов для собеседования](interview/15-question-bank.md)
 
 ## Как устроен каталог
 

@@ -40,11 +40,11 @@
 
 Сначала открой:
 
-1. [../start/junior-onboarding.md](../start/junior-onboarding.md)
-2. [../reference/api/news-api.md](../reference/api/news-api.md)
-3. [../guides/runtime-operations.md](../guides/runtime-operations.md)
-4. [../reference/config/env.md](../reference/config/env.md)
-5. [../start/learning-path.md](../start/learning-path.md)
+1. [Быстрый старт для новичка](../start/junior-onboarding.md)
+2. [News API: запросы и ответы](../reference/api/news-api.md)
+3. [Runtime и операционные процессы](../guides/runtime-operations.md)
+4. [Конфигурация окружения](../reference/config/env.md)
+5. [Учебный маршрут по проекту](../start/learning-path.md)
 
 А уже потом возвращайся к этой серии документов за архитектурной картиной и подробным runtime-разбором.
 
@@ -54,8 +54,8 @@
 2. [10. Сквозные Runtime-Сценарии](10-end-to-end-flows.md)
 3. [11. Модель Данных, Таблицы и Индексы](11-data-model-and-indexes.md)
 4. [12. События, Очереди и Messaging](12-events-queues-and-messaging.md)
-5. [15. Банк Вопросов и Ответов для Собеседования](../interview/question-bank.md)
-6. [16. Глоссарий и Быстрая Шпаргалка](../interview/glossary-and-cheatsheet.md)
+5. [15. Банк Вопросов и Ответов для Собеседования](../interview/15-question-bank.md)
+6. [16. Глоссарий и Быстрая Шпаргалка](../interview/16-glossary-and-cheatsheet.md)
 7. [17. Текущие Ограничения и Архитектурные Компромиссы](17-known-limitations-and-tradeoffs.md)
 
 ### Траектория 2. Глубоко понять реализацию
@@ -77,18 +77,18 @@
 3. [04. Модуль Crawler: Получение Сырого Контента](04-crawler.md)
 4. [05. Модуль Intelligence: Pipeline Обработки Сырой Новости](05-intelligence.md)
 5. [06. Модули Catalog и Shared: Хранение, Контракты и Межмодульные События](06-catalog-shared.md)
-6. [09. Как Добавлять Новую Фичу в Этот Проект](../guides/adding-a-feature.md)
+6. [09. Как Добавлять Новую Фичу в Этот Проект](../guides/09-adding-a-feature.md)
 7. [17. Текущие Ограничения и Архитектурные Компромиссы](17-known-limitations-and-tradeoffs.md)
 
 ## Карта документов
 
 | Файл | О чём он |
 | --- | --- |
-| [../start/junior-onboarding.md](../start/junior-onboarding.md) | Практический старт для новичка: поднять проект, заполнить demo-данными и пройти первые живые сценарии |
-| [../reference/api/news-api.md](../reference/api/news-api.md) | Примеры запросов и ответов News API, shape JSON и коды ответов |
-| [../reference/config/env.md](../reference/config/env.md) | Объяснение ключевых `.env`-переменных и типовых симптомов неверной настройки |
-| [../guides/runtime-operations.md](../guides/runtime-operations.md) | Что реально запущено в runtime: Octane, worker, scheduler, ручные CLI-команды |
-| [../start/learning-path.md](../start/learning-path.md) | Пошаговый учебный маршрут по проекту для джуна |
+| [Быстрый старт для новичка](../start/junior-onboarding.md) | Практический старт для новичка: поднять проект, заполнить demo-данными и пройти первые живые сценарии |
+| [News API: запросы и ответы](../reference/api/news-api.md) | Примеры запросов и ответов News API, shape JSON и коды ответов |
+| [Конфигурация окружения](../reference/config/env.md) | Объяснение ключевых `.env`-переменных и типовых симптомов неверной настройки |
+| [Runtime и операционные процессы](../guides/runtime-operations.md) | Что реально запущено в runtime: Octane, worker, scheduler, ручные CLI-команды |
+| [Учебный маршрут по проекту](../start/learning-path.md) | Пошаговый учебный маршрут по проекту для джуна |
 | [00. Обзор Документации и Карта Проекта](00-overview.md) | Общая карта, словарь и сценарии чтения |
 | [01. Точки Входа, Boot Lifecycle и Octane Runtime](01-entrypoint.md) | Boot lifecycle, Octane, RoadRunner, worker-процессы |
 | [02. Framework Layer: Что Реально Живёт в app/](02-app.md) | Framework glue-слой: `app/`, провайдеры, контроллеры, middleware, команды |
@@ -98,14 +98,14 @@
 | [06. Модули Catalog и Shared: Хранение, Контракты и Межмодульные События](06-catalog-shared.md) | Хранение, общие DTO, события, репозитории |
 | [07. Админка, Диагностика и Operational Debugging](07-admin-and-debugging.md) | Admin API, Filament, health, Telescope, ручная диагностика |
 | [08. Инфраструктура: Docker, Сервисы, Makefile и Контейнерный Runtime](08-infrastructure.md) | Docker, сервисы, Makefile, контейнерный runtime |
-| [09. Как Добавлять Новую Фичу в Этот Проект](../guides/adding-a-feature.md) | Практический playbook по добавлению фич |
+| [09. Как Добавлять Новую Фичу в Этот Проект](../guides/09-adding-a-feature.md) | Практический playbook по добавлению фич |
 | [10. Сквозные Runtime-Сценарии](10-end-to-end-flows.md) | Сквозные сценарии от источника до ответа API |
 | [11. Модель Данных, Таблицы и Индексы](11-data-model-and-indexes.md) | Таблицы, поля, индексы, JSONB, ограничения |
 | [12. События, Очереди и Messaging](12-events-queues-and-messaging.md) | Laravel Queue и AMQP messaging |
 | [13. Безопасность, Отказы и Failure Modes](13-security-and-failure-modes.md) | SSRF, sanitization, backoff, дедупликация, отказные сценарии |
 | [14. Тестирование и Quality Gates](14-testing-and-quality-gates.md) | Unit/feature/arch tests и quality gates |
-| [15. Банк Вопросов и Ответов для Собеседования](../interview/question-bank.md) | Большой набор вопросов и ответов |
-| [16. Глоссарий и Быстрая Шпаргалка](../interview/glossary-and-cheatsheet.md) | Быстрая шпаргалка по сущностям и потокам |
+| [15. Банк Вопросов и Ответов для Собеседования](../interview/15-question-bank.md) | Большой набор вопросов и ответов |
+| [16. Глоссарий и Быстрая Шпаргалка](../interview/16-glossary-and-cheatsheet.md) | Быстрая шпаргалка по сущностям и потокам |
 | [17. Текущие Ограничения и Архитектурные Компромиссы](17-known-limitations-and-tradeoffs.md) | Текущие ограничения и технические компромиссы |
 
 ## Два главных runtime-сценария
@@ -252,9 +252,9 @@ flowchart LR
 
 ## Куда идти дальше
 
-- Если ты только входишь в проект и хочешь сначала руками получить рабочий результат: [../start/junior-onboarding.md](../start/junior-onboarding.md)
-- Если нужен практический API-слой с примерами JSON: [../reference/api/news-api.md](../reference/api/news-api.md)
-- Если хочешь понять, какие процессы реально живут в Docker runtime: [../guides/runtime-operations.md](../guides/runtime-operations.md)
+- Если ты только входишь в проект и хочешь сначала руками получить рабочий результат: [Быстрый старт для новичка](../start/junior-onboarding.md)
+- Если нужен практический API-слой с примерами JSON: [News API: запросы и ответы](../reference/api/news-api.md)
+- Если хочешь понять, какие процессы реально живут в Docker runtime: [Runtime и операционные процессы](../guides/runtime-operations.md)
 - Если хочешь понять lifecycle процесса и влияние Octane: [01. Точки Входа, Boot Lifecycle и Octane Runtime](01-entrypoint.md)
 - Если хочешь понять, как Laravel "склеивает" модули: [02. Framework Layer: Что Реально Живёт в app/](02-app.md)
 - Если нужен сразу сквозной runtime-разбор: [10. Сквозные Runtime-Сценарии](10-end-to-end-flows.md)

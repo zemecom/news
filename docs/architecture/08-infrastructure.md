@@ -309,8 +309,8 @@ php artisan storage:link
 
 ## Связанные документы
 
-- [../guides/runtime-operations.md](../guides/runtime-operations.md) — практическая карта процессов и scheduler-а
-- [../reference/config/env.md](../reference/config/env.md) — какие `.env`-переменные реально влияют на runtime
+- [Runtime и операционные процессы](../guides/runtime-operations.md) — практическая карта процессов и scheduler-а
+- [Конфигурация окружения](../reference/config/env.md) — какие `.env`-переменные реально влияют на runtime
 - [01. Точки Входа, Boot Lifecycle и Octane Runtime](01-entrypoint.md) — lifecycle процессов
 - [11. Модель Данных, Таблицы и Индексы](11-data-model-and-indexes.md) — схема БД
 - [12. События, Очереди и Messaging](12-events-queues-and-messaging.md) — сообщения и очереди

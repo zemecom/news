@@ -209,5 +209,5 @@
 
 - [05. Модуль Intelligence: Pipeline Обработки Сырой Новости](05-intelligence.md)
 - [08. Инфраструктура: Docker, Сервисы, Makefile и Контейнерный Runtime](08-infrastructure.md)
-- [15. Банк Вопросов и Ответов для Собеседования](../interview/question-bank.md)
-- [16. Глоссарий и Быстрая Шпаргалка](../interview/glossary-and-cheatsheet.md)
+- [15. Банк Вопросов и Ответов для Собеседования](../interview/15-question-bank.md)
+- [16. Глоссарий и Быстрая Шпаргалка](../interview/16-glossary-and-cheatsheet.md)

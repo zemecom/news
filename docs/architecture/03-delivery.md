@@ -289,7 +289,7 @@ sequenceDiagram
 
 ## Связанные документы
 
-- [../reference/api/news-api.md](../reference/api/news-api.md) — практические примеры запросов и ответов API
+- [News API: запросы и ответы](../reference/api/news-api.md) — практические примеры запросов и ответов API
 - [06. Модули Catalog и Shared: Хранение, Контракты и Межмодульные События](06-catalog-shared.md) — откуда появляются persisted news и media assets
 - [10. Сквозные Runtime-Сценарии](10-end-to-end-flows.md) — сквозной HTTP flow
 - [11. Модель Данных, Таблицы и Индексы](11-data-model-and-indexes.md) — схема таблиц, на которых строится Delivery

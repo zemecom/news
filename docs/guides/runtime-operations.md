@@ -219,10 +219,10 @@ docker compose exec -T app php artisan db:seed --class=NewsItemSeeder --force
 
 Если хочешь практический старт, открой:
 
-- [junior-onboarding.md](../start/junior-onboarding.md)
+- [Быстрый старт для новичка](../start/junior-onboarding.md)
 
 Если хочешь понять глубже, как это связано с архитектурой:
 
-- [01-entrypoint.md](../architecture/01-entrypoint.md)
-- [08-infrastructure.md](../architecture/08-infrastructure.md)
-- [12-events-queues-and-messaging.md](../architecture/12-events-queues-and-messaging.md)
+- [Точка входа и жизненный цикл приложения](../architecture/01-entrypoint.md)
+- [Инфраструктура и runtime-контур](../architecture/08-infrastructure.md)
+- [События, очереди и messaging](../architecture/12-events-queues-and-messaging.md)

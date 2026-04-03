@@ -16,7 +16,7 @@
 
 4. Laravel schedule definition в `routes/console.php`.
 
-Важно: schedule в коде описан, но в текущем локальном Docker-стеке нет отдельного выделенного scheduler-процесса. Для практического operational-разбора смотри также [../guides/runtime-operations.md](../guides/runtime-operations.md).
+Важно: schedule в коде описан, но в текущем локальном Docker-стеке нет отдельного выделенного scheduler-процесса. Для практического operational-разбора смотри также [Runtime и операционные процессы](../guides/runtime-operations.md).
 
 ## Ключевые файлы и классы
 
@@ -261,7 +261,7 @@ php artisan queue:work \
 
 ## Связанные документы
 
-- [../guides/runtime-operations.md](../guides/runtime-operations.md) — практическая карта runtime-процессов, scheduler-а и ручных команд
+- [Runtime и операционные процессы](../guides/runtime-operations.md) — практическая карта runtime-процессов, scheduler-а и ручных команд
 - [02. Framework Layer: Что Реально Живёт в app/](02-app.md) — что именно bootstrap-ится внутри `app/`
 - [08. Инфраструктура: Docker, Сервисы, Makefile и Контейнерный Runtime](08-infrastructure.md) — как это упаковано в Docker
 - [12. События, Очереди и Messaging](12-events-queues-and-messaging.md) — как поверх этого runtime устроены очереди и messaging
