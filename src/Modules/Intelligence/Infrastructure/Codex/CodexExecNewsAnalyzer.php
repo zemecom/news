@@ -18,7 +18,9 @@ final readonly class CodexExecNewsAnalyzer implements NewsAnalyzer
 
     public function analyze(RawNewsData $raw, AiProviderProfile $account): NewsAnalysisResult
     {
-        $schemaPath = $this->writeTempFile('codex-news-schema-', json_encode($this->schema(), JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
+        $categories = config('intelligence.categories', []);
+        $contract = CodexNewsAnalysisContract::fromConfig(is_array($categories) ? $categories : []);
+        $schemaPath = $this->writeTempFile('codex-news-schema-', json_encode($contract->schema(), JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
         $outputPath = tempnam(sys_get_temp_dir(), 'codex-news-output-');
         $scratchDir = $this->ensureScratchDir();
         $model = $account->defaultModel !== '' ? $account->defaultModel : (string) config('intelligence.chatgpt_codex.model', 'gpt-5.4-mini');
@@ -31,7 +33,7 @@ final readonly class CodexExecNewsAnalyzer implements NewsAnalyzer
                 'CODEX_HOME' => $this->resolveCodexHome($account),
             ],
             timeoutSeconds: (int) config('intelligence.chatgpt_codex.timeout_seconds', 90),
-            input: $this->prompt($raw),
+            input: $contract->prompt($raw),
         );
 
         try {
@@ -40,8 +42,11 @@ final readonly class CodexExecNewsAnalyzer implements NewsAnalyzer
             }
 
             $rawOutput = trim((string) file_get_contents((string) $outputPath));
-            /** @var array<string, mixed> $payload */
             $payload = json_decode($rawOutput, true, 512, JSON_THROW_ON_ERROR);
+            if (! is_array($payload)) {
+                throw new CodexException('Invalid Codex analysis payload: root value must be an object.');
+            }
+            /** @var array<string, mixed> $payload */
         } catch (JsonException $e) {
             throw new CodexException('Failed to decode Codex exec output.', previous: $e);
         } finally {
@@ -49,22 +54,23 @@ final readonly class CodexExecNewsAnalyzer implements NewsAnalyzer
             @unlink((string) $outputPath);
         }
 
+        $payload = CodexNewsAnalysisPayload::fromArray($payload, $contract);
         $metadata = [
             'provider' => AiProviderProfile::PROVIDER_CHATGPT_CODEX,
             'model' => $model,
             'reasoning_effort' => $reasoningEffort ?? 'model_default',
             'profile_slug' => $account->slug,
-            'analysis_version' => 1,
+            'analysis_version' => CodexNewsAnalysisContract::ANALYSIS_VERSION,
         ];
 
         return new NewsAnalysisResult(
-            translatedContent: (string) ($payload['translated_content'] ?? $raw->content),
-            generatedTitle: isset($payload['generated_title']) && $payload['generated_title'] !== '' ? (string) $payload['generated_title'] : null,
-            category: (string) ($payload['category'] ?? ''),
-            tags: array_values(array_filter($payload['tags'] ?? [], static fn (mixed $tag): bool => is_string($tag) && $tag !== '')),
-            sentiment: (int) ($payload['sentiment'] ?? 0),
+            translatedContent: $payload->translatedContent,
+            generatedTitle: $payload->generatedTitle,
+            category: $payload->category,
+            tags: $payload->tags,
+            sentiment: $payload->sentiment,
             analysisMetadata: array_merge($metadata, [
-                'categories_prompted' => config('intelligence.categories', []),
+                'categories_prompted' => $contract->categories(),
             ]),
         );
     }
@@ -90,81 +96,6 @@ final readonly class CodexExecNewsAnalyzer implements NewsAnalyzer
         }
 
         return $path;
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    private function schema(): array
-    {
-        return [
-            '$schema' => 'http://json-schema.org/draft-07/schema#',
-            'type' => 'object',
-            'additionalProperties' => false,
-            'required' => [
-                'translated_content',
-                'generated_title',
-                'category',
-                'tags',
-                'sentiment',
-            ],
-            'properties' => [
-                'translated_content' => [
-                    'type' => 'string',
-                ],
-                'generated_title' => [
-                    'type' => ['string', 'null'],
-                    'maxLength' => 140,
-                ],
-                'category' => [
-                    'type' => 'string',
-                    'enum' => config('intelligence.categories', []),
-                ],
-                'tags' => [
-                    'type' => 'array',
-                    'maxItems' => 8,
-                    'items' => [
-                        'type' => 'string',
-                        'maxLength' => 32,
-                    ],
-                ],
-                'sentiment' => [
-                    'type' => 'integer',
-                    'minimum' => -10,
-                    'maximum' => 10,
-                ],
-            ],
-        ];
-    }
-
-    private function prompt(RawNewsData $raw): string
-    {
-        $categories = implode(', ', config('intelligence.categories', []));
-        $language = $raw->language !== '' ? $raw->language : 'en';
-
-        return <<<PROMPT
-You are a news analysis engine.
-Return only JSON matching the provided schema.
-
-Tasks:
-1. Translate the news content to Russian if it is not already Russian.
-2. Produce an objective, non-clickbait title in Russian.
-3. Pick exactly one category from this set: {$categories}.
-4. Produce 0-8 short lowercase tags.
-5. Produce a sentiment score from -10 to 10.
-
-Rules:
-- Preserve factual meaning.
-- Avoid exaggeration.
-- If the original title is already neutral, you may keep its meaning but rewrite it in clean Russian.
-- Tags should be concise and lowercase.
-- If the content is already in Russian, translated_content may stay semantically identical.
-
-Source language: {$language}
-Title: {$raw->title}
-Content:
-{$raw->content}
-PROMPT;
     }
 
     private function writeTempFile(string $prefix, string $contents): string

@@ -24,6 +24,7 @@ use Modules\Intelligence\Domain\Contracts\SentimentAnalyzer;
 use Modules\Intelligence\Domain\Contracts\TitleGenerator;
 use Modules\Intelligence\Domain\Contracts\Translator;
 use Modules\Intelligence\Domain\DTO\NewsAnalysisResult;
+use Modules\Intelligence\Domain\Exceptions\AiProviderException;
 use Modules\Intelligence\Domain\Exceptions\AiProviderRateLimitException;
 use Modules\Intelligence\Domain\Exceptions\AiProviderUnauthorizedException;
 use Modules\Intelligence\Infrastructure\LLM\HeuristicTranslator;
@@ -229,6 +230,58 @@ final class StepAndHeuristicsTest extends TestCase
         $this->assertSame('fallback', $runtime['status']);
         $this->assertSame('unauthorized', $runtime['fallback_reason']);
         $this->assertSame('Login expired', $runtime['last_error']);
+    }
+
+    public function test_chatgpt_codex_step_marks_provider_error_fallback_in_runtime_metadata(): void
+    {
+        config()->set('intelligence.provider', 'chatgpt_codex');
+
+        $account = AiProviderAccount::query()->create([
+            'slug' => 'chatgpt-default',
+            'provider' => AiProviderAccount::PROVIDER_CHATGPT_CODEX,
+            'display_name' => 'ChatGPT Codex',
+            'is_enabled' => true,
+            'codex_home_subpath' => 'chatgpt-default',
+            'default_model' => 'gpt-5.4-mini',
+            'default_reasoning_effort' => 'high',
+            'max_parallel_jobs' => 1,
+            'auth_status' => AiProviderAccount::STATUS_AUTHENTICATED,
+        ]);
+
+        $item = $this->createPersistedNewsItem();
+        $runtimeRecorder = app(NewsAnalysisRuntimeRecorder::class);
+        $runtimeRecorder->queue((int) $item->getKey());
+        $runtimeRecorder->markRunning((int) $item->getKey(), $account->toProfile());
+
+        $analyzer = $this->createMock(NewsAnalyzer::class);
+        $analyzer->expects($this->once())
+            ->method('analyze')
+            ->willThrowException(new class('Invalid Codex analysis payload: category is invalid.') extends RuntimeException implements AiProviderException {});
+
+        $synchronizer = $this->createMock(AiProviderStatusManager::class);
+        $synchronizer->expects($this->once())->method('markError');
+        $synchronizer->expects($this->never())->method('markUsageLimited');
+        $synchronizer->expects($this->never())->method('markNotAuthenticated');
+
+        $step = new ChatGptCodexEnrichmentStep(
+            analyzer: $analyzer,
+            resolver: app(ActiveAiProviderResolver::class),
+            statusSynchronizer: $synchronizer,
+            runtimeRecorder: $runtimeRecorder,
+        );
+
+        $step->process($this->rawNews([
+            'rawId' => (int) $item->getKey(),
+            'fingerprint' => $item->raw_fingerprint,
+        ]));
+
+        $item->refresh();
+        $runtime = $item->source_metadata['analysis_runtime'] ?? null;
+
+        $this->assertIsArray($runtime);
+        $this->assertSame('fallback', $runtime['status']);
+        $this->assertSame('provider_error', $runtime['fallback_reason']);
+        $this->assertSame('Invalid Codex analysis payload: category is invalid.', $runtime['last_error']);
     }
 
     public function test_translate_step_skips_russian_input(): void

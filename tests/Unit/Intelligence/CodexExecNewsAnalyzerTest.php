@@ -6,9 +6,11 @@ namespace Tests\Unit\Intelligence;
 
 use Carbon\CarbonImmutable;
 use Modules\Intelligence\Domain\DTO\AiProviderProfile;
+use Modules\Intelligence\Infrastructure\Codex\CodexException;
 use Modules\Intelligence\Infrastructure\Codex\CodexExecNewsAnalyzer;
 use Modules\Intelligence\Infrastructure\Codex\CodexProcessRunnerContract;
 use Modules\Shared\Domain\DTO\RawNewsData;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 final class CodexExecNewsAnalyzerTest extends TestCase
@@ -71,6 +73,91 @@ final class CodexExecNewsAnalyzerTest extends TestCase
         $this->assertSame('chatgpt_codex', $result->analysisMetadata['provider']);
         $this->assertSame('gpt-5.4-mini', $result->analysisMetadata['model']);
         $this->assertSame('high', $result->analysisMetadata['reasoning_effort']);
+        $this->assertSame(2, $result->analysisMetadata['analysis_version']);
+    }
+
+    /**
+     * @return array<string, array{0: array<string, mixed>|string, 1: string}>
+     */
+    public static function invalidPayloadProvider(): array
+    {
+        return [
+            'missing required field' => [
+                [
+                    'translated_content' => 'Переведённый текст',
+                    'generated_title' => 'Нейтральный заголовок',
+                    'category' => 'IT',
+                    'tags' => ['ai'],
+                ],
+                'sentiment',
+            ],
+            'invalid category' => [
+                [
+                    'translated_content' => 'Переведённый текст',
+                    'generated_title' => 'Нейтральный заголовок',
+                    'category' => 'Lifestyle',
+                    'tags' => ['ai'],
+                    'sentiment' => 4,
+                ],
+                'category',
+            ],
+            'invalid tags shape' => [
+                [
+                    'translated_content' => 'Переведённый текст',
+                    'generated_title' => 'Нейтральный заголовок',
+                    'category' => 'IT',
+                    'tags' => ['ai', ''],
+                    'sentiment' => 4,
+                ],
+                'tags',
+            ],
+            'invalid sentiment type' => [
+                [
+                    'translated_content' => 'Переведённый текст',
+                    'generated_title' => 'Нейтральный заголовок',
+                    'category' => 'IT',
+                    'tags' => ['ai'],
+                    'sentiment' => 'positive',
+                ],
+                'sentiment',
+            ],
+            'invalid sentiment range' => [
+                [
+                    'translated_content' => 'Переведённый текст',
+                    'generated_title' => 'Нейтральный заголовок',
+                    'category' => 'IT',
+                    'tags' => ['ai'],
+                    'sentiment' => 11,
+                ],
+                'sentiment',
+            ],
+            'too long generated title' => [
+                [
+                    'translated_content' => 'Переведённый текст',
+                    'generated_title' => str_repeat('a', 141),
+                    'category' => 'IT',
+                    'tags' => ['ai'],
+                    'sentiment' => 4,
+                ],
+                'generated_title',
+            ],
+            'invalid json' => [
+                '{',
+                'Failed to decode Codex exec output.',
+            ],
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>|string  $payload
+     */
+    #[DataProvider('invalidPayloadProvider')]
+    public function test_analyzer_rejects_invalid_codex_payload(array|string $payload, string $message): void
+    {
+        $this->expectException(CodexException::class);
+        $this->expectExceptionMessageMatches('/'.preg_quote($message, '/').'/i');
+
+        $this->analyzeWithPayload($payload);
     }
 
     private function rawNews(): RawNewsData
@@ -105,5 +192,39 @@ final class CodexExecNewsAnalyzerTest extends TestCase
             maxParallelJobs: 1,
             authStatus: AiProviderProfile::STATUS_AUTHENTICATED,
         );
+    }
+
+    /**
+     * @param  array<string, mixed>|string  $payload
+     */
+    private function analyzeWithPayload(array|string $payload): void
+    {
+        config()->set('intelligence.chatgpt_codex.home_base', sys_get_temp_dir().'/codex-exec-home');
+        config()->set('intelligence.chatgpt_codex.scratch_dir', sys_get_temp_dir().'/codex-scratch');
+
+        $runner = $this->createMock(CodexProcessRunnerContract::class);
+        $runner->expects($this->once())
+            ->method('run')
+            ->willReturnCallback(static function (array $command) use ($payload): array {
+                $outputFlagIndex = array_search('-o', $command, true);
+                self::assertIsInt($outputFlagIndex);
+
+                $outputPath = $command[$outputFlagIndex + 1];
+                file_put_contents(
+                    $outputPath,
+                    is_array($payload)
+                        ? json_encode($payload, JSON_THROW_ON_ERROR)
+                        : $payload,
+                );
+
+                return [
+                    'exit_code' => 0,
+                    'output' => '',
+                    'error_output' => '',
+                ];
+            });
+
+        $analyzer = new CodexExecNewsAnalyzer($runner);
+        $analyzer->analyze($this->rawNews(), $this->account());
     }
 }
