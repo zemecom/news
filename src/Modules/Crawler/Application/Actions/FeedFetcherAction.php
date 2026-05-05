@@ -13,6 +13,7 @@ use Modules\Crawler\Domain\Contracts\Deduplicator;
 use Modules\Crawler\Domain\Contracts\RawPublisher;
 use Modules\Crawler\Domain\Contracts\RssClient;
 use Modules\Crawler\Domain\Contracts\TelegramClient;
+use Modules\Shared\Domain\DTO\RawNewsData;
 use Modules\Shared\Domain\Events\SourceFetchFailed;
 use Modules\Shared\Domain\Events\SourceFetchSucceeded;
 use Throwable;
@@ -24,7 +25,7 @@ use Throwable;
  * 1. Получает сырые данные о канале/ленте (`$source`).
  * 2. Делегирует HTTP-скачивание клиентам (TelegramClient или RssClient) слой Infrastructure.
  * 3. Превращает "сырой" ответ в DTO `RawNewsData` через фабрику.
- * 4. Проверяет дубликаты через интерфейс `Deduplicator` (сохраняя идемпотентность парсинга).
+ * 4. Пакетно проверяет дубликаты через интерфейс `Deduplicator` (сохраняя идемпотентность парсинга).
  * 5. Уникальные посты отправляет в RabbitMQ (через `RawPublisher`) для модуля Intelligence.
  * 6. Выбрасывает доменные события об успехе/ошибке (для обновления статусов в модуле Catalog).
  */
@@ -63,15 +64,33 @@ final readonly class FeedFetcherAction
                 'duplicates' => 0,
             ];
 
+            /** @var list<RawNewsData> $rawItems */
+            $rawItems = [];
+            $fingerprints = [];
+
             foreach ($items as $item) {
                 $raw = $this->rawNewsFactory->fromRss($source, $item);
+                $rawItems[] = $raw;
 
-                if ($this->deduplicator->exists($raw->fingerprint)) {
+                if ($raw->fingerprint !== '') {
+                    $fingerprints[$raw->fingerprint] = $raw->fingerprint;
+                }
+            }
+
+            $existingFingerprints = array_fill_keys(
+                $this->deduplicator->existingFingerprints(array_values($fingerprints)),
+                true
+            );
+            $seenFingerprints = [];
+
+            foreach ($rawItems as $raw) {
+                if (isset($existingFingerprints[$raw->fingerprint]) || isset($seenFingerprints[$raw->fingerprint])) {
                     $stats['duplicates']++;
 
                     continue;
                 }
 
+                $seenFingerprints[$raw->fingerprint] = true;
                 $stats['new']++;
                 $this->publisher->publish($raw);
                 $logger->info(sprintf('[Fetcher] Published new item: %s', $raw->title));

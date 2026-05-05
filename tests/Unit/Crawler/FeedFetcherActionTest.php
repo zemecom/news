@@ -72,7 +72,10 @@ final class FeedFetcherActionTest extends TestCase
             }));
 
         $deduplicator = $this->createMock(Deduplicator::class);
-        $deduplicator->method('exists')->willReturn(false);
+        $deduplicator
+            ->expects($this->once())
+            ->method('existingFingerprints')
+            ->willReturn([]);
 
         $events = $this->createMock(Dispatcher::class);
         $events->expects($this->once())
@@ -81,6 +84,83 @@ final class FeedFetcherActionTest extends TestCase
 
         $action = new FeedFetcherAction($rssClient, $telegramClient, $publisher, $rawNewsFactory, $deduplicator, $events);
         $action($source);
+    }
+
+    public function test_checks_duplicate_fingerprints_in_one_batch(): void
+    {
+        Log::shouldReceive('channel')->with('stderr')->andReturnSelf();
+        Log::shouldReceive('info')->andReturnNull();
+        Log::shouldReceive('error')->andReturnNull();
+
+        $rssClient = $this->createMock(RssClient::class);
+        $telegramClient = $this->createMock(TelegramClient::class);
+        $publisher = $this->createMock(RawPublisher::class);
+        $rawNewsFactory = new RawNewsFactory(new FingerprintGenerator, new IncomingContentSanitizer);
+
+        $source = [
+            'id' => 11,
+            'url' => 'https://example.com/feed.xml',
+            'type' => 'rss',
+            'language_default' => 'en',
+        ];
+
+        $items = new Collection([
+            [
+                'guid' => 'existing/1',
+                'title' => 'Existing title',
+                'link' => 'https://example.com/existing',
+                'pubDate' => '2026-02-11T10:00:00+00:00',
+            ],
+            [
+                'guid' => 'fresh/1',
+                'title' => 'Fresh title',
+                'link' => 'https://example.com/fresh',
+                'pubDate' => '2026-02-11T10:01:00+00:00',
+            ],
+            [
+                'guid' => 'fresh/1',
+                'title' => 'Fresh title duplicate',
+                'link' => 'https://example.com/fresh-copy',
+                'pubDate' => '2026-02-11T10:02:00+00:00',
+            ],
+        ]);
+
+        $rssClient
+            ->expects($this->once())
+            ->method('fetch')
+            ->with('https://example.com/feed.xml')
+            ->willReturn($items);
+
+        $telegramClient
+            ->expects($this->never())
+            ->method('fetch');
+
+        $publisher
+            ->expects($this->once())
+            ->method('publish')
+            ->with($this->callback(function (RawNewsData $raw): bool {
+                $this->assertSame('fresh/1', $raw->externalId);
+
+                return true;
+            }));
+
+        $deduplicator = new RecordingDeduplicator([
+            $this->fingerprintForExternalId(11, 'existing/1'),
+        ]);
+
+        $events = $this->createMock(Dispatcher::class);
+        $events->expects($this->once())
+            ->method('dispatch')
+            ->with($this->isInstanceOf(SourceFetchSucceeded::class));
+
+        $action = new FeedFetcherAction($rssClient, $telegramClient, $publisher, $rawNewsFactory, $deduplicator, $events);
+
+        $stats = $action($source);
+
+        $this->assertSame(['total' => 3, 'new' => 1, 'duplicates' => 2], $stats);
+        $this->assertSame(0, $deduplicator->existsCalls);
+        $this->assertSame(1, $deduplicator->existingFingerprintsCalls);
+        $this->assertCount(2, $deduplicator->queriedBatches[0] ?? []);
     }
 
     public function test_throws_exception_for_unsupported_source_type(): void
@@ -122,5 +202,50 @@ final class FeedFetcherActionTest extends TestCase
             'type' => 'custom',
             'language_default' => 'en',
         ]);
+    }
+
+    private function fingerprintForExternalId(int $sourceId, string $externalId): string
+    {
+        return hash('sha256', sprintf(
+            'src:%d|ext:%s',
+            $sourceId,
+            mb_strtolower($externalId)
+        ));
+    }
+}
+
+final class RecordingDeduplicator implements Deduplicator
+{
+    public int $existsCalls = 0;
+
+    public int $existingFingerprintsCalls = 0;
+
+    /**
+     * @var list<list<string>>
+     */
+    public array $queriedBatches = [];
+
+    /**
+     * @param  list<string>  $existingFingerprints
+     */
+    public function __construct(private readonly array $existingFingerprints) {}
+
+    public function exists(string $fingerprint): bool
+    {
+        $this->existsCalls++;
+
+        return in_array($fingerprint, $this->existingFingerprints, true);
+    }
+
+    /**
+     * @param  list<string>  $fingerprints
+     * @return list<string>
+     */
+    public function existingFingerprints(array $fingerprints): array
+    {
+        $this->existingFingerprintsCalls++;
+        $this->queriedBatches[] = $fingerprints;
+
+        return array_values(array_intersect($fingerprints, $this->existingFingerprints));
     }
 }
