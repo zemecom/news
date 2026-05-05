@@ -20,6 +20,11 @@ return [
         'Другое',
     ],
 
+    'analysis_cache' => [
+        'store' => env('LLM_ANALYSIS_CACHE_STORE', 'redis'),
+        'ttl_seconds' => (int) env('LLM_ANALYSIS_CACHE_TTL_SECONDS', 604800),
+    ],
+
     'chatgpt_codex' => [
         'binary' => env('CODEX_BINARY', 'codex'),
         'model' => env('LLM_CHATGPT_CODEX_MODEL', 'gpt-5.4-mini'),

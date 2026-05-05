@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Modules\Intelligence\Infrastructure\Codex;
 
 use JsonException;
+use Modules\Intelligence\Domain\Contracts\NewsAnalysisCache;
 use Modules\Intelligence\Domain\Contracts\NewsAnalyzer;
 use Modules\Intelligence\Domain\DTO\AiProviderProfile;
 use Modules\Intelligence\Domain\DTO\NewsAnalysisResult;
@@ -14,17 +15,33 @@ final readonly class CodexExecNewsAnalyzer implements NewsAnalyzer
 {
     public function __construct(
         private CodexProcessRunnerContract $runner,
+        private NewsAnalysisCache $cache,
     ) {}
 
     public function analyze(RawNewsData $raw, AiProviderProfile $account): NewsAnalysisResult
     {
         $categories = config('intelligence.categories', []);
         $contract = CodexNewsAnalysisContract::fromConfig(is_array($categories) ? $categories : []);
+        $model = $account->defaultModel !== '' ? $account->defaultModel : (string) config('intelligence.chatgpt_codex.model', 'gpt-5.4-mini');
+        $reasoningEffort = $this->resolveReasoningEffort($account);
+        $metadata = $this->metadata($account, $model, $reasoningEffort, $contract);
+        $cacheReasoningEffort = $reasoningEffort ?? 'model_default';
+
+        $cached = $this->cache->get(
+            fingerprint: $raw->fingerprint,
+            provider: AiProviderProfile::PROVIDER_CHATGPT_CODEX,
+            model: $model,
+            reasoningEffort: $cacheReasoningEffort,
+            analysisVersion: CodexNewsAnalysisContract::ANALYSIS_VERSION,
+        );
+
+        if ($cached instanceof NewsAnalysisResult) {
+            return $this->withMetadata($cached, $metadata);
+        }
+
         $schemaPath = $this->writeTempFile('codex-news-schema-', json_encode($contract->schema(), JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
         $outputPath = tempnam(sys_get_temp_dir(), 'codex-news-output-');
         $scratchDir = $this->ensureScratchDir();
-        $model = $account->defaultModel !== '' ? $account->defaultModel : (string) config('intelligence.chatgpt_codex.model', 'gpt-5.4-mini');
-        $reasoningEffort = $this->resolveReasoningEffort($account);
 
         $result = $this->runner->run(
             command: $this->buildCommand($model, $reasoningEffort, $scratchDir, $schemaPath, (string) $outputPath),
@@ -55,24 +72,25 @@ final readonly class CodexExecNewsAnalyzer implements NewsAnalyzer
         }
 
         $payload = CodexNewsAnalysisPayload::fromArray($payload, $contract);
-        $metadata = [
-            'provider' => AiProviderProfile::PROVIDER_CHATGPT_CODEX,
-            'model' => $model,
-            'reasoning_effort' => $reasoningEffort ?? 'model_default',
-            'profile_slug' => $account->slug,
-            'analysis_version' => CodexNewsAnalysisContract::ANALYSIS_VERSION,
-        ];
-
-        return new NewsAnalysisResult(
+        $analysis = new NewsAnalysisResult(
             translatedContent: $payload->translatedContent,
             generatedTitle: $payload->generatedTitle,
             category: $payload->category,
             tags: $payload->tags,
             sentiment: $payload->sentiment,
-            analysisMetadata: array_merge($metadata, [
-                'categories_prompted' => $contract->categories(),
-            ]),
+            analysisMetadata: $metadata,
         );
+
+        $this->cache->put(
+            fingerprint: $raw->fingerprint,
+            provider: AiProviderProfile::PROVIDER_CHATGPT_CODEX,
+            model: $model,
+            reasoningEffort: $cacheReasoningEffort,
+            analysisVersion: CodexNewsAnalysisContract::ANALYSIS_VERSION,
+            result: $analysis,
+        );
+
+        return $analysis;
     }
 
     private function ensureScratchDir(): string
@@ -96,6 +114,40 @@ final readonly class CodexExecNewsAnalyzer implements NewsAnalyzer
         }
 
         return $path;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function metadata(
+        AiProviderProfile $account,
+        string $model,
+        ?string $reasoningEffort,
+        CodexNewsAnalysisContract $contract,
+    ): array {
+        return [
+            'provider' => AiProviderProfile::PROVIDER_CHATGPT_CODEX,
+            'model' => $model,
+            'reasoning_effort' => $reasoningEffort ?? 'model_default',
+            'profile_slug' => $account->slug,
+            'analysis_version' => CodexNewsAnalysisContract::ANALYSIS_VERSION,
+            'categories_prompted' => $contract->categories(),
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $metadata
+     */
+    private function withMetadata(NewsAnalysisResult $result, array $metadata): NewsAnalysisResult
+    {
+        return new NewsAnalysisResult(
+            translatedContent: $result->translatedContent,
+            generatedTitle: $result->generatedTitle,
+            category: $result->category,
+            tags: $result->tags,
+            sentiment: $result->sentiment,
+            analysisMetadata: $metadata,
+        );
     }
 
     private function writeTempFile(string $prefix, string $contents): string

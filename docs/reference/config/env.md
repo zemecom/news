@@ -103,6 +103,8 @@ cp .env.example .env
 | --- | --- |
 | `LLM_PROVIDER` | какой провайдер считать основным |
 | `LLM_FALLBACK_PROVIDER` | какой провайдер использовать как fallback |
+| `LLM_ANALYSIS_CACHE_STORE` | cache-store для успешных AI-ответов по fingerprint/model/reasoning/version |
+| `LLM_ANALYSIS_CACHE_TTL_SECONDS` | TTL кэша успешных AI-ответов |
 | `LLM_CHATGPT_CODEX_MODEL` | модель для ChatGPT/Codex CLI |
 | `LLM_CHATGPT_CODEX_REASONING_EFFORT` | уровень reasoning effort для Codex; пусто = default модели |
 | `LLM_CHATGPT_CODEX_TIMEOUT_SECONDS` | timeout одного Codex exec вызова |

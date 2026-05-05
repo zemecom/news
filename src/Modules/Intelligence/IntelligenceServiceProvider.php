@@ -24,10 +24,12 @@ use Modules\Intelligence\Domain\Contracts\AiProviderAuthManager;
 use Modules\Intelligence\Domain\Contracts\AiProviderStatusManager;
 use Modules\Intelligence\Domain\Contracts\Classifier;
 use Modules\Intelligence\Domain\Contracts\EnrichedPublisher as EnrichedPublisherContract;
+use Modules\Intelligence\Domain\Contracts\NewsAnalysisCache;
 use Modules\Intelligence\Domain\Contracts\NewsAnalyzer;
 use Modules\Intelligence\Domain\Contracts\SentimentAnalyzer;
 use Modules\Intelligence\Domain\Contracts\TitleGenerator;
 use Modules\Intelligence\Domain\Contracts\Translator;
+use Modules\Intelligence\Infrastructure\Cache\LaravelNewsAnalysisCache;
 use Modules\Intelligence\Infrastructure\Codex\CodexAccountStatusSynchronizer;
 use Modules\Intelligence\Infrastructure\Codex\CodexAppServerClient;
 use Modules\Intelligence\Infrastructure\Codex\CodexAppServerClientContract;
@@ -77,6 +79,7 @@ final class IntelligenceServiceProvider extends ServiceProvider
             rejectedRoutingKey: (string) config('messaging.routing_keys.enriched_rejected', 'enriched.rejected'),
         ));
         $this->app->bind(EnrichedPublisherContract::class, EnrichedPublisher::class);
+        $this->app->bind(NewsAnalysisCache::class, LaravelNewsAnalysisCache::class);
         $this->app->bind(NewsAnalyzer::class, CodexExecNewsAnalyzer::class);
         $this->app->bind(Translator::class, HeuristicTranslator::class);
         $this->app->bind(Classifier::class, KeywordClassifier::class);

@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Tests\Unit\Intelligence;
 
 use Carbon\CarbonImmutable;
+use Modules\Intelligence\Domain\Contracts\NewsAnalysisCache;
 use Modules\Intelligence\Domain\DTO\AiProviderProfile;
+use Modules\Intelligence\Domain\DTO\NewsAnalysisResult;
 use Modules\Intelligence\Infrastructure\Codex\CodexException;
 use Modules\Intelligence\Infrastructure\Codex\CodexExecNewsAnalyzer;
 use Modules\Intelligence\Infrastructure\Codex\CodexProcessRunnerContract;
@@ -61,7 +63,7 @@ final class CodexExecNewsAnalyzerTest extends TestCase
                 ];
             });
 
-        $analyzer = new CodexExecNewsAnalyzer($runner);
+        $analyzer = new CodexExecNewsAnalyzer($runner, new InMemoryNewsAnalysisCache);
 
         $result = $analyzer->analyze($this->rawNews(), $this->account());
 
@@ -74,6 +76,84 @@ final class CodexExecNewsAnalyzerTest extends TestCase
         $this->assertSame('gpt-5.4-mini', $result->analysisMetadata['model']);
         $this->assertSame('high', $result->analysisMetadata['reasoning_effort']);
         $this->assertSame(2, $result->analysisMetadata['analysis_version']);
+    }
+
+    public function test_analyzer_returns_cached_result_without_running_codex_exec(): void
+    {
+        $cached = new NewsAnalysisResult(
+            translatedContent: 'Кэшированный текст',
+            generatedTitle: 'Кэшированный заголовок',
+            category: 'IT',
+            tags: ['cache'],
+            sentiment: 2,
+            analysisMetadata: [],
+        );
+        $cache = new InMemoryNewsAnalysisCache($cached);
+
+        $runner = $this->createMock(CodexProcessRunnerContract::class);
+        $runner->expects($this->never())->method('run');
+
+        $analyzer = new CodexExecNewsAnalyzer($runner, $cache);
+        $result = $analyzer->analyze($this->rawNews(), $this->account());
+
+        $this->assertSame('Кэшированный текст', $result->translatedContent);
+        $this->assertSame('Кэшированный заголовок', $result->generatedTitle);
+        $this->assertSame(['cache'], $result->tags);
+        $this->assertSame('chatgpt_codex', $result->analysisMetadata['provider']);
+        $this->assertSame('chatgpt-default', $result->analysisMetadata['profile_slug']);
+        $this->assertSame(2, $result->analysisMetadata['analysis_version']);
+        $this->assertSame([
+            'fingerprint' => 'fp-1',
+            'provider' => 'chatgpt_codex',
+            'model' => 'gpt-5.4-mini',
+            'reasoningEffort' => 'high',
+            'analysisVersion' => 2,
+        ], $cache->lastGet);
+        $this->assertNull($cache->lastPut);
+    }
+
+    public function test_analyzer_stores_successful_codex_result_in_cache(): void
+    {
+        config()->set('intelligence.chatgpt_codex.home_base', sys_get_temp_dir().'/codex-exec-home');
+        config()->set('intelligence.chatgpt_codex.scratch_dir', sys_get_temp_dir().'/codex-scratch');
+
+        $cache = new InMemoryNewsAnalysisCache;
+        $runner = $this->createMock(CodexProcessRunnerContract::class);
+        $runner->expects($this->once())
+            ->method('run')
+            ->willReturnCallback(static function (array $command): array {
+                $outputFlagIndex = array_search('-o', $command, true);
+                self::assertIsInt($outputFlagIndex);
+
+                $outputPath = $command[$outputFlagIndex + 1];
+                file_put_contents($outputPath, json_encode([
+                    'translated_content' => 'Переведённый текст',
+                    'generated_title' => 'Нейтральный заголовок',
+                    'category' => 'IT',
+                    'tags' => ['ai', 'laravel'],
+                    'sentiment' => 4,
+                ], JSON_THROW_ON_ERROR));
+
+                return [
+                    'exit_code' => 0,
+                    'output' => '',
+                    'error_output' => '',
+                ];
+            });
+
+        $analyzer = new CodexExecNewsAnalyzer($runner, $cache);
+        $analyzer->analyze($this->rawNews(), $this->account());
+
+        $this->assertSame([
+            'fingerprint' => 'fp-1',
+            'provider' => 'chatgpt_codex',
+            'model' => 'gpt-5.4-mini',
+            'reasoningEffort' => 'high',
+            'analysisVersion' => 2,
+        ], $cache->lastPut);
+        $this->assertInstanceOf(NewsAnalysisResult::class, $cache->stored);
+        $this->assertSame('Переведённый текст', $cache->stored->translatedContent);
+        $this->assertSame(['ai', 'laravel'], $cache->stored->tags);
     }
 
     /**
@@ -224,7 +304,48 @@ final class CodexExecNewsAnalyzerTest extends TestCase
                 ];
             });
 
-        $analyzer = new CodexExecNewsAnalyzer($runner);
+        $analyzer = new CodexExecNewsAnalyzer($runner, new InMemoryNewsAnalysisCache);
         $analyzer->analyze($this->rawNews(), $this->account());
+    }
+}
+
+final class InMemoryNewsAnalysisCache implements NewsAnalysisCache
+{
+    /**
+     * @var array<string, mixed>|null
+     */
+    public ?array $lastGet = null;
+
+    /**
+     * @var array<string, mixed>|null
+     */
+    public ?array $lastPut = null;
+
+    public ?NewsAnalysisResult $stored = null;
+
+    public function __construct(private ?NewsAnalysisResult $result = null) {}
+
+    public function get(
+        string $fingerprint,
+        string $provider,
+        string $model,
+        string $reasoningEffort,
+        int $analysisVersion,
+    ): ?NewsAnalysisResult {
+        $this->lastGet = compact('fingerprint', 'provider', 'model', 'reasoningEffort', 'analysisVersion');
+
+        return $this->result;
+    }
+
+    public function put(
+        string $fingerprint,
+        string $provider,
+        string $model,
+        string $reasoningEffort,
+        int $analysisVersion,
+        NewsAnalysisResult $result,
+    ): void {
+        $this->lastPut = compact('fingerprint', 'provider', 'model', 'reasoningEffort', 'analysisVersion');
+        $this->stored = $result;
     }
 }
