@@ -43,6 +43,8 @@ RUN --mount=type=cache,target=/var/cache/apk \
     ca-certificates \
     icu-data-full \
     curl \
+    docker-cli \
+    docker-cli-compose \
     nodejs \
     npm \
     && ln -s /usr/bin/php85 /usr/bin/php

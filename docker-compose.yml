@@ -40,7 +40,7 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
-  worker:
+  crawler-worker:
     <<: *app_base
     profiles: ["queue"]
     build:
@@ -51,9 +51,78 @@ services:
         <<: *app_build_args
         WITH_XDEBUG: ${WITH_XDEBUG_WORKER:-0}
     command: ["sh", "docker/bin/start-worker.sh"]
+    environment:
+      WORKER_RUNTIME_NAME: crawler-worker
+      WORKER_QUEUES: crawler_tasks
     ports: []
     healthcheck:
       test: ["CMD", "php", "artisan", "app:health-check"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  intelligence-worker:
+    <<: *app_base
+    profiles: ["queue"]
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      target: ${DOCKER_BUILD_TARGET:-local}
+      args:
+        <<: *app_build_args
+        WITH_XDEBUG: ${WITH_XDEBUG_WORKER:-0}
+    command: ["sh", "docker/bin/start-worker.sh"]
+    environment:
+      WORKER_RUNTIME_NAME: intelligence-worker
+      WORKER_QUEUES: intelligence_tasks
+    ports: []
+    healthcheck:
+      test: ["CMD", "php", "artisan", "app:health-check"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  media-worker:
+    <<: *app_base
+    profiles: ["queue"]
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      target: ${DOCKER_BUILD_TARGET:-local}
+      args:
+        <<: *app_build_args
+        WITH_XDEBUG: ${WITH_XDEBUG_WORKER:-0}
+    command: ["sh", "docker/bin/start-worker.sh"]
+    environment:
+      WORKER_RUNTIME_NAME: media-worker
+      WORKER_QUEUES: media_tasks
+    ports: []
+    healthcheck:
+      test: ["CMD", "php", "artisan", "app:health-check"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  worker-control:
+    <<: *app_base
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      target: ${DOCKER_BUILD_TARGET:-local}
+      args:
+        <<: *app_build_args
+        WITH_XDEBUG: 0
+    command: ["php", "-S", "0.0.0.0:8081", "-t", "docker/worker-control/public", "docker/worker-control/router.php"]
+    user: "0:0"
+    volumes:
+      - ./:/app:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      WORKER_SUPERVISOR_TOKEN: ${WORKER_SUPERVISOR_TOKEN:-local-worker-supervisor-token}
+    ports: []
+    depends_on: []
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8081/healthz >/dev/null || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 3

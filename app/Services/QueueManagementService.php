@@ -82,6 +82,45 @@ final readonly class QueueManagementService
         ];
     }
 
+    /**
+     * @return array{queue:string,before:?int,after:?int,processed:bool,exit_code:?int,output:?string,max_jobs:int}
+     */
+    public function runUntilEmpty(string $queueName, int $maxJobs = 25): array
+    {
+        $queueName = $this->guardQueueName($queueName);
+        $before = $this->messageCount($queueName);
+
+        if ($before !== null && $before <= 0) {
+            return [
+                'queue' => $queueName,
+                'before' => $before,
+                'after' => $before,
+                'processed' => false,
+                'exit_code' => null,
+                'output' => null,
+                'max_jobs' => max(1, $maxJobs),
+            ];
+        }
+
+        $resolvedMaxJobs = max(1, $maxJobs);
+        $exitCode = Artisan::call('queue:work', [
+            '--stop-when-empty' => true,
+            '--max-jobs' => $resolvedMaxJobs,
+            '--queue' => $queueName,
+            '--tries' => 3,
+        ]);
+
+        return [
+            'queue' => $queueName,
+            'before' => $before,
+            'after' => $this->messageCount($queueName),
+            'processed' => $exitCode === 0,
+            'exit_code' => $exitCode,
+            'output' => trim(Artisan::output()) ?: null,
+            'max_jobs' => $resolvedMaxJobs,
+        ];
+    }
+
     public function purgeQueue(string $queueName): int
     {
         $queueName = $this->guardQueueName($queueName);

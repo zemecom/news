@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Artisan;
 use PhpAmqpLib\Channel\AMQPChannel;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
 use PHPUnit\Framework\MockObject\MockObject;
+use RuntimeException;
 use Tests\TestCase;
 
 final class QueueManagementServiceTest extends TestCase
@@ -139,5 +140,81 @@ final class QueueManagementServiceTest extends TestCase
         $this->assertTrue($result['processed']);
         $this->assertSame(1, $result['before']);
         $this->assertSame(0, $result['after']);
+    }
+
+    public function test_it_runs_queue_until_empty_with_a_safe_job_limit(): void
+    {
+        /** @var AMQPChannel&MockObject $beforeChannel */
+        $beforeChannel = $this->createMock(AMQPChannel::class);
+        $beforeChannel->expects($this->once())
+            ->method('queue_declare')
+            ->with('intelligence_tasks', true, true, false, false)
+            ->willReturn(['intelligence_tasks', 5, 0]);
+        $beforeChannel->expects($this->once())->method('close');
+
+        /** @var AMQPChannel&MockObject $afterChannel */
+        $afterChannel = $this->createMock(AMQPChannel::class);
+        $afterChannel->expects($this->once())
+            ->method('queue_declare')
+            ->with('intelligence_tasks', true, true, false, false)
+            ->willReturn(['intelligence_tasks', 0, 0]);
+        $afterChannel->expects($this->once())->method('close');
+
+        /** @var AMQPStreamConnection&MockObject $connection */
+        $connection = $this->createMock(AMQPStreamConnection::class);
+        $connection->expects($this->exactly(2))
+            ->method('channel')
+            ->willReturnOnConsecutiveCalls($beforeChannel, $afterChannel);
+
+        Artisan::spy();
+        Artisan::shouldReceive('call')
+            ->once()
+            ->with('queue:work', [
+                '--stop-when-empty' => true,
+                '--max-jobs' => 25,
+                '--queue' => 'intelligence_tasks',
+                '--tries' => 3,
+            ])
+            ->andReturn(0);
+        Artisan::shouldReceive('output')
+            ->once()
+            ->andReturn('');
+
+        $managementApi = new class implements QueuePreviewClient
+        {
+            public function previewQueue(string $queueName, int $limit = 10): array
+            {
+                return [];
+            }
+        };
+
+        $service = new QueueManagementService($connection, $managementApi);
+        $result = $service->runUntilEmpty('intelligence_tasks', 25);
+
+        $this->assertTrue($result['processed']);
+        $this->assertSame(5, $result['before']);
+        $this->assertSame(0, $result['after']);
+        $this->assertSame(25, $result['max_jobs']);
+    }
+
+    public function test_it_rejects_unknown_queue_names_for_admin_operations(): void
+    {
+        /** @var AMQPStreamConnection&MockObject $connection */
+        $connection = $this->createMock(AMQPStreamConnection::class);
+
+        $managementApi = new class implements QueuePreviewClient
+        {
+            public function previewQueue(string $queueName, int $limit = 10): array
+            {
+                return [];
+            }
+        };
+
+        $service = new QueueManagementService($connection, $managementApi);
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Queue "unknown_queue" is not allowed for admin operations.');
+
+        $service->runUntilEmpty('unknown_queue', 25);
     }
 }
