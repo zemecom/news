@@ -107,6 +107,19 @@ return [
             'processors' => [PsrLogMessageProcessor::class],
         ],
 
+        'crawler' => [
+            'driver' => 'stack',
+            'channels' => array_values(array_filter(explode(',', (string) env('LOG_CRAWLER_STACK', 'stderr,crawler_file')))),
+            'ignore_exceptions' => false,
+        ],
+
+        'crawler_file' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/crawler-run.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'replace_placeholders' => true,
+        ],
+
         'syslog' => [
             'driver' => 'syslog',
             'level' => env('LOG_LEVEL', 'debug'),

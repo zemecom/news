@@ -111,6 +111,8 @@ class CrawlerLog extends Component
                     $sourceId,
                     $sourceUrl,
                 ));
+                $this->appendLog('Waiting for crawler_tasks worker to process the job.');
+                $this->appendLog('If the log does not advance, start a worker with `make worker-up` or `make queue`.');
             } else {
                 $options = ['--no-ansi' => true];
                 if ($this->dateFrom !== null && trim($this->dateFrom) !== '') {

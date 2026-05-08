@@ -46,7 +46,7 @@ final readonly class FeedFetcherAction
      */
     public function __invoke(array $source, ?Carbon $dateFrom = null, ?Carbon $dateTo = null, ?int $limit = null): array
     {
-        $logger = Log::channel('stderr');
+        $logger = Log::channel('crawler');
         $logger->info(sprintf('[Fetcher] Starting action for source #%d (%s)', $source['id'], $source['url']));
 
         try {

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Crawler;
 
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 use Modules\Crawler\Infrastructure\Http\RssConnector;
 use Modules\Crawler\Infrastructure\Http\TelegramClient;
 use Modules\Crawler\Infrastructure\Parsers\Telegram\DefaultTelegramParser;
@@ -18,6 +19,9 @@ final class TelegramClientTest extends TestCase
 {
     public function test_fetch_continues_pagination_when_first_page_is_newer_than_date_to(): void
     {
+        Log::shouldReceive('channel')->with('crawler')->andReturnSelf();
+        Log::shouldReceive('info')->andReturnNull();
+
         $mockClient = new MockClient([
             MockResponse::make($this->telegramPage('sample/20', 'Newer post', '2026-02-11T10:00:00+00:00')),
             MockResponse::make(json_encode($this->telegramPage('sample/10', 'Older post', '2026-02-01T10:00:00+00:00'), JSON_THROW_ON_ERROR)),

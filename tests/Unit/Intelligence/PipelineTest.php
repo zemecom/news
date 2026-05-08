@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Intelligence;
 
 use Carbon\CarbonImmutable;
+use Closure;
 use Illuminate\Support\Facades\Event;
 use Modules\Intelligence\Application\Listeners\ProcessRawNewsListener;
 use Modules\Intelligence\Application\Pipeline\NewsProcessingPipeline;
@@ -183,16 +184,49 @@ final class PipelineTest extends TestCase
         };
 
         $pipeline = new NewsProcessingPipeline([$step], $publisher, $newsStore, $this->runtimeRecorder());
-        $listener = new ProcessRawNewsListener;
+        $listener = new ProcessRawNewsListener($pipeline);
 
         $this->assertSame('intelligence_tasks', $listener->viaQueue());
 
-        $this->app->instance(NewsProcessingPipeline::class, $pipeline);
-        $this->app->call([$listener, 'handle'], [
-            'event' => new RawNewsCreated($this->rawNews()),
-        ]);
+        $listener->handle(new RawNewsCreated($this->rawNews()));
 
         Event::assertDispatched(NewsEnriched::class, static fn (NewsEnriched $event): bool => $event->rawId === 77);
+    }
+
+    public function test_queued_listener_can_handle_event_without_method_injection(): void
+    {
+        $raw = $this->rawNews();
+        $handled = null;
+
+        $step = new class(static function (RawNewsData|EnrichedNewsData $input) use (&$handled): void {
+            $handled = $input;
+        }) implements PipelineStep
+        {
+
+            public function __construct(private readonly Closure $record) {}
+
+            public function process(RawNewsData|EnrichedNewsData $input): RawNewsData|EnrichedNewsData
+            {
+                ($this->record)($input);
+
+                return $input;
+            }
+        };
+
+        $pipeline = new NewsProcessingPipeline(
+            [$step],
+            $this->createMock(EnrichedPublisher::class),
+            $this->createMock(NewsStore::class),
+            $this->runtimeRecorder(),
+        );
+
+        $this->app->instance(NewsProcessingPipeline::class, $pipeline);
+
+        /** @var ProcessRawNewsListener $listener */
+        $listener = $this->app->make(ProcessRawNewsListener::class);
+        $listener->handle(new RawNewsCreated($raw));
+
+        $this->assertSame($raw, $handled);
     }
 
     public function test_deduplicate_step_allows_reanalysis_when_raw_id_is_already_known(): void

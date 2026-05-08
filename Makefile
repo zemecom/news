@@ -38,7 +38,7 @@ dev:
 	@# Run development servers concurrently (server, queue, logs, vite) inside Docker
 	$(DOCKER_APP) npx concurrently -c "#93c5fd,#c4b5fd,#fb7185,#fdba74" \
 		"RR_RELOAD_ENABLED=1 sh docker/bin/start-octane.sh" \
-		"php artisan queue:listen --tries=1 --timeout=0" \
+		"sh docker/bin/start-worker.sh" \
 		"php artisan pail --timeout=0" \
 		"npm run dev" \
 		--names=server,queue,logs,vite \
@@ -187,7 +187,7 @@ worker:
 
 worker-up:
 	@# Start the optional queue worker container
-	docker compose --profile queue up -d worker
+	docker compose --profile queue up -d --no-deps worker
 
 crawl:
 	@# Run the crawler command manually
@@ -203,7 +203,7 @@ process-once:
 
 queue:
 	@# Listen to the queue inside Docker
-	$(ARTISAN) queue:listen --tries=1 --timeout=0
+	$(DOCKER_APP) sh docker/bin/start-worker.sh
 
 serve:
 	@# Serve the application inside Docker

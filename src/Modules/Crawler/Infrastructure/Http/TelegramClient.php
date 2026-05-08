@@ -37,7 +37,7 @@ final readonly class TelegramClient implements TelegramClientContract
         $to = $dateTo ? $dateTo->copy()->setTimezone('UTC') : null;
 
         $parser = $this->resolver->resolve($channelName);
-        $logger = Log::channel('stderr');
+        $logger = Log::channel('crawler');
         $logger->info(sprintf('[Telegram] Starting fetch for channel \'@%s\' (Target limit: %d items)', $channelName, $limit));
 
         while (count($items) < $limit) {

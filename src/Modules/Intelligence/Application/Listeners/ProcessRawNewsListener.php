@@ -14,6 +14,10 @@ final class ProcessRawNewsListener implements ShouldQueue
 {
     use InteractsWithQueue;
 
+    public function __construct(
+        private readonly NewsProcessingPipeline $pipeline,
+    ) {}
+
     /**
      * Попытки выполнения
      */
@@ -41,8 +45,8 @@ final class ProcessRawNewsListener implements ShouldQueue
         ];
     }
 
-    public function handle(RawNewsCreated $event, NewsProcessingPipeline $pipeline): void
+    public function handle(RawNewsCreated $event): void
     {
-        $pipeline->handle($event->raw);
+        $this->pipeline->handle($event->raw);
     }
 }

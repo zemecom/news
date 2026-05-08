@@ -25,7 +25,7 @@ final class FeedFetcherActionTest extends TestCase
 {
     public function test_fetches_items_from_telegram_source(): void
     {
-        Log::shouldReceive('channel')->with('stderr')->andReturnSelf();
+        Log::shouldReceive('channel')->with('crawler')->andReturnSelf();
         Log::shouldReceive('info')->andReturnNull();
         Log::shouldReceive('error')->andReturnNull();
 
@@ -88,7 +88,7 @@ final class FeedFetcherActionTest extends TestCase
 
     public function test_checks_duplicate_fingerprints_in_one_batch(): void
     {
-        Log::shouldReceive('channel')->with('stderr')->andReturnSelf();
+        Log::shouldReceive('channel')->with('crawler')->andReturnSelf();
         Log::shouldReceive('info')->andReturnNull();
         Log::shouldReceive('error')->andReturnNull();
 
@@ -165,7 +165,7 @@ final class FeedFetcherActionTest extends TestCase
 
     public function test_throws_exception_for_unsupported_source_type(): void
     {
-        Log::shouldReceive('channel')->with('stderr')->andReturnSelf();
+        Log::shouldReceive('channel')->with('crawler')->andReturnSelf();
         Log::shouldReceive('info')->andReturnNull();
         Log::shouldReceive('error')->andReturnNull();
 
