@@ -58,6 +58,12 @@ docker compose exec -T app php artisan octane:reload
 docker compose --profile queue up -d worker
 ```
 
+Если нужно больше пропускной способности, этот же fleet масштабируется одинаковыми репликами:
+
+```bash
+docker compose --profile queue up -d --scale worker=2 worker
+```
+
 А внутри контейнера уже стартует:
 
 ```bash
@@ -82,6 +88,7 @@ php artisan queue:work \
 2. Падение или зависание worker-а не обязательно сразу ломает HTTP.
 3. Проблемы асинхронного пайплайна нужно диагностировать отдельно от web-layer.
 4. В локальном Docker-стеке `worker` вынесен в профиль `queue`, чтобы не держать лишнюю память, пока очереди не нужны.
+5. Локально это один shared fleet runtime, а не отдельные контейнеры на каждую очередь; детализация по очередям остаётся на уровне RabbitMQ diagnostics и bounded actions.
 
 ## 4. `make dev` и почему он немного особенный
 

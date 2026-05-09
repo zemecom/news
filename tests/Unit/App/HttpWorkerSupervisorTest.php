@@ -21,10 +21,12 @@ final class HttpWorkerSupervisorTest extends TestCase
         $history = [];
         $handler = HandlerStack::create(new MockHandler([
             new Response(200, [], json_encode([
-                'runtime' => 'crawler-worker',
-                'service' => 'crawler-worker',
+                'runtime' => 'worker',
+                'service' => 'worker',
                 'state' => 'running',
                 'container_present' => true,
+                'replica_count' => 3,
+                'running_replica_count' => 2,
                 'memory_bytes' => 104857600,
                 'cpu_percent' => 1.5,
                 'uptime_seconds' => 420,
@@ -44,18 +46,20 @@ final class HttpWorkerSupervisorTest extends TestCase
             baseUrl: 'http://worker-control:8081',
             token: 'secret-token',
             configured: true,
-            runtimes: ['crawler-worker'],
+            runtimes: ['worker'],
         );
 
-        $status = $supervisor->status('crawler-worker');
+        $status = $supervisor->status('worker');
         /** @var array{request: RequestInterface} $firstTransaction */
         $firstTransaction = $history[0];
 
         $this->assertSame('running', $status['state']);
+        $this->assertSame(3, $status['replica_count']);
+        $this->assertSame(2, $status['running_replica_count']);
         $this->assertSame(104857600, $status['memory_bytes']);
         $this->assertSame(1.5, $status['cpu_percent']);
         $this->assertSame('Bearer secret-token', $firstTransaction['request']->getHeaderLine('Authorization'));
-        $this->assertSame('/v1/runtimes/crawler-worker', $firstTransaction['request']->getUri()->getPath());
+        $this->assertSame('/v1/runtimes/worker', $firstTransaction['request']->getUri()->getPath());
     }
 
     public function test_it_maps_log_tail_payload_and_runtime_actions(): void
@@ -64,12 +68,12 @@ final class HttpWorkerSupervisorTest extends TestCase
         $history = [];
         $handler = HandlerStack::create(new MockHandler([
             new Response(200, [], json_encode([
-                'runtime' => 'crawler-worker',
+                'runtime' => 'worker',
                 'lines' => ['line one', 'line two'],
             ], JSON_THROW_ON_ERROR)),
             new Response(200, [], json_encode([
                 'success' => true,
-                'runtime' => 'crawler-worker',
+                'runtime' => 'worker',
                 'message' => 'Runtime restarted.',
             ], JSON_THROW_ON_ERROR)),
         ]));
@@ -84,18 +88,18 @@ final class HttpWorkerSupervisorTest extends TestCase
             baseUrl: 'http://worker-control:8081',
             token: 'secret-token',
             configured: true,
-            runtimes: ['crawler-worker'],
+            runtimes: ['worker'],
         );
 
-        $logs = $supervisor->tailLogs('crawler-worker', 20);
-        $result = $supervisor->restart('crawler-worker');
+        $logs = $supervisor->tailLogs('worker', 20);
+        $result = $supervisor->restart('worker');
         /** @var array{request: RequestInterface} $restartTransaction */
         $restartTransaction = $history[1];
 
         $this->assertSame(['line one', 'line two'], $logs['lines']);
         $this->assertTrue($result['success']);
         $this->assertSame('POST', $restartTransaction['request']->getMethod());
-        $this->assertSame('/v1/runtimes/crawler-worker/restart', $restartTransaction['request']->getUri()->getPath());
+        $this->assertSame('/v1/runtimes/worker/restart', $restartTransaction['request']->getUri()->getPath());
     }
 
     public function test_it_returns_unavailable_result_when_http_backend_fails(): void
@@ -114,10 +118,10 @@ final class HttpWorkerSupervisorTest extends TestCase
             baseUrl: 'http://worker-control:8081',
             token: 'secret-token',
             configured: true,
-            runtimes: ['crawler-worker'],
+            runtimes: ['worker'],
         );
 
-        $status = $supervisor->status('crawler-worker');
+        $status = $supervisor->status('worker');
 
         $this->assertSame('unavailable', $status['state']);
         $this->assertStringContainsString('Docker inspect failed', (string) $status['error']);

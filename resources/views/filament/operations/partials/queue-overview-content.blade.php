@@ -11,7 +11,7 @@
             Queues & Analysis Health
         </h3>
         <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">
-            Live snapshot of RabbitMQ queues used by crawler, intelligence and media workers.
+            Live snapshot of RabbitMQ queues served by the shared `worker` fleet.
         </p>
     </div>
 

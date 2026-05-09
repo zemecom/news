@@ -40,7 +40,7 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
-  crawler-worker:
+  worker:
     <<: *app_base
     profiles: ["queue"]
     build:
@@ -52,50 +52,8 @@ services:
         WITH_XDEBUG: ${WITH_XDEBUG_WORKER:-0}
     command: ["sh", "docker/bin/start-worker.sh"]
     environment:
-      WORKER_RUNTIME_NAME: crawler-worker
-      WORKER_QUEUES: crawler_tasks
-    ports: []
-    healthcheck:
-      test: ["CMD", "php", "artisan", "app:health-check"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-
-  intelligence-worker:
-    <<: *app_base
-    profiles: ["queue"]
-    build:
-      context: .
-      dockerfile: docker/Dockerfile
-      target: ${DOCKER_BUILD_TARGET:-local}
-      args:
-        <<: *app_build_args
-        WITH_XDEBUG: ${WITH_XDEBUG_WORKER:-0}
-    command: ["sh", "docker/bin/start-worker.sh"]
-    environment:
-      WORKER_RUNTIME_NAME: intelligence-worker
-      WORKER_QUEUES: intelligence_tasks
-    ports: []
-    healthcheck:
-      test: ["CMD", "php", "artisan", "app:health-check"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-
-  media-worker:
-    <<: *app_base
-    profiles: ["queue"]
-    build:
-      context: .
-      dockerfile: docker/Dockerfile
-      target: ${DOCKER_BUILD_TARGET:-local}
-      args:
-        <<: *app_build_args
-        WITH_XDEBUG: ${WITH_XDEBUG_WORKER:-0}
-    command: ["sh", "docker/bin/start-worker.sh"]
-    environment:
-      WORKER_RUNTIME_NAME: media-worker
-      WORKER_QUEUES: media_tasks
+      WORKER_RUNTIME_NAME: worker
+      WORKER_QUEUES: ${WORKER_QUEUES:-crawler_tasks,intelligence_tasks,media_tasks}
     ports: []
     healthcheck:
       test: ["CMD", "php", "artisan", "app:health-check"]

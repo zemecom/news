@@ -1,4 +1,4 @@
-SERVICES = app crawler-worker intelligence-worker media-worker worker-control postgres redis rabbitmq qdrant
+SERVICES = app worker worker-control postgres redis rabbitmq qdrant
 
 # Executables variables
 DOCKER_APP = docker compose exec -T app
@@ -182,12 +182,12 @@ app:
 	docker compose exec -it app sh
 
 worker:
-	@# Enter the crawler worker container shell
-	docker compose exec -it crawler-worker sh
+	@# Enter the worker container shell
+	docker compose exec -it worker sh
 
 worker-up:
-	@# Start all managed queue worker containers
-	docker compose --profile queue up -d --no-deps crawler-worker intelligence-worker media-worker
+	@# Start the managed queue worker fleet
+	docker compose --profile queue up -d --no-deps worker
 
 crawl:
 	@# Run the crawler command manually

@@ -32,8 +32,38 @@ final class WorkersPageTest extends TestCase
             {
                 return [
                     [
-                        'runtime' => 'crawler-worker',
+                        'runtime' => 'worker',
                         'queue' => 'crawler_tasks',
+                        'queues' => ['crawler_tasks', 'intelligence_tasks', 'media_tasks'],
+                        'queue_summaries' => [
+                            [
+                                'queue' => 'crawler_tasks',
+                                'status' => 'ok',
+                                'message_count' => 3,
+                                'consumer_count' => 0,
+                                'failed_count' => 1,
+                                'last_failed_at' => '2026-05-08 13:00:00',
+                                'error' => null,
+                            ],
+                            [
+                                'queue' => 'intelligence_tasks',
+                                'status' => 'ok',
+                                'message_count' => 0,
+                                'consumer_count' => 0,
+                                'failed_count' => 0,
+                                'last_failed_at' => null,
+                                'error' => null,
+                            ],
+                            [
+                                'queue' => 'media_tasks',
+                                'status' => 'ok',
+                                'message_count' => 0,
+                                'consumer_count' => 0,
+                                'failed_count' => 0,
+                                'last_failed_at' => null,
+                                'error' => null,
+                            ],
+                        ],
                         'health' => 'not_configured',
                         'message_count' => 3,
                         'consumer_count' => 0,
@@ -42,6 +72,8 @@ final class WorkersPageTest extends TestCase
                         'memory_bytes' => null,
                         'memory_human' => 'n/a',
                         'cpu_percent' => null,
+                        'replica_count' => 0,
+                        'running_replica_count' => 0,
                         'uptime_human' => 'n/a',
                         'restart_count' => null,
                         'last_heartbeat_at' => null,
@@ -50,8 +82,9 @@ final class WorkersPageTest extends TestCase
                         'last_failed_job' => null,
                         'last_error_summary' => 'Worker control is not configured.',
                         'operator_commands' => [
-                            'start_all' => 'make worker-up',
-                            'restart_runtime' => 'docker compose restart crawler-worker',
+                            'start_all' => 'docker compose --profile queue up -d worker',
+                            'restart_runtime' => 'docker compose restart worker',
+                            'scale_runtime_hint' => 'docker compose --profile queue up -d --scale worker=2 worker',
                         ],
                     ],
                 ];
@@ -122,10 +155,10 @@ final class WorkersPageTest extends TestCase
         $response
             ->assertOk()
             ->assertSee('Workers')
-            ->assertSee('Worker Runtime')
+            ->assertSee('Worker Fleet')
             ->assertSee('Docker Control')
             ->assertSee('Not configured')
-            ->assertSee('make worker-up')
+            ->assertSee('docker compose --profile queue up -d worker')
             ->assertSee('Run until empty')
             ->assertSee('FetchSourceJob');
     }
@@ -151,8 +184,38 @@ final class WorkersPageTest extends TestCase
             {
                 return [
                     [
-                        'runtime' => 'crawler-worker',
+                        'runtime' => 'worker',
                         'queue' => 'crawler_tasks',
+                        'queues' => ['crawler_tasks', 'intelligence_tasks', 'media_tasks'],
+                        'queue_summaries' => [
+                            [
+                                'queue' => 'crawler_tasks',
+                                'status' => 'ok',
+                                'message_count' => 0,
+                                'consumer_count' => 1,
+                                'failed_count' => 0,
+                                'last_failed_at' => null,
+                                'error' => null,
+                            ],
+                            [
+                                'queue' => 'intelligence_tasks',
+                                'status' => 'ok',
+                                'message_count' => 0,
+                                'consumer_count' => 0,
+                                'failed_count' => 0,
+                                'last_failed_at' => null,
+                                'error' => null,
+                            ],
+                            [
+                                'queue' => 'media_tasks',
+                                'status' => 'ok',
+                                'message_count' => 0,
+                                'consumer_count' => 0,
+                                'failed_count' => 0,
+                                'last_failed_at' => null,
+                                'error' => null,
+                            ],
+                        ],
                         'health' => 'running',
                         'message_count' => 0,
                         'consumer_count' => 1,
@@ -161,6 +224,8 @@ final class WorkersPageTest extends TestCase
                         'memory_bytes' => 1024,
                         'memory_human' => '1 KB',
                         'cpu_percent' => 0.1,
+                        'replica_count' => 2,
+                        'running_replica_count' => 1,
                         'uptime_human' => '1m',
                         'restart_count' => 0,
                         'last_heartbeat_at' => now()->toIso8601String(),
@@ -283,9 +348,9 @@ final class WorkersPageTest extends TestCase
         $this->app->instance(WorkerManagementService::class, $service);
 
         $this->livewireAs($admin, Workers::class)
-            ->call('startWorker', 'crawler-worker')
-            ->call('stopWorker', 'crawler-worker')
-            ->call('restartWorker', 'crawler-worker')
+            ->call('startWorker', 'worker')
+            ->call('stopWorker', 'worker')
+            ->call('restartWorker', 'worker')
             ->call('softRestartWorkers')
             ->call('runOneJob', 'crawler_tasks')
             ->call('runUntilEmpty', 'crawler_tasks')
@@ -293,9 +358,9 @@ final class WorkersPageTest extends TestCase
             ->assertHasNoErrors();
 
         $this->assertSame([
-            'start:crawler-worker',
-            'stop:crawler-worker',
-            'restart:crawler-worker',
+            'start:worker',
+            'stop:worker',
+            'restart:worker',
             'soft-restart',
             'run-one:crawler_tasks',
             'run-until-empty:crawler_tasks:',

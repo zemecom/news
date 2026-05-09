@@ -41,8 +41,9 @@ make dev
 - `make setup-local`: Сберет образы, поднимет базовый стек (`app`, `postgres`, `redis`, `rabbitmq`, `qdrant`) и настроит окружение.
 - `make dev`: Запустит сервер, очереди и Vite одновременно (внутри Docker).
 - `make setup-hooks`: Настроит путь для git hooks (если нужно запустить отдельно от `setup-local`).
-- Для управляемых фоновых очередей используются три отдельных runtime-контейнера: `crawler-worker`, `intelligence-worker`, `media-worker`.
-- Их можно поднять разом через `make worker-up`.
+- Для управляемых фоновых очередей используется один runtime-сервис `worker`, который по умолчанию слушает `crawler_tasks,intelligence_tasks,media_tasks`.
+- Базовый запуск worker fleet: `make worker-up`.
+- Масштабирование fleet локально: `docker compose --profile queue up -d --scale worker=2 worker`.
 - Отдельный internal-sidecar `worker-control` стартует в базовом стеке и обслуживает безопасный HTTP control-plane для `/admin/workers`, не давая `app`-контейнеру прямой доступ к Docker socket.
 
 Доступ: `http://localhost:${APP_PORT:-8080}`, healthchecks: `/health/live`, `/health/ready`.
@@ -113,7 +114,7 @@ make rector        # Rector (авто-рефакторинг)
 ```bash
 make crawl         # Запуск краулера вручную
 make queue         # Прослушивание очереди
-make worker-up     # Поднять все managed queue workers
+make worker-up     # Поднять managed worker fleet
 make serve         # Запуск сервера
 make logs          # Просмотр логов контейнеров
 ```
@@ -154,7 +155,8 @@ make logs          # Просмотр логов контейнеров
 
 - **PHP 8.5**: Код использует современные возможности (readonly classes, #[Override] и т.д.).
 - **Docker**: Локальный стек использует `postgres:18-alpine`, `redis:8-alpine`, `rabbitmq:4.2-management-alpine`, `qdrant`; образ `app` запускает Laravel Octane на RoadRunner и содержит Composer и Node.js/NPM. `worker` вынесен в профиль `queue`, чтобы не занимать RAM без необходимости.
-- **Workers Runtime Control**: В админке доступна отдельная страница `/admin/workers` с runtime health, bounded queue actions, failed jobs, queue preview и Docker Control. Реальные `start/stop/restart/logs/stats` выполняются через sidecar `worker-control`, а не через прямой доступ web/app-контейнера к Docker socket.
+- **Workers Runtime Control**: В админке доступна отдельная страница `/admin/workers` с fleet health, queue diagnostics, bounded queue actions, failed jobs, queue preview и Docker Control. Реальные `start/stop/restart/logs/stats` выполняются через sidecar `worker-control`, а не через прямой доступ web/app-контейнера к Docker socket.
+- **Kubernetes readiness**: локальный Docker упрощён до одного fleet-сервиса `worker`, но целевая Kubernetes-модель остаётся queue-specific Deployment'ами на том же образе и entrypoint, только с разными `WORKER_QUEUES`.
 - **PostgreSQL 18**: После обновления с ветки `17` существующий каталог `./docker/.data/postgres` может потребовать миграции данных или пересоздания локальной базы, если данные не нужны.
 - **Vite**: Фронтенд собирается и обслуживается также внутри контейнера.
 - **Secrets**: `.env` копируется из `.env.example` при `setup-local`. Для LLM‑интеграций пропиши свои ключи.

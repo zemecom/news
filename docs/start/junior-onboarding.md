@@ -183,6 +183,12 @@ docker compose exec -T app php artisan octane:reload
 3. видны ли jobs в Telescope;
 4. не упали ли listeners/pipeline steps.
 
+Если одной реплики мало, локально можно временно масштабировать worker fleet:
+
+```bash
+docker compose --profile queue up -d --scale worker=2 worker
+```
+
 ## 7. Какие документы читать дальше
 
 Если ты уже поднял проект и увидел данные, дальше лучше идти так:

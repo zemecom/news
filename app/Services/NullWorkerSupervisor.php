@@ -23,6 +23,8 @@ final class NullWorkerSupervisor implements WorkerSupervisor
             'service' => (string) ($runtimeConfig['service'] ?? $runtime),
             'state' => 'not_configured',
             'container_present' => false,
+            'replica_count' => 0,
+            'running_replica_count' => 0,
             'memory_bytes' => null,
             'cpu_percent' => null,
             'uptime_seconds' => null,
@@ -116,10 +118,14 @@ final class NullWorkerSupervisor implements WorkerSupervisor
         $restartTemplate = is_string($commands['restart_runtime_template'] ?? null)
             ? $commands['restart_runtime_template']
             : 'docker compose restart %s';
+        $scaleHintTemplate = is_string($commands['scale_runtime_hint_template'] ?? null)
+            ? $commands['scale_runtime_hint_template']
+            : 'docker compose --profile queue up -d --scale worker=%d worker';
 
         return [
-            'start_all' => is_string($commands['start_all'] ?? null) ? $commands['start_all'] : 'make worker-up',
+            'start_all' => is_string($commands['start_all'] ?? null) ? $commands['start_all'] : 'docker compose --profile queue up -d worker',
             'restart_runtime' => sprintf($restartTemplate, $runtime),
+            'scale_runtime_hint' => sprintf($scaleHintTemplate, 2),
         ];
     }
 }

@@ -62,9 +62,7 @@ final class Workers extends Page
         $selectedRuntime = is_array($selectedWorker) && is_string($selectedWorker['runtime'] ?? null)
             ? $selectedWorker['runtime']
             : null;
-        $selectedQueue = is_array($selectedWorker) && is_string($selectedWorker['queue'] ?? null)
-            ? $selectedWorker['queue']
-            : null;
+        $selectedQueue = $this->resolveSelectedQueue($selectedWorker);
 
         $this->selectedRuntime = $selectedRuntime;
         $this->selectedQueue = $selectedQueue;
@@ -89,6 +87,21 @@ final class Workers extends Page
 
                 return;
             }
+        }
+    }
+
+    public function selectQueue(string $queue): void
+    {
+        $selectedWorker = $this->resolveSelectedWorker(app(WorkerManagementService::class)->listWorkers());
+
+        if (! is_array($selectedWorker)) {
+            return;
+        }
+
+        $queues = is_array($selectedWorker['queues'] ?? null) ? $selectedWorker['queues'] : [];
+
+        if (in_array($queue, $queues, true)) {
+            $this->selectedQueue = $queue;
         }
     }
 
@@ -142,6 +155,27 @@ final class Workers extends Page
         }
 
         return $workers[0] ?? null;
+    }
+
+    /**
+     * @param  array<string, mixed>|null  $worker
+     */
+    private function resolveSelectedQueue(?array $worker): ?string
+    {
+        if (! is_array($worker)) {
+            return null;
+        }
+
+        $queues = array_values(array_filter(
+            is_array($worker['queues'] ?? null) ? $worker['queues'] : [],
+            static fn (mixed $queue): bool => is_string($queue) && $queue !== '',
+        ));
+
+        if ($this->selectedQueue !== null && in_array($this->selectedQueue, $queues, true)) {
+            return $this->selectedQueue;
+        }
+
+        return is_string($worker['queue'] ?? null) ? $worker['queue'] : ($queues[0] ?? null);
     }
 
     /**

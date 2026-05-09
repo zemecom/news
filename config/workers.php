@@ -15,22 +15,19 @@ return [
     'telemetry_store' => env('WORKER_TELEMETRY_STORE', env('CACHE_STORE', 'redis')),
 
     'runtimes' => [
-        'crawler-worker' => [
-            'service' => 'crawler-worker',
-            'queue' => 'crawler_tasks',
-        ],
-        'intelligence-worker' => [
-            'service' => 'intelligence-worker',
-            'queue' => 'intelligence_tasks',
-        ],
-        'media-worker' => [
-            'service' => 'media-worker',
-            'queue' => 'media_tasks',
+        'worker' => [
+            'service' => 'worker',
+            'queues' => [
+                'crawler_tasks',
+                'intelligence_tasks',
+                'media_tasks',
+            ],
         ],
     ],
 
     'operator_commands' => [
-        'start_all' => 'make worker-up',
-        'restart_runtime_template' => 'docker compose restart %s',
+        'start_all' => 'docker compose --profile queue up -d worker',
+        'restart_runtime_template' => 'docker compose restart worker',
+        'scale_runtime_hint_template' => 'docker compose --profile queue up -d --scale worker=%d worker',
     ],
 ];

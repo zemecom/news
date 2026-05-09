@@ -111,7 +111,7 @@ workerControlJson(404, [
 function workerControlStatus(string $runtime, array $runtimeConfig): array
 {
     $service = (string) ($runtimeConfig['service'] ?? $runtime);
-    [$containerIdSuccess, $containerId, $containerIdError] = workerControlRun([
+    [$containerIdSuccess, $containerIdsOutput, $containerIdError] = workerControlRun([
         'docker',
         'compose',
         '--project-directory',
@@ -127,6 +127,8 @@ function workerControlStatus(string $runtime, array $runtimeConfig): array
             'service' => $service,
             'state' => 'unavailable',
             'container_present' => false,
+            'replica_count' => 0,
+            'running_replica_count' => 0,
             'memory_bytes' => null,
             'cpu_percent' => null,
             'uptime_seconds' => null,
@@ -136,14 +138,17 @@ function workerControlStatus(string $runtime, array $runtimeConfig): array
         ];
     }
 
-    $containerId = trim($containerId);
+    $containerIds = array_values(array_filter(preg_split('/\r\n|\r|\n/', trim($containerIdsOutput)) ?: [], static fn (string $id): bool => $id !== ''));
+    $replicaCount = count($containerIds);
 
-    if ($containerId === '') {
+    if ($replicaCount === 0) {
         return [
             'runtime' => $runtime,
             'service' => $service,
             'state' => 'stopped',
             'container_present' => false,
+            'replica_count' => 0,
+            'running_replica_count' => 0,
             'memory_bytes' => null,
             'cpu_percent' => null,
             'uptime_seconds' => null,
@@ -156,7 +161,7 @@ function workerControlStatus(string $runtime, array $runtimeConfig): array
     [$inspectSuccess, $inspectOutput, $inspectError] = workerControlRun([
         'docker',
         'inspect',
-        $containerId,
+        ...$containerIds,
     ]);
 
     if (! $inspectSuccess) {
@@ -165,6 +170,8 @@ function workerControlStatus(string $runtime, array $runtimeConfig): array
             'service' => $service,
             'state' => 'unavailable',
             'container_present' => true,
+            'replica_count' => $replicaCount,
+            'running_replica_count' => 0,
             'memory_bytes' => null,
             'cpu_percent' => null,
             'uptime_seconds' => null,
@@ -175,31 +182,55 @@ function workerControlStatus(string $runtime, array $runtimeConfig): array
     }
 
     $decodedInspect = json_decode($inspectOutput, true);
-    $container = is_array($decodedInspect) && is_array($decodedInspect[0] ?? null) ? $decodedInspect[0] : [];
-    $state = is_array($container['State'] ?? null) ? $container['State'] : [];
-    $startedAt = is_string($state['StartedAt'] ?? null) ? $state['StartedAt'] : null;
-    $running = (bool) ($state['Running'] ?? false);
-    $restartCount = isset($container['RestartCount']) ? (int) $container['RestartCount'] : null;
+    $containers = is_array($decodedInspect) ? array_values(array_filter($decodedInspect, 'is_array')) : [];
+    $runningContainers = [];
+    $restartCount = 0;
+    $startedAt = null;
+
+    foreach ($containers as $container) {
+        $state = is_array($container['State'] ?? null) ? $container['State'] : [];
+
+        if ((bool) ($state['Running'] ?? false)) {
+            $runningContainers[] = $container;
+            $currentStartedAt = is_string($state['StartedAt'] ?? null) ? $state['StartedAt'] : null;
+
+            if ($currentStartedAt !== null && ($startedAt === null || $currentStartedAt < $startedAt)) {
+                $startedAt = $currentStartedAt;
+            }
+        }
+
+        $restartCount += isset($container['RestartCount']) ? (int) $container['RestartCount'] : 0;
+    }
+
+    $runningReplicaCount = count($runningContainers);
 
     $memoryBytes = null;
     $cpuPercent = null;
 
-    if ($running) {
+    if ($runningReplicaCount > 0) {
         [$statsSuccess, $statsOutput] = workerControlRun([
             'docker',
             'stats',
             '--no-stream',
             '--format',
             '{{json .}}',
-            $containerId,
+            ...$containerIds,
         ]);
 
         if ($statsSuccess) {
-            $decodedStats = json_decode($statsOutput, true);
+            $statsLines = array_values(array_filter(preg_split('/\r\n|\r|\n/', trim($statsOutput)) ?: [], static fn (string $line): bool => $line !== ''));
+            $memoryBytes = 0;
+            $cpuPercent = 0.0;
 
-            if (is_array($decodedStats)) {
-                $memoryBytes = workerControlParseBytes(is_string($decodedStats['MemUsage'] ?? null) ? $decodedStats['MemUsage'] : null);
-                $cpuPercent = workerControlParseCpu(is_string($decodedStats['CPUPerc'] ?? null) ? $decodedStats['CPUPerc'] : null);
+            foreach ($statsLines as $statsLine) {
+                $decodedStats = json_decode($statsLine, true);
+
+                if (! is_array($decodedStats)) {
+                    continue;
+                }
+
+                $memoryBytes += workerControlParseBytes(is_string($decodedStats['MemUsage'] ?? null) ? $decodedStats['MemUsage'] : null) ?? 0;
+                $cpuPercent += workerControlParseCpu(is_string($decodedStats['CPUPerc'] ?? null) ? $decodedStats['CPUPerc'] : null) ?? 0.0;
             }
         }
     }
@@ -207,8 +238,10 @@ function workerControlStatus(string $runtime, array $runtimeConfig): array
     return [
         'runtime' => $runtime,
         'service' => $service,
-        'state' => $running ? 'running' : 'stopped',
+        'state' => $runningReplicaCount > 0 ? 'running' : 'stopped',
         'container_present' => true,
+        'replica_count' => $replicaCount,
+        'running_replica_count' => $runningReplicaCount,
         'memory_bytes' => $memoryBytes,
         'cpu_percent' => $cpuPercent,
         'uptime_seconds' => $startedAt !== null ? CarbonImmutable::parse($startedAt)->diffInSeconds(now()) : null,

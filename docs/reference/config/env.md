@@ -155,6 +155,12 @@ cp .env.example .env
 
 Оставь `.env.example` почти как есть. В таком режиме `worker` не стартует автоматически и это нормально: локалка экономит память, а очереди можно поднять отдельно через `docker compose --profile queue up -d worker`.
 
+Если нужен shared worker fleet из нескольких одинаковых реплик, используй:
+
+```bash
+docker compose --profile queue up -d --scale worker=2 worker
+```
+
 ### Локальная отладка HTTP через IDE
 
 Проверь:

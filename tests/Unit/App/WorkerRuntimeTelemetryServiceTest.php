@@ -16,11 +16,11 @@ final class WorkerRuntimeTelemetryServiceTest extends TestCase
 
         $service = new WorkerRuntimeTelemetryService('array');
 
-        $service->recordHeartbeat('crawler-worker');
-        $service->recordProcessedJob('crawler-worker', 'Modules\\Crawler\\Application\\Jobs\\FetchSourceJob');
-        $service->recordFailedJob('crawler-worker', 'Modules\\Crawler\\Application\\Jobs\\FetchSourceJob', 'HTTP 500');
+        $service->recordHeartbeat('worker');
+        $service->recordProcessedJob('worker', 'Modules\\Crawler\\Application\\Jobs\\FetchSourceJob');
+        $service->recordFailedJob('worker', 'Modules\\Crawler\\Application\\Jobs\\FetchSourceJob', 'HTTP 500');
 
-        $snapshot = $service->snapshot('crawler-worker');
+        $snapshot = $service->snapshot('worker');
 
         $this->assertNotNull($snapshot['last_heartbeat_at']);
         $this->assertSame('Modules\\Crawler\\Application\\Jobs\\FetchSourceJob', $snapshot['last_processed_job']);
@@ -35,14 +35,14 @@ final class WorkerRuntimeTelemetryServiceTest extends TestCase
         config()->set('workers.heartbeat_ttl_seconds', 120);
 
         $service = new WorkerRuntimeTelemetryService('array');
-        $service->putSnapshot('crawler-worker', [
+        $service->putSnapshot('worker', [
             'last_heartbeat_at' => now()->subSeconds(121)->toIso8601String(),
             'last_processed_job' => null,
             'last_failed_job' => null,
             'last_error_summary' => null,
         ]);
 
-        $snapshot = $service->snapshot('crawler-worker');
+        $snapshot = $service->snapshot('worker');
 
         $this->assertTrue($snapshot['heartbeat_stale']);
     }

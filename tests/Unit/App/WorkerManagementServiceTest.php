@@ -23,15 +23,20 @@ final class WorkerManagementServiceTest extends TestCase
     public function test_it_builds_worker_snapshots_and_marks_not_configured_runtime_health(): void
     {
         config()->set('workers.runtimes', [
-            'crawler-worker' => [
-                'service' => 'crawler-worker',
-                'queue' => 'crawler_tasks',
+            'worker' => [
+                'service' => 'worker',
+                'queues' => ['crawler_tasks', 'intelligence_tasks', 'media_tasks'],
             ],
         ]);
 
         $overviewChannel = $this->createMock(AMQPChannel::class);
         $overviewChannel->method('queue_declare')
-            ->willReturn(['crawler_tasks', 3, 0]);
+            ->willReturnCallback(static fn (string $queue): array => match ($queue) {
+                'crawler_tasks' => ['crawler_tasks', 3, 0],
+                'intelligence_tasks' => ['intelligence_tasks', 0, 0],
+                'media_tasks' => ['media_tasks', 0, 0],
+                default => [$queue, 0, 0],
+            });
         $overviewChannel->method('close');
 
         $overviewConnection = $this->createMock(AMQPStreamConnection::class);
@@ -53,16 +58,18 @@ final class WorkerManagementServiceTest extends TestCase
         {
             public function listRuntimes(): array
             {
-                return ['crawler-worker'];
+                return ['worker'];
             }
 
             public function status(string $runtime): array
             {
                 return [
                     'runtime' => $runtime,
-                    'service' => 'crawler-worker',
+                    'service' => 'worker',
                     'state' => 'not_configured',
                     'container_present' => false,
+                    'replica_count' => 0,
+                    'running_replica_count' => 0,
                     'memory_bytes' => null,
                     'cpu_percent' => null,
                     'uptime_seconds' => null,
@@ -70,7 +77,7 @@ final class WorkerManagementServiceTest extends TestCase
                     'started_at' => null,
                     'error' => 'Worker control is not configured.',
                     'operator_commands' => [
-                        'start_all' => 'make worker-up',
+                        'start_all' => 'docker compose --profile queue up -d worker',
                     ],
                 ];
             }
@@ -116,8 +123,9 @@ final class WorkerManagementServiceTest extends TestCase
         $workers = $service->listWorkers();
 
         $this->assertCount(1, $workers);
-        $this->assertSame('crawler-worker', $workers[0]['runtime']);
+        $this->assertSame('worker', $workers[0]['runtime']);
         $this->assertSame('crawler_tasks', $workers[0]['queue']);
+        $this->assertSame(['crawler_tasks', 'intelligence_tasks', 'media_tasks'], $workers[0]['queues']);
         $this->assertSame('not_configured', $workers[0]['health']);
         $this->assertSame(3, $workers[0]['message_count']);
     }
@@ -125,16 +133,21 @@ final class WorkerManagementServiceTest extends TestCase
     public function test_it_marks_runtime_as_degraded_when_heartbeat_is_stale_and_queue_has_backlog(): void
     {
         config()->set('workers.runtimes', [
-            'crawler-worker' => [
-                'service' => 'crawler-worker',
-                'queue' => 'crawler_tasks',
+            'worker' => [
+                'service' => 'worker',
+                'queues' => ['crawler_tasks', 'intelligence_tasks', 'media_tasks'],
             ],
         ]);
         config()->set('workers.heartbeat_ttl_seconds', 120);
 
         $overviewChannel = $this->createMock(AMQPChannel::class);
         $overviewChannel->method('queue_declare')
-            ->willReturn(['crawler_tasks', 7, 0]);
+            ->willReturnCallback(static fn (string $queue): array => match ($queue) {
+                'crawler_tasks' => ['crawler_tasks', 7, 0],
+                'intelligence_tasks' => ['intelligence_tasks', 0, 0],
+                'media_tasks' => ['media_tasks', 0, 0],
+                default => [$queue, 0, 0],
+            });
         $overviewChannel->method('close');
 
         $overviewConnection = $this->createMock(AMQPStreamConnection::class);
@@ -151,7 +164,7 @@ final class WorkerManagementServiceTest extends TestCase
         });
 
         $telemetry = new WorkerRuntimeTelemetryService('array');
-        $telemetry->putSnapshot('crawler-worker', [
+        $telemetry->putSnapshot('worker', [
             'last_heartbeat_at' => now()->subSeconds(121)->toIso8601String(),
             'last_processed_job' => null,
             'last_failed_job' => null,
@@ -162,16 +175,18 @@ final class WorkerManagementServiceTest extends TestCase
         {
             public function listRuntimes(): array
             {
-                return ['crawler-worker'];
+                return ['worker'];
             }
 
             public function status(string $runtime): array
             {
                 return [
                     'runtime' => $runtime,
-                    'service' => 'crawler-worker',
+                    'service' => 'worker',
                     'state' => 'running',
                     'container_present' => true,
+                    'replica_count' => 2,
+                    'running_replica_count' => 1,
                     'memory_bytes' => 1000000,
                     'cpu_percent' => 1.2,
                     'uptime_seconds' => 300,
@@ -224,6 +239,8 @@ final class WorkerManagementServiceTest extends TestCase
 
         $this->assertSame('degraded', $workers[0]['health']);
         $this->assertTrue($workers[0]['heartbeat_stale']);
+        $this->assertSame(7, $workers[0]['message_count']);
+        $this->assertSame(2, $workers[0]['replica_count']);
     }
 
     public function test_it_soft_restarts_all_laravel_workers_via_queue_restart(): void
