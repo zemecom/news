@@ -36,12 +36,14 @@ rebuild:
 
 dev:
 	@# Run development servers concurrently (server, queue, logs, vite) inside Docker
-	$(DOCKER_APP) npx concurrently -c "#93c5fd,#c4b5fd,#fb7185,#fdba74" \
+	$(DOCKER_APP) npx concurrently -c "#93c5fd,#c4b5fd,#fb7185,#fdba74,#34d399,#f59e0b" \
 		"RR_RELOAD_ENABLED=1 sh docker/bin/start-octane.sh" \
 		"sh docker/bin/start-worker.sh" \
 		"php artisan pail --timeout=0" \
 		"npm run dev" \
-		--names=server,queue,logs,vite \
+		"npm run dev:web" \
+		"npm run dev:admin" \
+		--names=server,queue,logs,vite,web,admin \
 		--kill-others
 
 npm-dev:
@@ -51,6 +53,8 @@ npm-dev:
 npm-build-prod:
 	@# Build minified production frontend assets inside Docker
 	$(NPM) run build:prod
+	$(NPM) run build:web
+	$(NPM) run build:admin
 
 # --- Setup & Configuration ---
 
@@ -133,6 +137,8 @@ agent-check:
 	@# AI Agent helper: reload Octane, lint, generate docs, analyze, and test
 	$(ARTISAN) octane:reload || true
 	$(COMPOSER) lint
+	$(NPM) run build:web
+	$(NPM) run build:admin
 	@make docs-deps
 	$(COMPOSER) analyze
 	@make test-all

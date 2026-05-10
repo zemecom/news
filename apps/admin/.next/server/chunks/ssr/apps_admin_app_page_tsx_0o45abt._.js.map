@@ -1,0 +1,1 @@
+{"version":3,"sources":["../../../../../../apps/admin/app/page.tsx"],"sourcesContent":["import { redirect } from \"next/navigation\";\n\nexport default function AdminIndexPage() {\n  redirect(\"/news\");\n}\n"],"names":["AdminIndexPage"],"mappings":"uCAAA,EAAA,CAAA,CAAA,OAAA,IAAA,EAAA,EAAA,CAAA,CAAA,wBAEe,SAASA,EACtB,CAAA,EAAA,EAAA,QAAA,AAAQ,EAAC,QACX"}

@@ -15,10 +15,14 @@ use Illuminate\Support\Carbon;
  * @property string $title_original
  * @property string $content_original
  * @property string|null $title_generated
+ * @property string|null $content_translated
  * @property string|null $image_url
  * @property array<int|string, mixed>|null $media
  * @property array<int, string>|null $tags
  * @property array<string, mixed>|null $source_metadata
+ * @property int $sentiment_score
+ * @property bool $is_important
+ * @property string $status
  * @property string $raw_fingerprint
  * @property Carbon|null $published_at
  * @property Source|null $source

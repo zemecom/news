@@ -1,0 +1,97 @@
+openapi: 3.1.0
+info:
+  title: SmartNews API v1
+  version: 1.0.0
+  description: Базовая OpenAPI-спецификация для нового `/api/v1` surface.
+servers:
+  - url: http://api.localhost:8080/api/v1
+paths:
+  /auth/login:
+    post:
+      summary: Login with session cookie
+  /auth/logout:
+    post:
+      summary: Logout current session
+  /auth/me:
+    get:
+      summary: Current authenticated user
+  /news:
+    get:
+      summary: Public news feed
+  /news/{id}:
+    get:
+      summary: Public news detail
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+  /news/filters:
+    get:
+      summary: Public feed filters metadata
+  /admin/news:
+    get:
+      summary: Admin news list
+  /admin/news/{id}:
+    get:
+      summary: Admin news detail
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+  /admin/news/{id}/reanalyze:
+    post:
+      summary: Requeue AI analysis for one news item
+  /admin/news/bulk/reanalyze:
+    post:
+      summary: Requeue AI analysis for many news items
+  /admin/news/bulk/enrich-missing-ai:
+    post:
+      summary: Enqueue only items without AI metadata
+  /admin/news/bulk/refresh-ai:
+    post:
+      summary: Requeue AI analysis for selected items
+  /admin/sources:
+    get:
+      summary: Admin sources list
+    post:
+      summary: Create source
+  /admin/sources/{id}:
+    get:
+      summary: Source detail
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+    patch:
+      summary: Update source
+    delete:
+      summary: Delete source
+  /admin/settings:
+    get:
+      summary: Admin settings
+    put:
+      summary: Update admin settings
+  /admin/ai-provider-accounts:
+    get:
+      summary: AI provider accounts
+  /admin/ai-provider-accounts/{id}:
+    patch:
+      summary: Update AI provider account
+  /admin/ai-provider-accounts/{id}/sync:
+    post:
+      summary: Refresh provider status
+  /admin/ai-provider-accounts/{id}/login:
+    post:
+      summary: Start device login flow
+  /admin/ai-provider-accounts/{id}/cancel-login:
+    post:
+      summary: Cancel pending login flow
+  /admin/ai-provider-accounts/{id}/logout:
+    post:
+      summary: Logout provider

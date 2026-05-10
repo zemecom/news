@@ -1,0 +1,11 @@
+{
+  "name": "@smartnews/api-client",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@smartnews/types": "file:../types"
+  }
+}

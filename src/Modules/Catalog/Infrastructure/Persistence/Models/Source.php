@@ -6,12 +6,20 @@ namespace Modules\Catalog\Infrastructure\Persistence\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
  * @property string $name
  * @property string $url
+ * @property string $type
  * @property string|null $language_default
+ * @property string|null $cron_expression
+ * @property bool $is_active
+ * @property array<string, mixed>|null $retry_backoff_state
+ * @property Carbon|null $last_success_at
+ * @property Carbon|null $last_error_at
+ * @property int $error_streak
  */
 final class Source extends Model
 {

@@ -1,7 +1,7 @@
 # SmartNews Aggregator
 
-AI‑агрегатор новостей в формате modular monolith на Laravel. PHP 8.5+.
-Система собирает данные из источников, обогащает (перевод/классификация/тональность), хранит и доставляет пользователю.
+AI‑агрегатор новостей в формате modular monolith на Laravel + monorepo frontends на Next.js. PHP 8.5+.
+Система собирает данные из источников, обогащает (перевод/классификация/тональность), хранит и доставляет пользователю через versioned API и отдельные web/admin frontend-контуры.
 
 ## Архитектура
 
@@ -10,6 +10,9 @@ AI‑агрегатор новостей в формате modular monolith на
 - Слои в каждом модуле: `Domain`, `Application`, `Infrastructure`
 - Контракты: зависимости между слоями только через интерфейсы (Domain/Contracts)
 - Локальный HTTP-сервер: Laravel Octane + RoadRunner
+- Public frontend: `apps/web` (`Next.js 16`, `React 19`)
+- Admin frontend: `apps/admin` (`Next.js 16`, `React 19`)
+- Shared frontend packages: `packages/{api-client,types,ui,config}`
 
 Карта документации и маршруты чтения собраны в `docs/README.md`.
 
@@ -39,16 +42,22 @@ make dev
 ```
 
 - `make setup-local`: Сберет образы, поднимет базовый стек (`app`, `postgres`, `redis`, `rabbitmq`, `qdrant`) и настроит окружение.
-- `make dev`: Запустит сервер, очереди и Vite одновременно (внутри Docker).
+- `make dev`: Запустит API runtime, worker runtime, legacy Vite и оба Next.js frontend-контура (`web`, `admin`) внутри Docker.
 - `make setup-hooks`: Настроит путь для git hooks (если нужно запустить отдельно от `setup-local`).
 - Для управляемых фоновых очередей используется один runtime-сервис `worker`, который по умолчанию слушает `crawler_tasks,intelligence_tasks,media_tasks`.
 - Базовый запуск worker fleet: `make worker-up`.
 - Масштабирование fleet локально: `docker compose --profile queue up -d --scale worker=2 worker`.
 - Отдельный internal-sidecar `worker-control` стартует в базовом стеке и обслуживает безопасный HTTP control-plane для `/admin/workers`, не давая `app`-контейнеру прямой доступ к Docker socket.
 
-Доступ: `http://localhost:${APP_PORT:-8080}`, healthchecks: `/health/live`, `/health/ready`.
-По умолчанию: Приложение — `8080`, Vite (HMR) — `5173`. Порты настраиваются в `.env`.
-Локальный `APP_URL` по умолчанию: `http://localhost:8080`.
+Доступ:
+
+- API backend: `http://api.localhost:${APP_PORT:-8080}`
+- Public web: `http://app.localhost:${FRONTEND_WEB_PORT:-3000}`
+- Admin web: `http://admin.localhost:${FRONTEND_ADMIN_PORT:-3001}`
+- API healthchecks: `/health/live`, `/health/ready`
+
+По умолчанию: API — `8080`, public web — `3000`, admin web — `3001`, legacy Vite (HMR) — `5173`. Порты настраиваются в `.env`.
+Локальный `APP_URL` по умолчанию: `http://api.localhost:8080`.
 
 ### Первый осмысленный запуск
 
@@ -98,6 +107,7 @@ make test-coverage # Unit/Feature тесты с pcov и coverage gate
 make test-arch     # Проверка архитектурных правил (Pest)
 make ci-check      # Полный прогон (Lint, PHPStan, Psalm, Tests)
 make smoke-api     # Базовый тест API
+make agent-check   # Reload Octane, frontend builds, docs, analyze, tests
 ```
 
 ### Статический анализ и Линтинг
@@ -107,6 +117,8 @@ make analyze       # PHPStan
 make psalm         # Psalm
 make lint          # Pint (исправление стиля)
 make rector        # Rector (авто-рефакторинг)
+npm run build:web  # Production build public Next.js app
+npm run build:admin # Production build admin Next.js app
 ```
 
 ### Операции
@@ -158,7 +170,8 @@ make logs          # Просмотр логов контейнеров
 - **Workers Runtime Control**: В админке доступна отдельная страница `/admin/workers` с fleet health, queue diagnostics, bounded queue actions, failed jobs, queue preview и Docker Control. Реальные `start/stop/restart/logs/stats` выполняются через sidecar `worker-control`, а не через прямой доступ web/app-контейнера к Docker socket.
 - **Kubernetes readiness**: локальный Docker упрощён до одного fleet-сервиса `worker`, но целевая Kubernetes-модель остаётся queue-specific Deployment'ами на том же образе и entrypoint, только с разными `WORKER_QUEUES`.
 - **PostgreSQL 18**: После обновления с ветки `17` существующий каталог `./docker/.data/postgres` может потребовать миграции данных или пересоздания локальной базы, если данные не нужны.
-- **Vite**: Фронтенд собирается и обслуживается также внутри контейнера.
+- **Legacy Vite**: текущий Blade/Filament asset-поток по-прежнему собирается внутри контейнера.
+- **Next.js Frontends**: `apps/web` и `apps/admin` запускаются внутри контейнера через `npm run dev:web` и `npm run dev:admin`, а общие контракты живут в `packages/*`.
 - **Secrets**: `.env` копируется из `.env.example` при `setup-local`. Для LLM‑интеграций пропиши свои ключи.
 - **Xdebug**: По умолчанию выключен; включается через `WITH_XDEBUG`, `WITH_XDEBUG_WORKER` и `XDEBUG_MODE` в `.env` с последующей пересборкой соответствующего контейнера.
 
