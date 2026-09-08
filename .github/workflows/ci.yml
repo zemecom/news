@@ -9,6 +9,9 @@ on:
   schedule:
     - cron: "0 6 * * 1"
 
+env:
+  PHP_VERSION: '8.5'
+
 jobs:
   tests:
     runs-on: ubuntu-latest
@@ -20,17 +23,32 @@ jobs:
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.5'
+          php-version: ${{ env.PHP_VERSION }}
           extensions: intl, mbstring, sockets, zip, xml, pdo_pgsql
           coverage: pcov
-      - name: Cache composer
+          tools: composer:v2
+      - name: Resolve Composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
+      - name: Restore Composer download cache
         uses: actions/cache@v4
         with:
-          path: vendor
-          key: ${{ runner.os }}-composer-${{ hashFiles('composer.lock') }}
-          restore-keys: ${{ runner.os }}-composer-
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-files-${{ hashFiles('composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-files-
       - name: Install dependencies
-        run: composer install --prefer-dist --no-progress
+        run: composer install --prefer-dist --no-progress --no-interaction
+      - name: Restore analysis and test caches
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            .phpstan-cache
+            .psalm-cache
+            .phpunit.cache
+          key: ${{ runner.os }}-php-${{ env.PHP_VERSION }}-qa-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            ${{ runner.os }}-php-${{ env.PHP_VERSION }}-qa-
       - name: Validate composer.json
         run: composer qa:validate
       - name: Security audit (Composer)
@@ -45,6 +63,16 @@ jobs:
         run: composer test:coverage
       - name: Architecture tests
         run: composer test:arch
+      - name: Save analysis and test caches
+        if: ${{ !cancelled() }}
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            .phpstan-cache
+            .psalm-cache
+            .phpunit.cache
+          key: ${{ runner.os }}-php-${{ env.PHP_VERSION }}-qa-${{ github.run_id }}-${{ github.run_attempt }}
+
   acceptance:
     if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
     runs-on: ubuntu-latest
@@ -56,16 +84,21 @@ jobs:
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.5'
+          php-version: ${{ env.PHP_VERSION }}
           extensions: intl, mbstring, sockets, zip, xml, pdo_pgsql
           coverage: none
-      - name: Cache composer
+          tools: composer:v2
+      - name: Resolve Composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
+      - name: Restore Composer download cache
         uses: actions/cache@v4
         with:
-          path: vendor
-          key: ${{ runner.os }}-composer-${{ hashFiles('composer.lock') }}
-          restore-keys: ${{ runner.os }}-composer-
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-files-${{ hashFiles('composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-files-
       - name: Install dependencies
-        run: composer install --prefer-dist --no-progress
+        run: composer install --prefer-dist --no-progress --no-interaction
       - name: Acceptance tests
         run: composer test:acceptance

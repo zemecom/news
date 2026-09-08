@@ -3,6 +3,7 @@
     errorLevel="5"
     resolveFromConfigFile="true"
     phpVersion="8.5"
+    cacheDirectory=".psalm-cache"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="vendor/vimeo/psalm/config.xsd"
 >

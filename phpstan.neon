@@ -1,4 +1,5 @@
 parameters:
+  tmpDir: .phpstan-cache
   bootstrapFiles:
     - vendor/autoload.php
   stubFiles:
