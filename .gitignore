@@ -12,6 +12,8 @@
 /.fleet
 /.idea
 /.nova
+/.phpstan-cache/
+/.psalm-cache/
 /.phpunit.cache
 /.vscode
 /.zed
